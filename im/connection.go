@@ -46,7 +46,7 @@ func (c *WsConnection) Read() (*Message, error) {
 
 func (c *WsConnection) error(err error) {
 	e := err.Error()
-	if strings.HasSuffix(e, "use of closed network connection") {
+	if strings.HasSuffix(e, "use of closed network conn") {
 		return
 	}
 	_ = c.Close()

@@ -1,8 +1,11 @@
 package im
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
-// Client represent a user client connection
+// Client represent a user client conn
 type Client struct {
 	conn Connection
 
@@ -22,20 +25,39 @@ func NewClient(conn Connection) *Client {
 	return client
 }
 
-func (c *Client) ReadMessage() {
+func (c *Client) readMessage() {
+	defer func() {
+		err := recover()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}()
+
 	for {
 		message, err := c.conn.Read()
 		if err != nil {
 			//
 			continue
 		}
-		if message.action.IsApi() {
+		if message.Action.IsApi() {
+
+		} else if message.Action.IsHeartbeat() {
+
+		} else if message.Action.IsMessage() {
 
 		}
 	}
 }
 
-func (c *Client) WriteMessage() {
+func (c *Client) deliver() {
+
+}
+
+func (c *Client) IsOnline() bool {
+	return false
+}
+
+func (c *Client) writeMessage() {
 	for {
 		select {
 		case message := <-c.messages:
@@ -48,6 +70,6 @@ func (c *Client) WriteMessage() {
 }
 
 func (c *Client) Run() {
-	go c.ReadMessage()
-	go c.WriteMessage()
+	go c.readMessage()
+	go c.writeMessage()
 }

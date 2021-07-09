@@ -37,9 +37,9 @@ func (a Action) ActionName() string {
 }
 
 type Message struct {
-	req      string
-	action   Action
-	response interface{}
+	Req    string
+	Action Action
+	Data   interface{}
 }
 
 func DeserializeMessage(data []byte) (*Message, error) {
