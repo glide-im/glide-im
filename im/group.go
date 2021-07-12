@@ -1,15 +1,17 @@
 package im
 
+import "go_im/im/entity"
+
 type Group struct {
 	*mutex
 
 	Gid  int64
 	Name string
 
-	online []chan *Message
+	online []chan *entity.Message
 }
 
-func (g *Group) SendMessage(message *Message) {
+func (g *Group) SendMessage(message *entity.Message) {
 	defer g.LockUtilReturn()
 
 	for i := range g.online {

@@ -2,13 +2,14 @@ package im
 
 import (
 	"github.com/gorilla/websocket"
+	"go_im/im/entity"
 	"strings"
 	"time"
 )
 
 type Connection interface {
-	Write(message *Message) error
-	Read() (*Message, error)
+	Write(message *entity.Message) error
+	Read() (*entity.Message, error)
 	Close() error
 }
 
@@ -24,7 +25,7 @@ func NewWsConnection(conn *websocket.Conn, options *WsServerOptions) *WsConnecti
 	return c
 }
 
-func (c *WsConnection) Write(message *Message) error {
+func (c *WsConnection) Write(message *entity.Message) error {
 	deadLine := time.Now().Add(c.options.WriteDeadLine)
 	_ = c.conn.SetWriteDeadline(deadLine)
 
@@ -35,13 +36,13 @@ func (c *WsConnection) Write(message *Message) error {
 	return c.conn.WriteMessage(1, data)
 }
 
-func (c *WsConnection) Read() (*Message, error) {
+func (c *WsConnection) Read() (*entity.Message, error) {
 
 	_, bytes, err := c.conn.ReadMessage()
 	if err != nil {
 		return nil, err
 	}
-	return DeserializeMessage(bytes)
+	return entity.DeserializeMessage(bytes)
 }
 
 func (c *WsConnection) error(err error) {
