@@ -1,10 +1,15 @@
 package im
 
 import (
+	"errors"
 	"github.com/gorilla/websocket"
 	"go_im/im/entity"
 	"strings"
 	"time"
+)
+
+var (
+	ErrForciblyClosed = errors.New("connection was forcibly closed")
 )
 
 type Connection interface {
@@ -22,6 +27,10 @@ func NewWsConnection(conn *websocket.Conn, options *WsServerOptions) *WsConnecti
 	c := new(WsConnection)
 	c.conn = conn
 	c.options = options
+	c.conn.SetCloseHandler(func(code int, text string) error {
+		logger.D("closed")
+		return nil
+	})
 	return c
 }
 
@@ -40,6 +49,10 @@ func (c *WsConnection) Read() (*entity.Message, error) {
 
 	_, bytes, err := c.conn.ReadMessage()
 	if err != nil {
+		if strings.Contains(err.Error(), "An existing connection was forcibly closed by the remote host") {
+			_ = c.conn.Close()
+			err = ErrForciblyClosed
+		}
 		return nil, err
 	}
 	return entity.DeserializeMessage(bytes)

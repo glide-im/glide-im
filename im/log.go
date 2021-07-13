@@ -12,12 +12,12 @@ func (l *Logger) E(msg string, err error) {
 	fmt.Printf(err.Error())
 }
 
-func (l *Logger) I(msg string) {
-	fmt.Println(msg)
+func (l *Logger) I(format string, args ...string) {
+	fmt.Println(fmt.Sprintf(format, args))
 }
 
-func (l *Logger) D(msg string) {
-	fmt.Println(msg)
+func (l *Logger) D(format string, args ...interface{}) {
+	fmt.Println(fmt.Sprintf(format, args))
 }
 
 func (l *Logger) W(msg string) {

@@ -44,14 +44,21 @@ func (a *api) Handle(client *Client, message *entity.Message) error {
 
 func (a *api) login(client *Client, seq int64, loginEntity *entity.LoginEntity) error {
 	if len(loginEntity.Password) != 0 && len(loginEntity.Username) != 0 {
-		client.EnqueueMessage(&entity.Message{
-			Seq:  seq,
-			Data: []byte("login success"),
-		})
+		m := entity.NewMessage(seq, entity.ActionSuccess)
+		if err := m.SetData(entity.AuthorDto{Token: "this is token"}); err != nil {
+			return err
+		}
+		client.uid = 1234 // query uid
+		client.deviceId = loginEntity.Device
+		client.EnqueueMessage(m)
 	} else {
-		client.EnqueueMessage(entity.NewMessage(seq, entity.ActionUserUnauthorized, "unauthorized"))
+		client.EnqueueMessage(entity.NewSimpleMessage(seq, entity.ActionUserUnauthorized, "unauthorized"))
 	}
 	return nil
+}
+
+func (a *api) getInfo() {
+
 }
 
 func (a *api) register(client *Client, seq int64, registerEntity *entity.RegisterEntity) error {

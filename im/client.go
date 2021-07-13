@@ -1,7 +1,6 @@
 package im
 
 import (
-	"fmt"
 	"go_im/im/entity"
 	"time"
 )
@@ -13,9 +12,9 @@ type Client struct {
 	uid      int64
 	deviceId int64
 	time     time.Time
+	closed   bool
 
 	messages chan *entity.Message
-	closed   []chan interface{}
 }
 
 func NewClient(conn Connection) *Client {
@@ -32,26 +31,30 @@ func (c *Client) EnqueueMessage(message *entity.Message) {
 }
 
 func (c *Client) IsOnline() bool {
-	return false
+	return c.uid != 0
 }
 
-func (c *Client) Offline(reason string) {
-
+func (c *Client) Close(reason string) {
+	c.uid = 0
+	_ = c.conn.Close()
+	logger.D("connection closed uid=%d", c.uid)
 }
 
 func (c *Client) readMessage() {
 	defer func() {
 		err := recover()
 		if err != nil {
-			fmt.Println(err)
+			logger.E("client read message error", err.(error))
 		}
 	}()
 
 	for {
 		message, err := c.conn.Read()
 		if err != nil {
-			c.handleError(-1, err)
-			continue
+			if !c.handleError(-1, err) {
+				continue
+			}
+			break
 		}
 		if message.Action&entity.MaskActionApi != 0 {
 			err = Api.Handle(c, message)
@@ -61,9 +64,13 @@ func (c *Client) readMessage() {
 			c.handleHeartbeat(message)
 		}
 		if err != nil {
-			c.handleError(message.Seq, err)
+			if !c.handleError(message.Seq, err) {
+				continue
+			}
+			break
 		}
 	}
+	c.uid = 0
 }
 
 func (c *Client) writeMessage() {
@@ -78,11 +85,18 @@ func (c *Client) writeMessage() {
 	}
 }
 
-func (c *Client) handleError(seq int64, err error) {
-	c.messages <- &entity.Message{
-		Seq:  seq,
-		Data: []byte(err.Error()),
+// handleError return whether fatal error
+func (c *Client) handleError(seq int64, err error) bool {
+
+	if err == ErrForciblyClosed {
+		c.closed = true
+		logger.D("uid=%d forcibly closed", c.uid)
+		return true
 	}
+
+	c.messages <- entity.NewErrMessage(seq, err)
+
+	return false
 }
 
 func (c *Client) handleHeartbeat(message *entity.Message) {
@@ -90,10 +104,15 @@ func (c *Client) handleHeartbeat(message *entity.Message) {
 }
 
 func (c *Client) handleMessage(message *entity.Message) {
-
+	switch message.Action {
+	case entity.ActionChatMessage:
+	case entity.ActionGroupMessage:
+		GroupManager.DispatchMessage(c, message)
+	}
 }
 
 func (c *Client) Run() {
 	go c.readMessage()
 	go c.writeMessage()
+	logger.D("new connection")
 }

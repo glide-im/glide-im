@@ -9,4 +9,5 @@ require (
 	github.com/gorilla/websocket v1.4.1
 	github.com/jinzhu/gorm v1.9.16
 	github.com/onsi/gomega v1.14.0 // indirect
+	github.com/stretchr/testify v1.5.1
 )
