@@ -12,14 +12,19 @@ var (
 )
 
 type api struct {
+	*userApi
+	*groupApi
+
 	actionEntityMap map[entity.Action]interface{}
 }
 
 func newApi() *api {
 	ret := new(api)
+	ret.userApi = new(userApi)
+	ret.groupApi = new(groupApi)
 	ret.actionEntityMap = map[entity.Action]interface{}{
-		entity.ActionUserLogin:    &entity.LoginEntity{},
-		entity.ActionUserRegister: &entity.RegisterEntity{},
+		entity.ActionUserLogin:    &entity.LoginRequest{},
+		entity.ActionUserRegister: &entity.RegisterRequest{},
 	}
 	return ret
 }
@@ -34,34 +39,10 @@ func (a *api) Handle(client *Client, message *entity.Message) error {
 
 	switch message.Action {
 	case entity.ActionUserLogin:
-		return a.login(client, message.Seq, en.(*entity.LoginEntity))
+		return a.login(client, message.Seq, en.(*entity.LoginRequest))
 	case entity.ActionUserRegister:
-		return a.register(client, message.Seq, en.(*entity.RegisterEntity))
+		return a.register(client, message.Seq, en.(*entity.RegisterRequest))
 	default:
 		return ErrUnknownAction
 	}
-}
-
-func (a *api) login(client *Client, seq int64, loginEntity *entity.LoginEntity) error {
-	if len(loginEntity.Password) != 0 && len(loginEntity.Username) != 0 {
-		m := entity.NewMessage(seq, entity.ActionSuccess)
-		if err := m.SetData(entity.AuthorDto{Token: "this is token"}); err != nil {
-			return err
-		}
-		client.uid = 1234 // query uid
-		client.deviceId = loginEntity.Device
-		client.EnqueueMessage(m)
-	} else {
-		client.EnqueueMessage(entity.NewSimpleMessage(seq, entity.ActionUserUnauthorized, "unauthorized"))
-	}
-	return nil
-}
-
-func (a *api) getInfo() {
-
-}
-
-func (a *api) register(client *Client, seq int64, registerEntity *entity.RegisterEntity) error {
-
-	return nil
 }

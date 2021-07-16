@@ -2,15 +2,24 @@ package dao
 
 import (
 	"errors"
-	"go_im/im/model"
 	"go_im/pkg/db"
+	"time"
 )
+
+type User struct {
+	Uid      int64
+	Nickname string
+	Avatar   string
+
+	CreateAt time.Time
+	UpdateAt time.Time
+}
 
 var UserDao = new(userDao)
 
 type userDao struct{}
 
-func (d *userDao) GetUser(uid int64) (*model.User, error) {
+func (d *userDao) GetUser(uid int64) (*User, error) {
 
 	db.DB.Raw("select * from user where uid = ?", uid)
 

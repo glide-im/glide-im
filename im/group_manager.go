@@ -31,7 +31,7 @@ func (m *groupManager) GetGroup(gid uint64) *Group {
 
 func (m *groupManager) DispatchMessage(c *Client, message *entity.Message) {
 
-	groupMsg := new(entity.GroupMessageEntity)
+	groupMsg := new(entity.GroupMessage)
 	err := message.DeserializeData(groupMsg)
 	if err != nil {
 		logger.E("dispatch group message error", err)
@@ -40,14 +40,6 @@ func (m *groupManager) DispatchMessage(c *Client, message *entity.Message) {
 
 	group := m.GetGroup(groupMsg.Gid)
 	group.SendMessage(c.uid, message)
-}
-
-func (m *groupManager) GetGroupMember(c *Client, gid int64) {
-
-}
-
-func (m *groupManager) GetGroupInfo(c *Client, gid int64) {
-
 }
 
 func (m *groupManager) Run() {

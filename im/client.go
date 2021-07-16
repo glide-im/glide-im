@@ -30,14 +30,18 @@ func (c *Client) EnqueueMessage(message *entity.Message) {
 	c.messages <- message
 }
 
-func (c *Client) IsOnline() bool {
-	return c.uid != 0
+func (c *Client) SignIn(uid int64, deviceId int64) {
+	c.uid = uid
+	c.deviceId = deviceId
+	ClientManager.AddClient(c)
+	logger.D("client sign in uid=%d", uid)
 }
 
 func (c *Client) Close(reason string) {
 	c.uid = 0
+	ClientManager.DeleteClient(c)
 	_ = c.conn.Close()
-	logger.D("connection closed uid=%d", c.uid)
+	logger.D("connection closed uid=%d, reason=%d", c.uid, reason)
 }
 
 func (c *Client) readMessage() {
@@ -115,4 +119,23 @@ func (c *Client) Run() {
 	go c.readMessage()
 	go c.writeMessage()
 	logger.D("new connection")
+}
+
+var ClientManager = &clientManager{clients: map[int64]*Client{}}
+
+type clientManager struct {
+	*mutex
+	clients map[int64]*Client
+}
+
+func (c *clientManager) AddClient(client *Client) {
+	c.clients[client.uid] = client
+}
+
+func (c *clientManager) DeleteClient(client *Client) {
+	delete(c.clients, client.uid)
+}
+
+func (c *clientManager) GetClient(uid int64) *Client {
+	return c.clients[uid]
 }

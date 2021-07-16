@@ -7,7 +7,7 @@ type Action int32
 const (
 
 	// ======================================== api
-	MaskActionApi Action = 1 << 20
+	MaskActionApi Action = 1 << 0
 
 	ActionUserLogin    = MaskActionApi | 1<<0
 	ActionUserRegister = MaskActionApi | 1<<1
