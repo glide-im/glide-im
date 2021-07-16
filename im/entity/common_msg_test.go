@@ -7,6 +7,6 @@ import (
 
 func TestActionValue(t *testing.T) {
 
-	t.Logf("\n%b\n%b\n%b", MaskActionApi, ActionUserLogin, ActionFailed)
+	t.Logf("\n%b\n%b\n%b", MaskActionApi, ActionUserLogin, RespActionFailed)
 	assert.Equal(t, ActionUserLogin, MaskActionApi|1<<0)
 }

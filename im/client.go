@@ -14,6 +14,7 @@ type Client struct {
 	time     time.Time
 	closed   bool
 
+	groups   []*Group
 	messages chan *entity.Message
 }
 
@@ -26,6 +27,11 @@ func NewClient(conn Connection) *Client {
 	return client
 }
 
+func (c *Client) AddGroup(group *Group) {
+	c.groups = append(c.groups, group)
+}
+
+// EnqueueMessage enqueue blocking message channel
 func (c *Client) EnqueueMessage(message *entity.Message) {
 	c.messages <- message
 }
@@ -33,13 +39,16 @@ func (c *Client) EnqueueMessage(message *entity.Message) {
 func (c *Client) SignIn(uid int64, deviceId int64) {
 	c.uid = uid
 	c.deviceId = deviceId
-	ClientManager.AddClient(c)
+	ClientManager.ClientSignIn(c)
 	logger.D("client sign in uid=%d", uid)
 }
 
-func (c *Client) Close(reason string) {
+func (c *Client) SignOut(reason string) {
 	c.uid = 0
-	ClientManager.DeleteClient(c)
+	for _, group := range c.groups {
+		group.Unsubscribe(c.uid)
+	}
+	ClientManager.ClientSignOut(c)
 	_ = c.conn.Close()
 	logger.D("connection closed uid=%d, reason=%d", c.uid, reason)
 }
@@ -63,7 +72,7 @@ func (c *Client) readMessage() {
 		if message.Action&entity.MaskActionApi != 0 {
 			err = Api.Handle(c, message)
 		} else if message.Action&entity.MaskActionMessage != 0 {
-			c.handleMessage(message)
+			err = c.handleMessage(message)
 		} else if message.Action == entity.ActionHeartbeat {
 			c.handleHeartbeat(message)
 		}
@@ -80,6 +89,7 @@ func (c *Client) readMessage() {
 func (c *Client) writeMessage() {
 	for {
 		select {
+		// blocking write
 		case message := <-c.messages:
 			err := c.conn.Write(message)
 			if err != nil {
@@ -94,6 +104,7 @@ func (c *Client) handleError(seq int64, err error) bool {
 
 	if err == ErrForciblyClosed {
 		c.closed = true
+		c.SignOut("forcibly closed")
 		logger.D("uid=%d forcibly closed", c.uid)
 		return true
 	}
@@ -107,35 +118,18 @@ func (c *Client) handleHeartbeat(message *entity.Message) {
 
 }
 
-func (c *Client) handleMessage(message *entity.Message) {
+func (c *Client) handleMessage(message *entity.Message) error {
 	switch message.Action {
 	case entity.ActionChatMessage:
+		return ClientManager.SendChatMessage(c.uid, message)
 	case entity.ActionGroupMessage:
-		GroupManager.DispatchMessage(c, message)
+		return GroupManager.DispatchMessage(c, message)
 	}
+	return nil
 }
 
 func (c *Client) Run() {
 	go c.readMessage()
 	go c.writeMessage()
 	logger.D("new connection")
-}
-
-var ClientManager = &clientManager{clients: map[int64]*Client{}}
-
-type clientManager struct {
-	*mutex
-	clients map[int64]*Client
-}
-
-func (c *clientManager) AddClient(client *Client) {
-	c.clients[client.uid] = client
-}
-
-func (c *clientManager) DeleteClient(client *Client) {
-	delete(c.clients, client.uid)
-}
-
-func (c *clientManager) GetClient(uid int64) *Client {
-	return c.clients[uid]
 }

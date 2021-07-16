@@ -11,38 +11,57 @@ var (
 	Api = newApi()
 )
 
+type ApiMessage struct {
+	uid int64
+	seq int64
+}
+
 type api struct {
 	*userApi
 	*groupApi
-
-	actionEntityMap map[entity.Action]interface{}
 }
 
 func newApi() *api {
 	ret := new(api)
 	ret.userApi = new(userApi)
 	ret.groupApi = new(groupApi)
-	ret.actionEntityMap = map[entity.Action]interface{}{
-		entity.ActionUserLogin:    &entity.LoginRequest{},
-		entity.ActionUserRegister: &entity.RegisterRequest{},
-	}
 	return ret
 }
 
 func (a *api) Handle(client *Client, message *entity.Message) error {
 
-	en := a.actionEntityMap[message.Action]
-	e := message.DeserializeData(en)
-	if e != nil {
-		return e
+	en := entity.NewRequestFromAction(message.Action)
+
+	if en != nil {
+		e := message.DeserializeData(en)
+		if e != nil {
+			return e
+		}
+	}
+
+	msg := &ApiMessage{
+		uid: client.uid,
+		seq: message.Seq,
 	}
 
 	switch message.Action {
 	case entity.ActionUserLogin:
-		return a.login(client, message.Seq, en.(*entity.LoginRequest))
+		return a.Login(msg, en.(*entity.LoginRequest))
 	case entity.ActionUserRegister:
-		return a.register(client, message.Seq, en.(*entity.RegisterRequest))
+		return a.Register(msg, en.(*entity.RegisterRequest))
+	case entity.ActionUserSyncMsg:
+		return a.SyncMessageList(msg)
+	case entity.ActionUserRelation:
+		return a.GetRelationList(msg)
+	case entity.ActionUserLogout:
+	case entity.ActionUserEditInfo:
+	case entity.ActionUserGetInfo:
+		return a.GetUserInfo(msg, en.(*entity.UserInfoRequest))
+	case entity.ActionUserInfo:
+		return a.UserInfo(msg)
 	default:
 		return ErrUnknownAction
 	}
+
+	return ErrUnknownAction
 }

@@ -6,3 +6,10 @@ type GroupMessage struct {
 	MessageType uint
 	Content     string
 }
+
+type ChatMessage struct {
+	ChatId      uint64
+	Target      int64
+	MessageType int
+	Message     string
+}

@@ -5,31 +5,45 @@ import "encoding/json"
 type Action int32
 
 const (
+	ActionAck = 1
 
-	// ======================================== api
-	MaskActionApi Action = 1 << 0
+	MaskActionApi Action = 1 << 20
 
-	ActionUserLogin    = MaskActionApi | 1<<0
-	ActionUserRegister = MaskActionApi | 1<<1
-	ActionUserGetInfo  = MaskActionApi | 1<<2
-	ActionUserEditInfo = MaskActionApi | 1<<3
-	ActionUserLogout   = MaskActionApi | 1<<4
-	ActionUserSyncMsg  = MaskActionApi | 1<<5
+	ActionUserLogin    = MaskActionApi | 1
+	ActionUserRegister = MaskActionApi | 2
+	ActionUserGetInfo  = MaskActionApi | 3
+	ActionUserEditInfo = MaskActionApi | 4
+	ActionUserLogout   = MaskActionApi | 5
+	ActionUserSyncMsg  = MaskActionApi | 6
+	ActionUserInfo     = MaskActionApi | 7
 
-	// ======================================== api response
-	MaskActionApiResp      = MaskActionApi | MaskActionApi<<1
-	ActionFailed           = MaskActionApiResp | 1<<0
-	ActionSuccess          = MaskActionApiResp | 1<<1
-	ActionUserUnauthorized = MaskActionApiResp | 1<<4
+	ActionUserRelation = MaskActionApi | 10
 
-	// ======================================== message
 	MaskActionMessage  = 1 << 25
-	ActionGroupMessage = MaskActionMessage | 1<<0
-	ActionChatMessage  = MaskActionMessage | 1<<1
+	ActionGroupMessage = MaskActionMessage | 1
+	ActionChatMessage  = MaskActionMessage | 2
 
-	// ======================================== heartbeat
 	ActionHeartbeat Action = 1<<30 | 1
 )
+
+const (
+	MaskRespActionApi          = 1 << 20
+	RespActionFailed           = MaskRespActionApi | 1
+	RespActionSuccess          = MaskRespActionApi | 2
+	RespActionUserUnauthorized = MaskRespActionApi | 3
+
+	MaskRespActionNotify    = 1 << 30
+	RespActionGroupRemoved  = MaskRespActionNotify | 1
+	RespActionGroupApproval = MaskRespActionNotify | 3
+	RespActionGroupApproved = MaskRespActionNotify | 4
+	RespActionGroupRefused  = MaskRespActionNotify | 5
+
+	RespActionFriendApproval = MaskRespActionNotify | 6
+	RespActionFriendApproved = MaskRespActionNotify | 7
+	RespActionFriendRefused  = MaskRespActionNotify | 8
+)
+
+var actionRequestMap map[Action]func() interface{}
 
 type Message struct {
 	Seq    int64
@@ -67,6 +81,13 @@ func NewErrMessage(seq int64, err error) *Message {
 	return resp
 }
 
+func NewAckMessage(seq int64) *Message {
+	resp := new(Message)
+	resp.Seq = seq
+	resp.Action = ActionAck
+	return resp
+}
+
 func NewSimpleMessage(seq int64, action Action, msg string) *Message {
 	ret := new(Message)
 	ret.Seq = seq
@@ -80,4 +101,26 @@ func NewMessage(seq int64, action Action) *Message {
 	ret.Seq = seq
 	ret.Action = action
 	return ret
+}
+
+func init() {
+	actionRequestMap = map[Action]func() interface{}{
+		ActionUserLogin:    func() interface{} { return &LoginRequest{} },
+		ActionUserRegister: func() interface{} { return &RegisterRequest{} },
+		ActionUserGetInfo:  func() interface{} { return &UserInfoRequest{} },
+
+		ActionUserEditInfo: func() interface{} { return &RegisterRequest{} },
+		ActionUserLogout:   nil,
+		ActionUserRelation: nil,
+		ActionUserSyncMsg:  nil,
+		ActionUserInfo:     nil,
+	}
+}
+
+func NewRequestFromAction(action Action) interface{} {
+	fun, ok := actionRequestMap[action]
+	if ok {
+		return fun()
+	}
+	return nil
 }

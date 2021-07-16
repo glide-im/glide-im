@@ -35,3 +35,13 @@ func (d *userDao) GetUid(token string) (int64, error) {
 	// query redis
 	return 1, nil
 }
+
+func (d *userDao) GetMessageList(uid int64) []uint64 {
+
+	return []uint64{}
+}
+
+func (d *userDao) GetFriends(uid int64) []int64 {
+
+	return []int64{}
+}

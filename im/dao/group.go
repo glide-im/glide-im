@@ -24,3 +24,18 @@ func (d *groupDao) GetGroup(gid uint64) *im.Group {
 
 	return im.NewGroup(1, "group", []int64{})
 }
+
+func (d *groupDao) RemoveMember(gid uint64, uint642 int64) error {
+
+	return nil
+}
+
+func (d *groupDao) AddMember(gid uint64, uint642 int64) error {
+
+	return nil
+}
+
+func (d *groupDao) GetUserGroup(uid int64) []uint64 {
+
+	return []uint64{}
+}

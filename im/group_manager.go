@@ -29,21 +29,17 @@ func (m *groupManager) GetGroup(gid uint64) *Group {
 	return g
 }
 
-func (m *groupManager) DispatchMessage(c *Client, message *entity.Message) {
+func (m *groupManager) DispatchMessage(c *Client, message *entity.Message) error {
 
 	groupMsg := new(entity.GroupMessage)
 	err := message.DeserializeData(groupMsg)
 	if err != nil {
 		logger.E("dispatch group message error", err)
-		return
+		return err
 	}
 
 	group := m.GetGroup(groupMsg.Gid)
-	group.SendMessage(c.uid, message)
-}
-
-func (m *groupManager) Run() {
-
+	return group.SendMessage(c.uid, message)
 }
 
 type GroupMap struct {

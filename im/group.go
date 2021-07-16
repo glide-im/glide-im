@@ -30,24 +30,27 @@ func (g *Group) GetOnlineMember() []int64 {
 	return m
 }
 
-func (g *Group) SendMessage(uid int64, message *entity.Message) {
+func (g *Group) SendMessage(uid int64, message *entity.Message) error {
 	defer g.LockUtilReturn()()
 
 	for i := range g.memberCh {
+		if uid == i {
+			continue
+		}
 		g.memberCh[i] <- message
 	}
+
+	return nil
 }
 
-func (g *Group) Subscribe(client *Client) {
+func (g *Group) Subscribe(uid int64, mc chan *entity.Message) {
 	defer g.LockUtilReturn()()
-
-	g.memberCh[client.uid] = client.messages
+	g.memberCh[uid] = mc
 }
 
-func (g *Group) Unsubscribe(client *Client) {
+func (g *Group) Unsubscribe(uid int64) {
 	defer g.LockUtilReturn()()
-
-	delete(g.memberCh, client.uid)
+	delete(g.memberCh, uid)
 }
 
 type Int64Set struct {
