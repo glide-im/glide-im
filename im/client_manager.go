@@ -20,7 +20,7 @@ func (c *clientManager) ClientSignOut(client *Client) {
 	delete(c.clients, client.uid)
 }
 
-func (c *clientManager) SendChatMessage(from int64, message *entity.Message) error {
+func (c *clientManager) DispatchMessage(from int64, message *entity.Message) error {
 
 	msg := new(entity.ChatMessage)
 	if err := message.DeserializeData(msg); err != nil {
@@ -41,7 +41,7 @@ func (c *clientManager) SendChatMessage(from int64, message *entity.Message) err
 func (c *clientManager) EnqueueMessage(uid int64, msg *entity.Message) bool {
 	client, ok := c.clients[uid]
 	if ok {
-		if client.closed {
+		if client.closed.Get() {
 			ok = false
 		} else {
 			client.EnqueueMessage(msg)

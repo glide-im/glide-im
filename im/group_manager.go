@@ -24,7 +24,8 @@ func (m *groupManager) GetGroup(gid uint64) *Group {
 	if g != nil {
 		return g
 	}
-	g = dao.GroupDao.GetGroup(gid)
+	name, member := dao.GroupDao.GetGroup(gid)
+	NewGroup(gid, name, member)
 	m.groups.Put(gid, g)
 	return g
 }

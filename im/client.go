@@ -12,7 +12,7 @@ type Client struct {
 	uid      int64
 	deviceId int64
 	time     time.Time
-	closed   bool
+	closed   *AtomicBool
 
 	groups   []*Group
 	messages chan *entity.Message
@@ -21,6 +21,7 @@ type Client struct {
 func NewClient(conn Connection) *Client {
 	client := new(Client)
 	client.conn = conn
+	client.closed = NewAtomicBool(false)
 	client.messages = make(chan *entity.Message, 200)
 	client.time = time.Now()
 
@@ -33,10 +34,16 @@ func (c *Client) AddGroup(group *Group) {
 
 // EnqueueMessage enqueue blocking message channel
 func (c *Client) EnqueueMessage(message *entity.Message) {
+	logger.I("enqueue new message %v", message)
+	if c.closed.Get() {
+		logger.W("connection closed, cannot enqueue message")
+		return
+	}
 	c.messages <- message
 }
 
 func (c *Client) SignIn(uid int64, deviceId int64) {
+	logger.I("client sign in")
 	c.uid = uid
 	c.deviceId = deviceId
 	ClientManager.ClientSignIn(c)
@@ -44,6 +51,7 @@ func (c *Client) SignIn(uid int64, deviceId int64) {
 }
 
 func (c *Client) SignOut(reason string) {
+	logger.I("client sign out")
 	c.uid = 0
 	for _, group := range c.groups {
 		group.Unsubscribe(c.uid)
@@ -57,10 +65,11 @@ func (c *Client) readMessage() {
 	defer func() {
 		err := recover()
 		if err != nil {
-			logger.E("client read message error", err.(error))
+			logger.D("client read message error: %v", err)
 		}
 	}()
 
+	logger.I("start read message")
 	for {
 		message, err := c.conn.Read()
 		if err != nil {
@@ -87,6 +96,7 @@ func (c *Client) readMessage() {
 }
 
 func (c *Client) writeMessage() {
+	logger.I("start write message")
 	for {
 		select {
 		// blocking write
@@ -103,13 +113,13 @@ func (c *Client) writeMessage() {
 func (c *Client) handleError(seq int64, err error) bool {
 
 	if err == ErrForciblyClosed {
-		c.closed = true
+		c.closed.Set(true)
 		c.SignOut("forcibly closed")
 		logger.D("uid=%d forcibly closed", c.uid)
 		return true
 	}
 
-	c.messages <- entity.NewErrMessage(seq, err)
+	//c.messages <- entity.NewErrMessage(seq, err)
 
 	return false
 }
@@ -121,7 +131,7 @@ func (c *Client) handleHeartbeat(message *entity.Message) {
 func (c *Client) handleMessage(message *entity.Message) error {
 	switch message.Action {
 	case entity.ActionChatMessage:
-		return ClientManager.SendChatMessage(c.uid, message)
+		return ClientManager.DispatchMessage(c.uid, message)
 	case entity.ActionGroupMessage:
 		return GroupManager.DispatchMessage(c, message)
 	}
@@ -129,7 +139,7 @@ func (c *Client) handleMessage(message *entity.Message) error {
 }
 
 func (c *Client) Run() {
+	logger.D("///////////////////////// connection running /////////////////////////////")
 	go c.readMessage()
 	go c.writeMessage()
-	logger.D("new connection")
 }

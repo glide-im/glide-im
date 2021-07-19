@@ -1,7 +1,5 @@
 package dao
 
-import "go_im/im"
-
 /**
 Member
 
@@ -20,9 +18,9 @@ var GroupDao = new(groupDao)
 
 type groupDao struct{}
 
-func (d *groupDao) GetGroup(gid uint64) *im.Group {
+func (d *groupDao) GetGroup(gid uint64) (string, []int64) {
 
-	return im.NewGroup(1, "group", []int64{})
+	return "", []int64{}
 }
 
 func (d *groupDao) RemoveMember(gid uint64, uint642 int64) error {

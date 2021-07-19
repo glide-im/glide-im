@@ -28,7 +28,7 @@ func NewWsConnection(conn *websocket.Conn, options *WsServerOptions) *WsConnecti
 	c.conn = conn
 	c.options = options
 	c.conn.SetCloseHandler(func(code int, text string) error {
-		logger.D("closed")
+		logger.D("connection closed")
 		return nil
 	})
 	return c
