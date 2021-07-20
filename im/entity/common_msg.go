@@ -37,6 +37,7 @@ const (
 	RespActionGroupApproval = MaskRespActionNotify | 3
 	RespActionGroupApproved = MaskRespActionNotify | 4
 	RespActionGroupRefused  = MaskRespActionNotify | 5
+	RespActionEcho          = MaskRespActionNotify | 100
 
 	RespActionFriendApproval = MaskRespActionNotify | 6
 	RespActionFriendApproved = MaskRespActionNotify | 7
@@ -48,7 +49,7 @@ var actionRequestMap map[Action]func() interface{}
 type Message struct {
 	Seq    int64
 	Action Action
-	Data   []byte
+	Data   string
 }
 
 func DeserializeMessage(data []byte) (*Message, error) {
@@ -62,22 +63,27 @@ func (m *Message) Serialize() ([]byte, error) {
 }
 
 func (m *Message) SetData(v interface{}) error {
+	if s, ok := v.(string); ok {
+		m.Data = s
+		return nil
+	}
+
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
 	}
-	m.Data = b
+	m.Data = string(b)
 	return nil
 }
 
 func (m *Message) DeserializeData(v interface{}) error {
-	return json.Unmarshal(m.Data, v)
+	return json.Unmarshal([]byte(m.Data), v)
 }
 
 func NewErrMessage(seq int64, err error) *Message {
 	resp := new(Message)
 	resp.Seq = seq
-	resp.Data = []byte(err.Error())
+	resp.Data = err.Error()
 	return resp
 }
 
@@ -92,7 +98,7 @@ func NewSimpleMessage(seq int64, action Action, msg string) *Message {
 	ret := new(Message)
 	ret.Seq = seq
 	ret.Action = action
-	ret.Data = []byte(msg)
+	ret.Data = msg
 	return ret
 }
 

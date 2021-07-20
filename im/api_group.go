@@ -40,7 +40,7 @@ func (m *groupApi) RemoveMember(msg *ApiMessage, gid uint64, uid int64) error {
 
 	resp := entity.NewSimpleMessage(msg.seq, entity.RespActionSuccess, "remove member success")
 	if msg.uid == uid {
-		resp.Data = []byte("exit group success")
+		resp.SetData("exit group success")
 	} else {
 		resp1 := entity.NewSimpleMessage(0, entity.RespActionGroupRemoved, "you have been removed from the group xxx by xxx")
 		ClientManager.EnqueueMessage(uid, resp1)

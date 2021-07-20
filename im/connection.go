@@ -10,6 +10,8 @@ import (
 
 var (
 	ErrForciblyClosed = errors.New("connection was forcibly closed")
+	ErrClosed         = errors.New("closed")
+	ErrBadPackage     = errors.New("bad package data")
 )
 
 type Connection interface {
@@ -29,7 +31,7 @@ func NewWsConnection(conn *websocket.Conn, options *WsServerOptions) *WsConnecti
 	c.options = options
 	c.conn.SetCloseHandler(func(code int, text string) error {
 		logger.D("connection closed")
-		return nil
+		return ErrClosed
 	})
 	return c
 }
@@ -55,7 +57,11 @@ func (c *WsConnection) Read() (*entity.Message, error) {
 		}
 		return nil, err
 	}
-	return entity.DeserializeMessage(bytes)
+	m, err := entity.DeserializeMessage(bytes)
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func (c *WsConnection) error(err error) {

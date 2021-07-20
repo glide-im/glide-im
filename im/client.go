@@ -2,6 +2,7 @@ package im
 
 import (
 	"go_im/im/entity"
+	"strings"
 	"time"
 )
 
@@ -51,14 +52,14 @@ func (c *Client) SignIn(uid int64, deviceId int64) {
 }
 
 func (c *Client) SignOut(reason string) {
-	logger.I("client sign out")
+	logger.I("client sign out uid=%d, reason=%s", c.uid, reason)
 	c.uid = 0
 	for _, group := range c.groups {
 		group.Unsubscribe(c.uid)
 	}
 	ClientManager.ClientSignOut(c)
+	c.closed.Set(true)
 	_ = c.conn.Close()
-	logger.D("connection closed uid=%d, reason=%d", c.uid, reason)
 }
 
 func (c *Client) readMessage() {
@@ -84,6 +85,10 @@ func (c *Client) readMessage() {
 			err = c.handleMessage(message)
 		} else if message.Action == entity.ActionHeartbeat {
 			c.handleHeartbeat(message)
+		} else {
+			// echo
+			m, _ := message.Serialize()
+			c.EnqueueMessage(entity.NewSimpleMessage(1, entity.RespActionEcho, string(m)))
 		}
 		if err != nil {
 			if !c.handleError(message.Seq, err) {
@@ -104,6 +109,7 @@ func (c *Client) writeMessage() {
 			err := c.conn.Write(message)
 			if err != nil {
 				logger.E("client write message error", err)
+				c.handleError(-1, err)
 			}
 		}
 	}
@@ -112,14 +118,18 @@ func (c *Client) writeMessage() {
 // handleError return whether fatal error
 func (c *Client) handleError(seq int64, err error) bool {
 
-	if err == ErrForciblyClosed {
-		c.closed.Set(true)
-		c.SignOut("forcibly closed")
-		logger.D("uid=%d forcibly closed", c.uid)
+	if strings.Contains(err.Error(), "use of closed network connection") {
+		c.SignOut("connection closed")
 		return true
 	}
 
-	//c.messages <- entity.NewErrMessage(seq, err)
+	if err == ErrForciblyClosed || err == ErrClosed {
+		c.SignOut("client forcibly closed")
+		return true
+	}
+
+	//c.SignOut(fmt.Sprintf("%v", err))
+	c.messages <- entity.NewErrMessage(seq, err)
 
 	return false
 }
@@ -142,4 +152,10 @@ func (c *Client) Run() {
 	logger.D("///////////////////////// connection running /////////////////////////////")
 	go c.readMessage()
 	go c.writeMessage()
+	go func() {
+		for !c.closed.Get() {
+			c.EnqueueMessage(entity.NewMessage(time.Now().Unix(), entity.ActionAck))
+			time.Sleep(time.Second * 3)
+		}
+	}()
 }
