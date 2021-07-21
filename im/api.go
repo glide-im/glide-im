@@ -46,7 +46,14 @@ func (a *api) Handle(client *Client, message *entity.Message) error {
 
 	switch message.Action {
 	case entity.ActionUserLogin:
-		return a.Login(msg, en.(*entity.LoginRequest))
+		req := en.(*entity.LoginRequest)
+		m, uid, err := a.Login(msg, req)
+		if err != nil {
+			return err
+		}
+		client.SignIn(uid, req.Device)
+		client.EnqueueMessage(m)
+		return nil
 	case entity.ActionUserRegister:
 		return a.Register(msg, en.(*entity.RegisterRequest))
 	case entity.ActionUserSyncMsg:

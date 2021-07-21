@@ -110,7 +110,14 @@ func (c *Client) writeMessage() {
 			if err != nil {
 				logger.E("client write message error", err)
 				c.handleError(-1, err)
+				if c.closed.Get() {
+					break
+				}
 			}
+		}
+		if c.closed.Get() {
+			logger.D("write message break len=%d", len(c.messages))
+			break
 		}
 	}
 }
@@ -154,7 +161,9 @@ func (c *Client) Run() {
 	go c.writeMessage()
 	go func() {
 		for !c.closed.Get() {
-			c.EnqueueMessage(entity.NewMessage(time.Now().Unix(), entity.ActionAck))
+			hello := entity.NewMessage(time.Now().Unix(), entity.ActionAck)
+			hello.SetData("hello")
+			c.EnqueueMessage(hello)
 			time.Sleep(time.Second * 3)
 		}
 	}()

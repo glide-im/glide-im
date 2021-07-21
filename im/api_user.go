@@ -19,19 +19,22 @@ func (a *userApi) Auth(msg *ApiMessage, request *entity.AuthRequest) error {
 	return nil
 }
 
-func (a *userApi) Login(msg *ApiMessage, request *entity.LoginRequest) error {
+func (a *userApi) Login(msg *ApiMessage, request *entity.LoginRequest) (*entity.Message, int64, error) {
+
+	uid, token, err := dao.UserDao.GetUidByLogin(request.Username, request.Password)
+	if err != nil {
+		return nil, uid, err
+	}
+
 	if len(request.Password) != 0 && len(request.Username) != 0 {
 		m := entity.NewMessage(msg.seq, entity.RespActionSuccess)
-		if err := m.SetData(entity.AuthorResponse{Token: "this is token"}); err != nil {
-			return err
+		if err := m.SetData(entity.AuthorResponse{Token: token}); err != nil {
+			return nil, uid, err
 		}
-		ClientManager.GetClient(msg.uid).SignIn(1234, request.Device)
-		ClientManager.GetClient(msg.uid).EnqueueMessage(m)
+		return m, uid, nil
 	} else {
-		resp := entity.NewSimpleMessage(msg.seq, entity.RespActionUserUnauthorized, "unauthorized")
-		ClientManager.GetClient(msg.uid).EnqueueMessage(resp)
+		return entity.NewSimpleMessage(msg.seq, entity.RespActionUserUnauthorized, "unauthorized"), uid, nil
 	}
-	return nil
 }
 
 func (a *userApi) GetRelationList(msg *ApiMessage) error {
