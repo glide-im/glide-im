@@ -7,26 +7,25 @@ import (
 
 type userApi struct{}
 
-func (a *userApi) Auth(msg *ApiMessage, request *entity.AuthRequest) error {
+func (a *userApi) Auth(msg *ApiMessage, request *entity.AuthRequest) (*entity.Message, bool, error) {
 
-	uid, err := dao.UserDao.GetUid(request.Token)
-	if err != nil {
-		return err
+	var resp = entity.NewMessage(msg.seq, entity.RespActionSuccess)
+	uid := dao.UserDao.GetUid(request.Token)
+	if uid == request.Uid {
+		return resp, true, nil
+	} else {
+		return resp, false, nil
 	}
-
-	ClientManager.GetClient(uid).SignIn(uid, request.DeviceId)
-
-	return nil
 }
 
 func (a *userApi) Login(msg *ApiMessage, request *entity.LoginRequest) (*entity.Message, int64, error) {
 
-	uid, token, err := dao.UserDao.GetUidByLogin(request.Username, request.Password)
+	uid, token, err := dao.UserDao.GetUidByLogin(request.Account, request.Password)
 	if err != nil {
 		return nil, uid, err
 	}
 
-	if len(request.Password) != 0 && len(request.Username) != 0 {
+	if len(request.Password) != 0 && len(request.Account) != 0 {
 		m := entity.NewMessage(msg.seq, entity.RespActionSuccess)
 		if err := m.SetData(entity.AuthorResponse{Token: token}); err != nil {
 			return nil, uid, err
@@ -81,7 +80,16 @@ func (a *userApi) UserInfo(msg *ApiMessage) error {
 	return nil
 }
 
-func (a *userApi) Register(msg *ApiMessage, registerEntity *entity.RegisterRequest) error {
+func (a *userApi) Register(msg *ApiMessage, registerEntity *entity.RegisterRequest) (*entity.Message, error) {
 
-	return nil
+	resp := entity.NewMessage(msg.seq, entity.RespActionSuccess)
+	err := dao.UserDao.AddUser(registerEntity.Account, registerEntity.Password)
+
+	if err != nil {
+		resp.Data = "seq err=" + err.Error()
+	} else {
+		resp.Data = "register success"
+	}
+
+	return resp, err
 }

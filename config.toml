@@ -5,3 +5,9 @@ Username = "root"
 Password = "root"
 Db = "go_im"
 Charset = "utf8"
+
+[Redis]
+Host = "127.0.0.1"
+Port = 6379
+Password = ""
+Db = 8

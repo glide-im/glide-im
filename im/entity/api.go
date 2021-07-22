@@ -2,17 +2,18 @@ package entity
 
 type LoginRequest struct {
 	Device   int64  `json:"device"`
-	Username string `json:"username"`
+	Account  string `json:"account"`
 	Password string `json:"password"`
 }
 
 type AuthRequest struct {
 	Token    string `json:"token"`
 	DeviceId int64  `json:"device_id"`
+	Uid      int64  `json:"uid"`
 }
 
 type RegisterRequest struct {
-	Username string `json:"username"`
+	Account  string `json:"account"`
 	Password string `json:"password"`
 }
 

@@ -5,6 +5,7 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/jinzhu/gorm"
 	"go_im/config"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -23,4 +24,22 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
+	DB.LogMode(true)
+	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
+		return "im_" + strings.TrimSuffix(defaultTableName, "s")
+	}
+	initRedis()
+}
+
+func initRedis() {
+
+	conf := config.Redis
+	Redis = redis.NewClient(&redis.Options{
+		Addr:         fmt.Sprintf("%s:%d", conf.Host, conf.Port),
+		Password:     conf.Password,
+		DB:           conf.Db,
+		PoolSize:     0,
+		MinIdleConns: 0,
+	})
+
 }

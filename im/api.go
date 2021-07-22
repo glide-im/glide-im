@@ -54,8 +54,25 @@ func (a *api) Handle(client *Client, message *entity.Message) error {
 		client.SignIn(uid, req.Device)
 		client.EnqueueMessage(m)
 		return nil
+	case entity.ActionUserAuth:
+		req := en.(*entity.AuthRequest)
+		m, success, err := a.Auth(msg, req)
+		if err != nil {
+			return err
+		}
+		if success {
+			client.SignIn(req.Uid, req.DeviceId)
+		}
+		client.EnqueueMessage(m)
+		return nil
 	case entity.ActionUserRegister:
-		return a.Register(msg, en.(*entity.RegisterRequest))
+		req := en.(*entity.RegisterRequest)
+		m, err := a.Register(msg, req)
+		if err != nil {
+			return err
+		}
+		client.EnqueueMessage(m)
+		return nil
 	case entity.ActionUserSyncMsg:
 		return a.SyncMessageList(msg)
 	case entity.ActionUserRelation:

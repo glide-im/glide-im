@@ -79,6 +79,7 @@ func (c *Client) readMessage() {
 			}
 			break
 		}
+		logger.D("New message: %s", message)
 		if message.Action&entity.MaskActionApi != 0 {
 			err = Api.Handle(c, message)
 		} else if message.Action&entity.MaskActionMessage != 0 {

@@ -1,6 +1,9 @@
 package entity
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 type Action int32
 
@@ -16,6 +19,7 @@ const (
 	ActionUserLogout   = MaskActionApi | 5
 	ActionUserSyncMsg  = MaskActionApi | 6
 	ActionUserInfo     = MaskActionApi | 7
+	ActionUserAuth     = MaskActionApi | 8
 
 	ActionUserRelation = MaskActionApi | 10
 
@@ -43,6 +47,25 @@ const (
 	RespActionFriendApproved = MaskRespActionNotify | 7
 	RespActionFriendRefused  = MaskRespActionNotify | 8
 )
+
+var actionNameMap = map[Action]string{
+	ActionUserLogin:    "ActionUserLogin",
+	ActionUserRegister: "ActionUserRegister",
+	ActionUserGetInfo:  "ActionUserGetInfo",
+	ActionUserEditInfo: "ActionUserEditInfo",
+	ActionUserLogout:   "ActionUserLogout",
+	ActionUserSyncMsg:  "ActionUserSyncMsg",
+	ActionUserInfo:     "ActionUserInfo",
+	ActionUserAuth:     "ActionUserAuth",
+
+	ActionUserRelation: "ActionUserRelation",
+
+	MaskActionMessage:  "MaskActionMessage",
+	ActionGroupMessage: "ActionGroupMessage",
+	ActionChatMessage:  "ActionChatMessage",
+
+	ActionHeartbeat: "ActionHeartbeat",
+}
 
 var actionRequestMap map[Action]func() interface{}
 
@@ -78,6 +101,11 @@ func (m *Message) SetData(v interface{}) error {
 
 func (m *Message) DeserializeData(v interface{}) error {
 	return json.Unmarshal([]byte(m.Data), v)
+}
+
+func (m *Message) String() string {
+	n := actionNameMap[m.Action]
+	return fmt.Sprintf("Message{Seq=%d, Action=%s, Data=%s}", m.Seq, n, m.Data)
 }
 
 func NewErrMessage(seq int64, err error) *Message {
