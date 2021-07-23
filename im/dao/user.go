@@ -23,18 +23,14 @@ func InitUserDao() {
 		redisConfig: redisConfig{},
 		mySqlConf:   mySqlConf{},
 	}
-
-	tb := &User{}
-	if !db.DB.HasTable(tb) {
-		db.DB.CreateTable(&tb)
-	}
 }
 
 func (d *userDao) GetUser(uid int64) (*User, error) {
 
-	db.DB.Raw("select * from user where uid = ?", uid)
+	u := User{Uid: uid}
+	err := db.DB.Where("uid=?", uid).Find(&u).Error
 
-	return nil, nil
+	return &u, err
 }
 
 func (d *userDao) AddUser(account string, password string) error {
@@ -106,10 +102,6 @@ func (d *userDao) GetUid(token string) int64 {
 		return 0
 	}
 	return uid
-}
-
-func (d *userDao) GetMessageList(uid int64) []uint64 {
-	return []uint64{}
 }
 
 func (d *userDao) GetFriends(uid int64) []int64 {

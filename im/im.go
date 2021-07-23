@@ -4,6 +4,6 @@ import "go_im/im/dao"
 
 func Run() {
 
-	dao.InitUserDao()
+	dao.Init()
 	NewWsServer(nil).Run()
 }

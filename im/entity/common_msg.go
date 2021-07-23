@@ -17,11 +17,13 @@ const (
 	ActionUserGetInfo  = MaskActionApi | 3
 	ActionUserEditInfo = MaskActionApi | 4
 	ActionUserLogout   = MaskActionApi | 5
-	ActionUserSyncMsg  = MaskActionApi | 6
+	ActionUserChatList = MaskActionApi | 6
 	ActionUserInfo     = MaskActionApi | 7
 	ActionUserAuth     = MaskActionApi | 8
-
 	ActionUserRelation = MaskActionApi | 10
+	ActionUserNewChat  = MaskActionApi | 11
+
+	ActionOnlineUser = MaskActionApi | 20
 
 	MaskActionMessage  = 1 << 25
 	ActionGroupMessage = MaskActionMessage | 1
@@ -54,7 +56,7 @@ var actionNameMap = map[Action]string{
 	ActionUserGetInfo:  "ActionUserGetInfo",
 	ActionUserEditInfo: "ActionUserEditInfo",
 	ActionUserLogout:   "ActionUserLogout",
-	ActionUserSyncMsg:  "ActionUserSyncMsg",
+	ActionUserChatList: "ActionUserChatList",
 	ActionUserInfo:     "ActionUserInfo",
 	ActionUserAuth:     "ActionUserAuth",
 
@@ -146,7 +148,7 @@ func init() {
 		ActionUserEditInfo: func() interface{} { return &RegisterRequest{} },
 		ActionUserLogout:   nil,
 		ActionUserRelation: nil,
-		ActionUserSyncMsg:  nil,
+		ActionUserChatList: nil,
 		ActionUserInfo:     nil,
 	}
 }

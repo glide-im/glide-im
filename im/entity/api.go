@@ -19,7 +19,7 @@ type RegisterRequest struct {
 
 // AuthorResponse login or register result
 type AuthorResponse struct {
-	Token string `json:"token"`
+	Token string
 }
 
 type UserInfoRequest struct {
@@ -34,6 +34,11 @@ type UserInfoResponse struct {
 
 type UserInfoListResponse struct {
 	UserInfo []*UserInfoResponse
+}
+
+type UserNewChatRequest struct {
+	Id   uint64
+	Type int8
 }
 
 type RelationResponse struct {

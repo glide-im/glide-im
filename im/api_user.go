@@ -5,6 +5,18 @@ import (
 	"go_im/im/entity"
 )
 
+type ApiFatalError struct {
+	msg string
+}
+
+func (f *ApiFatalError) Error() string {
+	return f.msg
+}
+
+func newApiFatalError(msg string) *ApiFatalError {
+	return &ApiFatalError{msg: msg}
+}
+
 type userApi struct{}
 
 func (a *userApi) Auth(msg *ApiMessage, request *entity.AuthRequest) (*entity.Message, bool, error) {
@@ -20,20 +32,20 @@ func (a *userApi) Auth(msg *ApiMessage, request *entity.AuthRequest) (*entity.Me
 
 func (a *userApi) Login(msg *ApiMessage, request *entity.LoginRequest) (*entity.Message, int64, error) {
 
+	if len(request.Account) == 0 || len(request.Password) == 0 {
+		return entity.NewSimpleMessage(msg.seq, entity.RespActionUserUnauthorized, "account or password empty"), -1, nil
+	}
+
 	uid, token, err := dao.UserDao.GetUidByLogin(request.Account, request.Password)
 	if err != nil {
 		return nil, uid, err
 	}
 
-	if len(request.Password) != 0 && len(request.Account) != 0 {
-		m := entity.NewMessage(msg.seq, entity.RespActionSuccess)
-		if err := m.SetData(entity.AuthorResponse{Token: token}); err != nil {
-			return nil, uid, err
-		}
-		return m, uid, nil
-	} else {
-		return entity.NewSimpleMessage(msg.seq, entity.RespActionUserUnauthorized, "unauthorized"), uid, nil
+	m := entity.NewMessage(msg.seq, entity.RespActionSuccess)
+	if err = m.SetData(entity.AuthorResponse{Token: token}); err != nil {
+		return nil, uid, err
 	}
+	return m, uid, nil
 }
 
 func (a *userApi) GetRelationList(msg *ApiMessage) error {
@@ -60,18 +72,57 @@ func (a *userApi) GetRelationList(msg *ApiMessage) error {
 	return nil
 }
 
-func (a *userApi) SyncMessageList(msg *ApiMessage) error {
-
-	chats := dao.UserDao.GetMessageList(msg.uid)
-	for _, chat := range chats {
-		dao.MessageDao.GetChatInfo(chat)
-	}
+func (a *userApi) GetUserInfo(msg *ApiMessage, request *entity.UserInfoRequest) error {
 
 	return nil
 }
 
-func (a *userApi) GetUserInfo(msg *ApiMessage, request *entity.UserInfoRequest) error {
+func (a *userApi) GetOnlineUser(msg *ApiMessage) error {
 
+	m := entity.NewMessage(msg.seq, entity.ActionOnlineUser)
+	type u struct {
+		Uid      int64
+		Account  string
+		Avatar   string
+		Nickname string
+	}
+	var users []u
+
+	for k := range ClientManager.AllClient() {
+		user, err := dao.UserDao.GetUser(k)
+		if err != nil {
+			logger.D("get online uid=%d error, error=%v", k, err)
+			continue
+		}
+		users = append(users, u{Uid: user.Uid, Account: user.Account, Avatar: user.Avatar, Nickname: user.Nickname})
+	}
+
+	_ = m.SetData(users)
+	ClientManager.EnqueueMessage(msg.uid, m)
+	return nil
+}
+
+func (a *userApi) NewChat(msg *ApiMessage, request *entity.UserNewChatRequest) error {
+
+	err := dao.MessageDao.NewChat(msg.uid, request.Id, request.Type)
+
+	if err != nil {
+		ClientManager.EnqueueMessage(msg.uid, entity.NewAckMessage(msg.seq))
+	}
+	return err
+}
+
+func (a *userApi) GetUserChatList(msg *ApiMessage) error {
+
+	resp := entity.NewMessage(msg.seq, entity.RespActionSuccess)
+	list, err := dao.MessageDao.GetUserChatList(msg.uid)
+	if err != nil {
+		return err
+	}
+	if err = resp.SetData(list); err != nil {
+		return err
+	}
+	ClientManager.EnqueueMessage(msg.uid, resp)
 	return nil
 }
 

@@ -30,7 +30,7 @@ func (c *clientManager) DispatchMessage(from int64, message *entity.Message) err
 	if c.EnqueueMessage(msg.Target, message) {
 		// offline
 	}
-	if err := dao.MessageDao.NewChatMessage(msg.ChatId, msg.Message, msg.MessageType); err != nil {
+	if err := dao.MessageDao.NewChatMessage(msg.ChatId, from, msg.Message, "", msg.MessageType); err != nil {
 		return err
 	}
 
@@ -48,6 +48,10 @@ func (c *clientManager) EnqueueMessage(uid int64, msg *entity.Message) bool {
 		}
 	}
 	return ok
+}
+
+func (c *clientManager) AllClient() map[int64]*Client {
+	return c.clients
 }
 
 func (c *clientManager) GetClient(uid int64) *Client {

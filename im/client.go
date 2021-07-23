@@ -66,7 +66,7 @@ func (c *Client) readMessage() {
 	defer func() {
 		err := recover()
 		if err != nil {
-			logger.D("client read message error: %v", err)
+			logger.D("Recover: client read message error: %v", err)
 		}
 	}()
 
@@ -103,6 +103,11 @@ func (c *Client) readMessage() {
 
 func (c *Client) writeMessage() {
 	logger.I("start write message")
+
+	hello := entity.NewMessage(time.Now().Unix(), entity.ActionAck)
+	_ = hello.SetData("hello")
+	c.EnqueueMessage(hello)
+
 	for {
 		select {
 		// blocking write
@@ -160,12 +165,4 @@ func (c *Client) Run() {
 	logger.D("///////////////////////// connection running /////////////////////////////")
 	go c.readMessage()
 	go c.writeMessage()
-	go func() {
-		for !c.closed.Get() {
-			hello := entity.NewMessage(time.Now().Unix(), entity.ActionAck)
-			hello.SetData("hello")
-			c.EnqueueMessage(hello)
-			time.Sleep(time.Second * 3)
-		}
-	}()
 }

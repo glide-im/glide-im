@@ -73,10 +73,15 @@ func (a *api) Handle(client *Client, message *entity.Message) error {
 		}
 		client.EnqueueMessage(m)
 		return nil
-	case entity.ActionUserSyncMsg:
-		return a.SyncMessageList(msg)
+
+	case entity.ActionUserChatList:
+		return a.GetUserChatList(msg)
 	case entity.ActionUserRelation:
 		return a.GetRelationList(msg)
+	case entity.ActionOnlineUser:
+		return a.GetOnlineUser(msg)
+	case entity.ActionUserNewChat:
+		return a.NewChat(msg, en.(*entity.UserNewChatRequest))
 	case entity.ActionUserLogout:
 	case entity.ActionUserEditInfo:
 	case entity.ActionUserGetInfo:
