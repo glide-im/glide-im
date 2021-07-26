@@ -3,6 +3,7 @@ package im
 import (
 	"go_im/im/dao"
 	"go_im/im/entity"
+	"time"
 )
 
 var ClientManager = &clientManager{clients: map[int64]*Client{}}
@@ -22,16 +23,34 @@ func (c *clientManager) ClientSignOut(client *Client) {
 
 func (c *clientManager) DispatchMessage(from int64, message *entity.Message) error {
 
-	msg := new(entity.ChatMessage)
+	msg := new(entity.SenderChatMessage)
 	if err := message.DeserializeData(msg); err != nil {
 		return err
 	}
+	msg.SendAt = time.Now()
 
-	if c.EnqueueMessage(msg.Target, message) {
-		// offline
-	}
-	if err := dao.MessageDao.NewChatMessage(msg.ChatId, from, msg.Message, "", msg.MessageType); err != nil {
+	mid, err := dao.MessageDao.NewChatMessage(from, msg)
+	if err != nil {
 		return err
+	}
+
+	rm := entity.ReceiverChatMessage{
+		Mid:         mid,
+		ChatId:      msg.ChatId,
+		Sender:      from,
+		MessageType: msg.MessageType,
+		Message:     msg.Message,
+		SendAt:      msg.SendAt,
+	}
+
+	dispatchMsg := entity.NewMessage(1, entity.ActionChatMessage)
+
+	if err = dispatchMsg.SetData(rm); err != nil {
+		return err
+	}
+
+	if c.EnqueueMessage(msg.Receiver, dispatchMsg) {
+		// offline
 	}
 
 	c.EnqueueMessage(from, entity.NewAckMessage(message.Seq))
@@ -44,6 +63,10 @@ func (c *clientManager) EnqueueMessage(uid int64, msg *entity.Message) bool {
 		if client.closed.Get() {
 			ok = false
 		} else {
+			if uid <= 0 {
+				client.EnqueueMessage(entity.NewSimpleMessage(msg.Seq, entity.RespActionFailed, "unauthorized"))
+				return false
+			}
 			client.EnqueueMessage(msg)
 		}
 	}

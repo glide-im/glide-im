@@ -48,7 +48,7 @@ func (a *userApi) Login(msg *ApiMessage, request *entity.LoginRequest) (*entity.
 	return m, uid, nil
 }
 
-func (a *userApi) GetRelationList(msg *ApiMessage) error {
+func (a *userApi) GetAndInitRelationList(msg *ApiMessage) error {
 
 	groups := dao.GroupDao.GetUserGroup(msg.uid)
 	for _, gid := range groups {
@@ -104,12 +104,11 @@ func (a *userApi) GetOnlineUser(msg *ApiMessage) error {
 
 func (a *userApi) NewChat(msg *ApiMessage, request *entity.UserNewChatRequest) error {
 
-	err := dao.MessageDao.NewChat(msg.uid, request.Id, request.Type)
-
-	if err != nil {
-		ClientManager.EnqueueMessage(msg.uid, entity.NewAckMessage(msg.seq))
+	if err := dao.MessageDao.NewChat(msg.uid, request.Id, request.Type); err != nil {
+		return err
 	}
-	return err
+	ClientManager.EnqueueMessage(msg.uid, entity.NewAckMessage(msg.seq))
+	return nil
 }
 
 func (a *userApi) GetUserChatList(msg *ApiMessage) error {

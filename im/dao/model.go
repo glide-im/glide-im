@@ -14,7 +14,7 @@ type User struct {
 }
 
 type Chat struct {
-	Cid          uint64 `gorm:"primary_key"`
+	Cid          int64 `gorm:"primary_key"`
 	Owner        int64
 	Target       uint64
 	ChatType     int8
@@ -25,11 +25,11 @@ type Chat struct {
 }
 
 type ChatMessage struct {
-	Mid         uint64 `gorm:"primary_key"`
+	Mid         int64 `gorm:"primary_key"`
 	Cid         uint64
 	SenderUid   int64
 	SendAt      time.Time
 	Message     string
-	MessageType int
+	MessageType int8
 	At          string
 }

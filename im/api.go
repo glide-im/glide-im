@@ -7,9 +7,14 @@ import (
 
 var (
 	ErrUnknownAction = errors.New("ErrUnknownAction")
-
-	Api = newApi()
+	Api              = newApi()
 )
+
+var ActionDoNotNeedToken = map[entity.Action]int8{
+	entity.ActionUserAuth:     0,
+	entity.ActionUserLogin:    0,
+	entity.ActionUserRegister: 0,
+}
 
 type ApiMessage struct {
 	uid int64
@@ -29,6 +34,10 @@ func newApi() *api {
 }
 
 func (a *api) Handle(client *Client, message *entity.Message) error {
+
+	if err := a.intercept(client, message); err != nil {
+		return err
+	}
 
 	en := entity.NewRequestFromAction(message.Action)
 
@@ -77,7 +86,7 @@ func (a *api) Handle(client *Client, message *entity.Message) error {
 	case entity.ActionUserChatList:
 		return a.GetUserChatList(msg)
 	case entity.ActionUserRelation:
-		return a.GetRelationList(msg)
+		return a.GetAndInitRelationList(msg)
 	case entity.ActionOnlineUser:
 		return a.GetOnlineUser(msg)
 	case entity.ActionUserNewChat:
@@ -93,4 +102,17 @@ func (a *api) Handle(client *Client, message *entity.Message) error {
 	}
 
 	return ErrUnknownAction
+}
+
+func (a *api) intercept(client *Client, message *entity.Message) error {
+
+	_, ok := ActionDoNotNeedToken[message.Action]
+	if client.uid <= 0 && !ok {
+		return errors.New("unauthorized")
+	}
+
+	// verify fields
+
+	// something else
+	return nil
 }

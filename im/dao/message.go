@@ -2,19 +2,28 @@ package dao
 
 import (
 	"errors"
+	"go_im/im/entity"
 	"go_im/pkg/db"
 	"time"
 )
 
-var MessageDao = new(messageDao)
+func InitMessageDao() {
 
-type messageDao struct{}
+}
+
+var MessageDao = &messageDao{
+	keyMessageIdIncr: "user:message:chat:incr_id",
+}
+
+type messageDao struct {
+	keyMessageIdIncr string
+}
 
 func (m *messageDao) GetUserChatList(uid int64) ([]*Chat, error) {
 
 	var chats []*Chat
-	err := db.DB.Where("uid=?", uid).Find(chats).Error
-	return chats, err
+	err := db.DB.Table("im_chat").Where("owner = ?", uid).Find(&chats)
+	return chats, err.Error
 }
 
 func (m *messageDao) NewChat(uid int64, target uint64, typ int8) error {
@@ -30,6 +39,11 @@ func (m *messageDao) NewChat(uid int64, target uint64, typ int8) error {
 		CreateAt:     now,
 	}
 
+	row := 0
+	db.DB.Model(&c).Where(Chat{Owner: uid, Target: target, ChatType: typ}).Count(&row)
+	if row > 0 {
+		return errors.New("chat exist")
+	}
 	if db.DB.Model(&c).Create(&c).RowsAffected <= 0 {
 		return errors.New("create chat error")
 	}
@@ -37,22 +51,28 @@ func (m *messageDao) NewChat(uid int64, target uint64, typ int8) error {
 }
 
 // NewChatMessage
-func (m *messageDao) NewChatMessage(cid uint64, sender int64, content string, at string, msgType int) error {
+func (m *messageDao) NewChatMessage(sender int64, message *entity.SenderChatMessage) (uint64, error) {
+
+	mid, err := db.Redis.Incr(m.keyMessageIdIncr).Result()
+	if err != nil {
+		return 0, err
+	}
 
 	cm := ChatMessage{
-		Cid:         cid,
+		Mid:         mid,
+		Cid:         message.ChatId,
 		SenderUid:   sender,
-		SendAt:      time.Now(),
-		Message:     content,
-		MessageType: msgType,
-		At:          at,
+		SendAt:      message.SendAt,
+		Message:     message.Message,
+		MessageType: message.MessageType,
+		At:          "",
 	}
 
 	if db.DB.Model(&cm).Create(&cm).RowsAffected <= 0 {
-		return errors.New("create chat message error")
+		return 0, errors.New("create chat message error")
 	}
 
-	return nil
+	return 0, nil
 }
 
 func (m *messageDao) GetChatHistory(cid uint64, uid int64, size int) []*ChatMessage {

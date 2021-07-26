@@ -64,10 +64,10 @@ func (c *Client) SignOut(reason string) {
 
 func (c *Client) readMessage() {
 	defer func() {
-		err := recover()
-		if err != nil {
-			logger.D("Recover: client read message error: %v", err)
-		}
+		//err := recover()
+		//if err != nil {
+		//	logger.D("Recover: client read message error: %v", err)
+		//}
 	}()
 
 	logger.I("start read message")

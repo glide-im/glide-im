@@ -149,13 +149,14 @@ func init() {
 		ActionUserLogout:   nil,
 		ActionUserRelation: nil,
 		ActionUserChatList: nil,
-		ActionUserInfo:     nil,
+		ActionUserInfo:     func() interface{} { return &UserInfoRequest{} },
+		ActionUserNewChat:  func() interface{} { return &UserNewChatRequest{} },
 	}
 }
 
 func NewRequestFromAction(action Action) interface{} {
 	fun, ok := actionRequestMap[action]
-	if ok {
+	if ok && fun != nil {
 		return fun()
 	}
 	return nil
