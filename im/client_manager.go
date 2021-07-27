@@ -1,9 +1,9 @@
 package im
 
 import (
+	"errors"
 	"go_im/im/dao"
 	"go_im/im/entity"
-	"time"
 )
 
 var ClientManager = &clientManager{clients: map[int64]*Client{}}
@@ -25,25 +25,41 @@ func (c *clientManager) DispatchMessage(from int64, message *entity.Message) err
 
 	msg := new(entity.SenderChatMessage)
 	if err := message.DeserializeData(msg); err != nil {
+		logger.E("sender chat msg ", err)
 		return err
 	}
-	msg.SendAt = time.Now()
+	logger.D("Chat message from=%d, cid=%d, msg=%s", from, msg.Cid, msg.Message)
 
-	mid, err := dao.MessageDao.NewChatMessage(from, msg)
+	if msg.Cid <= 0 {
+		return errors.New("chat not create")
+	}
+
+	// update sender read time
+	_ = dao.MessageDao.UpdateChatEnterTime(msg.UcId)
+
+	// insert message to chat
+	chatMsg, err := dao.MessageDao.NewChatMessage(msg.Cid, from, msg.Message, msg.MessageType)
+	if err != nil {
+		return err
+	}
+
+	// update receiver's list chat
+	uChat, err := dao.MessageDao.UpdateUserChatMsgTime(msg.Cid, msg.Receiver)
 	if err != nil {
 		return err
 	}
 
 	rm := entity.ReceiverChatMessage{
-		Mid:         mid,
-		ChatId:      msg.ChatId,
+		Mid:         chatMsg.Mid,
+		Cid:         msg.Cid,
+		UcId:        uChat.UcId,
 		Sender:      from,
 		MessageType: msg.MessageType,
 		Message:     msg.Message,
-		SendAt:      msg.SendAt,
+		SendAt:      chatMsg.SendAt,
 	}
 
-	dispatchMsg := entity.NewMessage(1, entity.ActionChatMessage)
+	dispatchMsg := entity.NewMessage(-1, entity.ActionChatMessage)
 
 	if err = dispatchMsg.SetData(rm); err != nil {
 		return err
@@ -63,6 +79,9 @@ func (c *clientManager) EnqueueMessage(uid int64, msg *entity.Message) bool {
 		if client.closed.Get() {
 			ok = false
 		} else {
+			if msg.Seq == -1 {
+				msg.Seq = client.getNextSeq()
+			}
 			if uid <= 0 {
 				client.EnqueueMessage(entity.NewSimpleMessage(msg.Seq, entity.RespActionFailed, "unauthorized"))
 				return false

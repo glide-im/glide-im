@@ -8,6 +8,7 @@ func Init() {
 		User{},
 		Chat{},
 		ChatMessage{},
+		UserChat{},
 	}
 
 	for _, tb := range tables {

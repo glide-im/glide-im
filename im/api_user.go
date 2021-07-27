@@ -104,10 +104,32 @@ func (a *userApi) GetOnlineUser(msg *ApiMessage) error {
 
 func (a *userApi) NewChat(msg *ApiMessage, request *entity.UserNewChatRequest) error {
 
-	if err := dao.MessageDao.NewChat(msg.uid, request.Id, request.Type); err != nil {
+	uid := msg.uid
+	target := request.Id
+
+	c, err := dao.MessageDao.NewChat(uid, target, request.Type)
+	if err != nil {
 		return err
 	}
-	ClientManager.EnqueueMessage(msg.uid, entity.NewAckMessage(msg.seq))
+
+	// chat
+	if request.Type == 1 {
+		m2, err2 := dao.MessageDao.NewUserChat(c.Cid, uid, target, 1)
+		if err2 != nil {
+			return err2
+		}
+		_, err = dao.MessageDao.NewUserChat(c.Cid, int64(target), uint64(uid), 1)
+		if err != nil {
+			return err
+		}
+		resp := entity.NewMessage(msg.seq, entity.RespActionSuccess)
+		if err = resp.SetData(m2); err != nil {
+			return err
+		}
+		ClientManager.EnqueueMessage(msg.uid, resp)
+	} else {
+		ClientManager.EnqueueMessage(msg.uid, entity.NewAckMessage(msg.seq))
+	}
 	return nil
 }
 

@@ -17,6 +17,8 @@ type Client struct {
 
 	groups   []*Group
 	messages chan *entity.Message
+
+	seq *AtomicInt64
 }
 
 func NewClient(conn Connection) *Client {
@@ -25,6 +27,7 @@ func NewClient(conn Connection) *Client {
 	client.closed = NewAtomicBool(false)
 	client.messages = make(chan *entity.Message, 200)
 	client.time = time.Now()
+	client.seq = new(AtomicInt64)
 
 	return client
 }
@@ -60,6 +63,12 @@ func (c *Client) SignOut(reason string) {
 	ClientManager.ClientSignOut(c)
 	c.closed.Set(true)
 	_ = c.conn.Close()
+}
+
+func (c *Client) getNextSeq() int64 {
+	seq := c.seq.Get()
+	c.seq.Set(seq + 1)
+	return seq
 }
 
 func (c *Client) readMessage() {

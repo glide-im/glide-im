@@ -34,3 +34,13 @@ func (a *AtomicBool) Get() bool {
 	}
 	return ret
 }
+
+type AtomicInt64 int64
+
+func (a *AtomicInt64) Set(v int64) {
+	atomic.StoreInt64((*int64)(a), v)
+}
+
+func (a *AtomicInt64) Get() int64 {
+	return atomic.LoadInt64((*int64)(a))
+}

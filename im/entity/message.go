@@ -11,7 +11,8 @@ type GroupMessage struct {
 
 // SenderChatMessage simple chat room message
 type SenderChatMessage struct {
-	ChatId      uint64
+	Cid         uint64
+	UcId        int64
 	Receiver    int64
 	MessageType int8
 	Message     string
@@ -19,8 +20,9 @@ type SenderChatMessage struct {
 }
 
 type ReceiverChatMessage struct {
-	Mid         uint64
-	ChatId      uint64
+	Mid         int64
+	Cid         uint64
+	UcId        int64
 	Sender      int64
 	MessageType int8
 	Message     string

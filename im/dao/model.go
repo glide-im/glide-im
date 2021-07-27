@@ -15,6 +15,14 @@ type User struct {
 
 type Chat struct {
 	Cid          int64 `gorm:"primary_key"`
+	ChatType     int8
+	NewMessageAt time.Time
+	CreateAt     time.Time
+}
+
+type UserChat struct {
+	UcId         int64 `gorm:"primary_key"`
+	Cid          int64
 	Owner        int64
 	Target       uint64
 	ChatType     int8
