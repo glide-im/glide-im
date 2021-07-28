@@ -23,53 +23,58 @@ func (c *clientManager) ClientSignOut(client *Client) {
 
 func (c *clientManager) DispatchMessage(from int64, message *entity.Message) error {
 
-	msg := new(entity.SenderChatMessage)
-	if err := message.DeserializeData(msg); err != nil {
-		logger.E("sender chat msg ", err)
+	senderMsg := new(entity.SenderChatMessage)
+	if err := message.DeserializeData(senderMsg); err != nil {
+		logger.E("sender chat senderMsg ", err)
 		return err
 	}
-	logger.D("Chat message from=%d, cid=%d, msg=%s", from, msg.Cid, msg.Message)
+	logger.D("Chat message from=%d, cid=%d, senderMsg=%s", from, senderMsg.Cid, senderMsg.Message)
 
-	if msg.Cid <= 0 {
+	if senderMsg.Cid <= 0 {
 		return errors.New("chat not create")
 	}
 
 	// update sender read time
-	_ = dao.MessageDao.UpdateChatEnterTime(msg.UcId)
+	_ = dao.MessageDao.UpdateChatEnterTime(senderMsg.UcId)
 
 	// insert message to chat
-	chatMsg, err := dao.MessageDao.NewChatMessage(msg.Cid, from, msg.Message, msg.MessageType)
+	chatMsg, err := dao.MessageDao.NewChatMessage(senderMsg.Cid, from, senderMsg.Message, senderMsg.MessageType)
 	if err != nil {
 		return err
 	}
+	affirm := entity.NewMessage(message.Seq, message.Action)
+	if err = affirm.SetData(chatMsg); err != nil {
+		return err
+	}
+	// send success, return chat message
+	c.EnqueueMessage(from, affirm)
 
 	// update receiver's list chat
-	uChat, err := dao.MessageDao.UpdateUserChatMsgTime(msg.Cid, msg.Receiver)
+	uChat, err := dao.MessageDao.UpdateUserChatMsgTime(senderMsg.Cid, senderMsg.Receiver)
 	if err != nil {
 		return err
 	}
 
-	rm := entity.ReceiverChatMessage{
+	receiverMsg := entity.ReceiverChatMessage{
 		Mid:         chatMsg.Mid,
-		Cid:         msg.Cid,
+		Cid:         senderMsg.Cid,
 		UcId:        uChat.UcId,
 		Sender:      from,
-		MessageType: msg.MessageType,
-		Message:     msg.Message,
+		MessageType: senderMsg.MessageType,
+		Message:     senderMsg.Message,
 		SendAt:      chatMsg.SendAt,
 	}
 
 	dispatchMsg := entity.NewMessage(-1, entity.ActionChatMessage)
 
-	if err = dispatchMsg.SetData(rm); err != nil {
+	if err = dispatchMsg.SetData(receiverMsg); err != nil {
 		return err
 	}
 
-	if c.EnqueueMessage(msg.Receiver, dispatchMsg) {
+	if c.EnqueueMessage(senderMsg.Receiver, dispatchMsg) {
 		// offline
 	}
 
-	c.EnqueueMessage(from, entity.NewAckMessage(message.Seq))
 	return nil
 }
 
@@ -90,6 +95,11 @@ func (c *clientManager) EnqueueMessage(uid int64, msg *entity.Message) bool {
 		}
 	}
 	return ok
+}
+
+func (c *clientManager) IsOnline(uid int64) bool {
+	_, online := c.clients[uid]
+	return online
 }
 
 func (c *clientManager) AllClient() map[int64]*Client {

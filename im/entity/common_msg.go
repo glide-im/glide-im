@@ -12,16 +12,17 @@ const (
 
 	MaskActionApi Action = 1 << 20
 
-	ActionUserLogin    = MaskActionApi | 1
-	ActionUserRegister = MaskActionApi | 2
-	ActionUserGetInfo  = MaskActionApi | 3
-	ActionUserEditInfo = MaskActionApi | 4
-	ActionUserLogout   = MaskActionApi | 5
-	ActionUserChatList = MaskActionApi | 6
-	ActionUserInfo     = MaskActionApi | 7
-	ActionUserAuth     = MaskActionApi | 8
-	ActionUserRelation = MaskActionApi | 10
-	ActionUserNewChat  = MaskActionApi | 11
+	ActionUserLogin       = MaskActionApi | 1
+	ActionUserRegister    = MaskActionApi | 2
+	ActionUserGetInfo     = MaskActionApi | 3
+	ActionUserEditInfo    = MaskActionApi | 4
+	ActionUserLogout      = MaskActionApi | 5
+	ActionUserChatList    = MaskActionApi | 6
+	ActionUserInfo        = MaskActionApi | 7
+	ActionUserAuth        = MaskActionApi | 8
+	ActionUserRelation    = MaskActionApi | 10
+	ActionUserNewChat     = MaskActionApi | 11
+	ActionUserChatHistory = MaskActionApi | 12
 
 	ActionOnlineUser = MaskActionApi | 20
 
@@ -145,12 +146,13 @@ func init() {
 		ActionUserRegister: func() interface{} { return &RegisterRequest{} },
 		ActionUserGetInfo:  func() interface{} { return &UserInfoRequest{} },
 
-		ActionUserEditInfo: func() interface{} { return &RegisterRequest{} },
-		ActionUserLogout:   nil,
-		ActionUserRelation: nil,
-		ActionUserChatList: nil,
-		ActionUserInfo:     func() interface{} { return &UserInfoRequest{} },
-		ActionUserNewChat:  func() interface{} { return &UserNewChatRequest{} },
+		ActionUserEditInfo:    func() interface{} { return &RegisterRequest{} },
+		ActionUserLogout:      nil,
+		ActionUserRelation:    nil,
+		ActionUserChatList:    nil,
+		ActionUserChatHistory: func() interface{} { return &ChatHistoryRequest{} },
+		ActionUserInfo:        func() interface{} { return &UserInfoRequest{} },
+		ActionUserNewChat:     func() interface{} { return &UserNewChatRequest{} },
 	}
 }
 

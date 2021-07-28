@@ -42,7 +42,7 @@ func (a *userApi) Login(msg *ApiMessage, request *entity.LoginRequest) (*entity.
 	}
 
 	m := entity.NewMessage(msg.seq, entity.RespActionSuccess)
-	if err = m.SetData(entity.AuthorResponse{Token: token}); err != nil {
+	if err = m.SetData(entity.AuthorResponse{Token: token, Uid: uid}); err != nil {
 		return nil, uid, err
 	}
 	return m, uid, nil
@@ -74,6 +74,46 @@ func (a *userApi) GetAndInitRelationList(msg *ApiMessage) error {
 
 func (a *userApi) GetUserInfo(msg *ApiMessage, request *entity.UserInfoRequest) error {
 
+	users, err := dao.UserDao.GetUser(request.Uid...)
+	if err != nil {
+		return err
+	}
+	resp := entity.NewMessage(msg.seq, entity.ActionOnlineUser)
+	type u struct {
+		Uid      int64
+		Account  string
+		Avatar   string
+		Nickname string
+	}
+	var ret []u
+	for _, user := range users {
+		retU := u{
+			Uid:      user.Uid,
+			Account:  user.Account,
+			Avatar:   user.Account,
+			Nickname: user.Nickname,
+		}
+		ret = append(ret, retU)
+	}
+	if err = resp.SetData(ret); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *userApi) GetChatHistory(msg *ApiMessage, request *entity.ChatHistoryRequest) error {
+
+	chatMessages, err := dao.MessageDao.GetChatHistory(request.Cid, 20)
+	if err != nil {
+		return err
+	}
+
+	resp := entity.NewMessage(msg.seq, entity.ActionUserChatHistory)
+	if err = resp.SetData(chatMessages); err != nil {
+		return err
+	}
+
+	ClientManager.EnqueueMessage(msg.uid, resp)
 	return nil
 }
 
@@ -89,11 +129,12 @@ func (a *userApi) GetOnlineUser(msg *ApiMessage) error {
 	var users []u
 
 	for k := range ClientManager.AllClient() {
-		user, err := dao.UserDao.GetUser(k)
-		if err != nil {
+		us, err := dao.UserDao.GetUser(k)
+		if err != nil || len(us) == 0 {
 			logger.D("get online uid=%d error, error=%v", k, err)
 			continue
 		}
+		user := us[0]
 		users = append(users, u{Uid: user.Uid, Account: user.Account, Avatar: user.Avatar, Nickname: user.Nickname})
 	}
 

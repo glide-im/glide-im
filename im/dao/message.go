@@ -127,11 +127,11 @@ func (m *messageDao) NewChatMessage(cid uint64, sender int64, msg string, typ in
 	return &cm, nil
 }
 
-func (m *messageDao) GetChatHistory(cid uint64, uid int64, size int) ([]*ChatMessage, error) {
+func (m *messageDao) GetChatHistory(cid uint64, size int) ([]*ChatMessage, error) {
 
 	var messages []*ChatMessage
 
-	err := db.DB.Where("cid = ? and uid = ?", cid, uid).Limit(size).Find(&messages).Error
+	err := db.DB.Where("cid = ?", cid).Limit(size).Find(&messages).Error
 
 	return messages, err
 }

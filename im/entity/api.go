@@ -20,6 +20,7 @@ type RegisterRequest struct {
 // AuthorResponse login or register result
 type AuthorResponse struct {
 	Token string
+	Uid   int64
 }
 
 type UserInfoRequest struct {
@@ -44,4 +45,10 @@ type UserNewChatRequest struct {
 type RelationResponse struct {
 	Groups  []uint64
 	Friends []int64
+}
+
+type ChatHistoryRequest struct {
+	Cid  uint64
+	Time int64
+	Type int8
 }

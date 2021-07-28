@@ -25,12 +25,16 @@ func InitUserDao() {
 	}
 }
 
-func (d *userDao) GetUser(uid int64) (*User, error) {
+func (d *userDao) GetUser(uid ...int64) ([]*User, error) {
 
-	u := User{Uid: uid}
-	err := db.DB.Where("uid=?", uid).Find(&u).Error
+	var u []*User
+	query := db.DB
 
-	return &u, err
+	for _, i := range uid {
+		query.Or("uid=?", i)
+	}
+
+	return u, query.Find(&u).Error
 }
 
 func (d *userDao) AddUser(account string, password string) error {
