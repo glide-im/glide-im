@@ -1,7 +1,5 @@
 package dao
 
-import "time"
-
 type User struct {
 	Uid      int64 `gorm:"primary_key"`
 	Account  string
@@ -9,15 +7,15 @@ type User struct {
 	Password string
 	Avatar   string
 
-	CreateAt time.Time
-	UpdateAt time.Time
+	CreateAt Timestamp
+	UpdateAt Timestamp
 }
 
 type Chat struct {
 	Cid          int64 `gorm:"primary_key"`
 	ChatType     int8
-	NewMessageAt time.Time
-	CreateAt     time.Time
+	NewMessageAt Timestamp
+	CreateAt     Timestamp
 }
 
 type UserChat struct {
@@ -27,16 +25,16 @@ type UserChat struct {
 	Target       uint64
 	ChatType     int8
 	Unread       int
-	NewMessageAt time.Time
-	ReadAt       time.Time
-	CreateAt     time.Time
+	NewMessageAt Timestamp
+	ReadAt       Timestamp
+	CreateAt     Timestamp
 }
 
 type ChatMessage struct {
 	Mid         int64 `gorm:"primary_key"`
 	Cid         uint64
 	SenderUid   int64
-	SendAt      time.Time
+	SendAt      Timestamp
 	Message     string
 	MessageType int8
 	At          string

@@ -45,12 +45,13 @@ func (d *userDao) AddUser(account string, password string) error {
 		return errors.New("account already exist")
 	}
 
+	t := Timestamp(time.Now())
 	u := User{
 		Account:  account,
 		Password: password,
 		Avatar:   "",
-		CreateAt: time.Now(),
-		UpdateAt: time.Now(),
+		CreateAt: t,
+		UpdateAt: t,
 	}
 
 	if db.DB.Model(&u).Create(&u).RowsAffected > 0 {

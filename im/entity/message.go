@@ -1,6 +1,8 @@
 package entity
 
-import "time"
+import (
+	"go_im/im/dao"
+)
 
 type GroupMessage struct {
 	Gid         uint64
@@ -16,7 +18,7 @@ type SenderChatMessage struct {
 	Receiver    int64
 	MessageType int8
 	Message     string
-	SendAt      time.Time
+	SendAt      dao.Timestamp
 }
 
 type ReceiverChatMessage struct {
@@ -26,5 +28,5 @@ type ReceiverChatMessage struct {
 	Sender      int64
 	MessageType int8
 	Message     string
-	SendAt      time.Time
+	SendAt      dao.Timestamp
 }

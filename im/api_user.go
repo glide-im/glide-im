@@ -101,6 +101,20 @@ func (a *userApi) GetUserInfo(msg *ApiMessage, request *entity.UserInfoRequest) 
 	return nil
 }
 
+func (a *userApi) GetChatInfo(msg *ApiMessage, request *entity.ChatInfoRequest) error {
+
+	uc, err := dao.MessageDao.GetUserChatFromChat(request.Cid, msg.uid)
+	if err != nil {
+		return err
+	}
+	resp := entity.NewMessage(msg.seq, entity.ActionUserChatInfo)
+	if err = resp.SetData(uc); err != nil {
+		return err
+	}
+	ClientManager.EnqueueMessage(msg.uid, resp)
+	return nil
+}
+
 func (a *userApi) GetChatHistory(msg *ApiMessage, request *entity.ChatHistoryRequest) error {
 
 	chatMessages, err := dao.MessageDao.GetChatHistory(request.Cid, 20)

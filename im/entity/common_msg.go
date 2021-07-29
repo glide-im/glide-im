@@ -23,6 +23,7 @@ const (
 	ActionUserRelation    = MaskActionApi | 10
 	ActionUserNewChat     = MaskActionApi | 11
 	ActionUserChatHistory = MaskActionApi | 12
+	ActionUserChatInfo    = MaskActionApi | 13
 
 	ActionOnlineUser = MaskActionApi | 20
 
@@ -151,6 +152,7 @@ func init() {
 		ActionUserRelation:    nil,
 		ActionUserChatList:    nil,
 		ActionUserChatHistory: func() interface{} { return &ChatHistoryRequest{} },
+		ActionUserChatInfo:    func() interface{} { return &ChatInfoRequest{} },
 		ActionUserInfo:        func() interface{} { return &UserInfoRequest{} },
 		ActionUserNewChat:     func() interface{} { return &UserNewChatRequest{} },
 	}

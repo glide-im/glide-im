@@ -30,7 +30,7 @@ func (m *messageDao) GetUserChatList(uid int64) ([]*UserChat, error) {
 }
 
 func (m *messageDao) UpdateChatEnterTime(ucId int64) error {
-	chat := UserChat{ReadAt: time.Now()}
+	chat := UserChat{ReadAt: Timestamp(time.Now())}
 	db.DB.Model(&chat).Where("uc_id = ?", ucId).Update("read_at")
 	return nil
 }
@@ -42,7 +42,7 @@ func (m *messageDao) UpdateUserChatMsgTime(cid uint64, uid int64) (*UserChat, er
 	if err != nil {
 		return nil, err
 	}
-	uc.NewMessageAt = time.Now()
+	uc.NewMessageAt = Timestamp(time.Now())
 	uc.Unread = uc.Unread + 1
 	err = db.DB.Model(uc).Update("new_message_at", "unread").Error
 
@@ -51,7 +51,7 @@ func (m *messageDao) UpdateUserChatMsgTime(cid uint64, uid int64) (*UserChat, er
 
 func (m *messageDao) NewChat(uid int64, target uint64, typ int8) (*Chat, error) {
 
-	now := time.Now()
+	now := Timestamp(time.Now())
 	cid, err := db.Redis.Incr(m.keyChatIdIncr).Result()
 
 	if err != nil {
@@ -78,7 +78,7 @@ func (m *messageDao) NewChat(uid int64, target uint64, typ int8) (*Chat, error) 
 
 func (m *messageDao) NewUserChat(cid int64, uid int64, target uint64, typ int8) (*UserChat, error) {
 
-	now := time.Now()
+	now := Timestamp(time.Now())
 	ucid, err := db.Redis.Incr(m.keyUserChatIdIncr).Result()
 
 	if err != nil {
@@ -114,7 +114,7 @@ func (m *messageDao) NewChatMessage(cid uint64, sender int64, msg string, typ in
 		Mid:         mid,
 		Cid:         cid,
 		SenderUid:   sender,
-		SendAt:      time.Now(),
+		SendAt:      Timestamp(time.Now()),
 		Message:     msg,
 		MessageType: typ,
 		At:          "",

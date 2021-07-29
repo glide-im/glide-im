@@ -93,6 +93,8 @@ func (a *api) Handle(client *Client, message *entity.Message) error {
 		return a.NewChat(msg, en.(*entity.UserNewChatRequest))
 	case entity.ActionUserChatHistory:
 		return a.GetChatHistory(msg, en.(*entity.ChatHistoryRequest))
+	case entity.ActionUserChatInfo:
+		return a.GetChatInfo(msg, en.(*entity.ChatInfoRequest))
 	case entity.ActionUserLogout:
 	case entity.ActionUserEditInfo:
 	case entity.ActionUserGetInfo:

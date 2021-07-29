@@ -3,11 +3,9 @@ package db
 import (
 	"fmt"
 	"github.com/go-redis/redis"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	"go_im/config"
-	"strings"
-
-	_ "github.com/go-sql-driver/mysql"
 )
 
 var (
@@ -25,8 +23,9 @@ func Init() {
 		panic(err)
 	}
 	DB.LogMode(true)
+	DB.SingularTable(true)
 	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
-		return "im_" + strings.TrimSuffix(defaultTableName, "s")
+		return "im_" + defaultTableName
 	}
 	initRedis()
 }
