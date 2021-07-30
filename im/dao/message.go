@@ -131,7 +131,7 @@ func (m *messageDao) GetChatHistory(cid uint64, size int) ([]*ChatMessage, error
 
 	var messages []*ChatMessage
 
-	err := db.DB.Where("cid = ?", cid).Limit(size).Find(&messages).Error
+	err := db.DB.Where("cid = ?", cid).Order("send_at desc").Limit(size).Find(&messages).Error
 
 	return messages, err
 }

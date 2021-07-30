@@ -28,10 +28,13 @@ func InitUserDao() {
 func (d *userDao) GetUser(uid ...int64) ([]*User, error) {
 
 	var u []*User
-	query := db.DB
+	query := db.DB.Where("uid = ?", uid[0])
 
-	for _, i := range uid {
-		query.Or("uid=?", i)
+	for index, id := range uid {
+		if index == 0 {
+			continue
+		}
+		query.Or("uid=?", id)
 	}
 
 	return u, query.Find(&u).Error
