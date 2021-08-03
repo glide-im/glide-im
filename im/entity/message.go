@@ -5,15 +5,15 @@ import (
 )
 
 type GroupMessage struct {
-	Gid         uint64
-	Uid         uint64
+	Gid         int64
+	Uid         int64
 	MessageType uint
 	Content     string
 }
 
 // SenderChatMessage simple chat room message
 type SenderChatMessage struct {
-	Cid         uint64
+	Cid         int64
 	UcId        int64
 	Receiver    int64
 	MessageType int8
@@ -23,7 +23,7 @@ type SenderChatMessage struct {
 
 type ReceiverChatMessage struct {
 	Mid         int64
-	Cid         uint64
+	Cid         int64
 	UcId        int64
 	Sender      int64
 	MessageType int8

@@ -1,5 +1,10 @@
 package dao
 
+import (
+	"errors"
+	"go_im/pkg/db"
+)
+
 /**
 Member
 
@@ -18,22 +23,72 @@ var GroupDao = new(groupDao)
 
 type groupDao struct{}
 
-func (d *groupDao) GetGroup(gid uint64) (string, []int64) {
+func (d *groupDao) NewGroup(name string, owner int64) (*Group, error) {
 
-	return "", []int64{}
+	g := Group{
+		Gid:      0,
+		Name:     name,
+		Avatar:   "",
+		Owner:    owner,
+		Mute:     false,
+		Notice:   "",
+		CreateAt: nowTimestamp(),
+	}
+
+	if db.DB.Model(&g).Create(&g).RowsAffected <= 0 {
+		return nil, errors.New("create group error")
+	}
+
+	return &g, nil
 }
 
-func (d *groupDao) RemoveMember(gid uint64, uint642 int64) error {
+func (d *groupDao) GetGroup(gid int64) (*Group, error) {
+
+	g := new(Group)
+	err := db.DB.Model(g).Where("gid = ?", gid).Find(g).Error
+	return g, err
+}
+
+func (d *groupDao) RemoveMember(gid int64, uid int64) error {
+
+	e := db.DB.Table("im_group_member").Delete("gid = ? and uid = ?", gid, uid).Error
+
+	if e != nil {
+		return e
+	}
 
 	return nil
 }
 
-func (d *groupDao) AddMember(gid uint64, uint642 int64) error {
+func (d *groupDao) AddMember(gid int64, uid int64, typ int8) error {
+
+	gm := GroupMember{
+		Gid:    gid,
+		Uid:    uid,
+		Mute:   0,
+		Remark: "",
+		Type:   typ,
+		JoinAt: nowTimestamp(),
+	}
+
+	if db.DB.Model(&gm).Create(&gm).RowsAffected <= 0 {
+		return errors.New("add member error")
+	}
 
 	return nil
 }
 
-func (d *groupDao) GetUserGroup(uid int64) []uint64 {
+func (d *groupDao) GetMembers(gid int64) ([]*GroupMember, error) {
 
-	return []uint64{}
+	var gm []*GroupMember
+
+	err := db.DB.Model(gm).Where("gid = ?", gid).Find(gm).Error
+
+	return gm, err
+}
+
+func (d *groupDao) GetUserGroup(uid int64) ([]*Group, error) {
+	var groups []*Group
+	err := db.DB.Table("im_group_member").Where("uid = ?", uid).Find(&groups).Error
+	return groups, err
 }

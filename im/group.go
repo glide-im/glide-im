@@ -5,14 +5,14 @@ import "go_im/im/entity"
 type Group struct {
 	*mutex
 
-	Gid  uint64
+	Gid  int64
 	Name string
 
 	member   []int64
 	memberCh map[int64]chan *entity.Message
 }
 
-func NewGroup(gid uint64, name string, member []int64) *Group {
+func NewGroup(gid int64, name string, member []int64) *Group {
 	ret := new(Group)
 	ret.Gid = gid
 	ret.Name = name

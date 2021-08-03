@@ -1,7 +1,6 @@
 package im
 
 import (
-	"go_im/im/dao"
 	"go_im/im/entity"
 )
 
@@ -18,14 +17,13 @@ func NewGroupManager() *groupManager {
 	return ret
 }
 
-func (m *groupManager) GetGroup(gid uint64) *Group {
+func (m *groupManager) GetGroup(gid int64) *Group {
 	defer m.LockUtilReturn()()
 	g := m.groups.Get(gid)
 	if g != nil {
 		return g
 	}
-	name, member := dao.GroupDao.GetGroup(gid)
-	NewGroup(gid, name, member)
+	//group, err := dao.GroupDao.GetGroup(gid)
 	m.groups.Put(gid, g)
 	return g
 }
@@ -45,12 +43,12 @@ func (m *groupManager) DispatchMessage(c *Client, message *entity.Message) error
 
 type GroupMap struct {
 	*mutex
-	groupsMap map[uint64]*Group
+	groupsMap map[int64]*Group
 }
 
 func NewGroupMap() *GroupMap {
 	ret := new(GroupMap)
-	ret.groupsMap = make(map[uint64]*Group)
+	ret.groupsMap = make(map[int64]*Group)
 	return ret
 }
 
@@ -58,7 +56,7 @@ func (g *GroupMap) Size() int {
 	return len(g.groupsMap)
 }
 
-func (g *GroupMap) Get(gid uint64) *Group {
+func (g *GroupMap) Get(gid int64) *Group {
 	defer g.LockUtilReturn()()
 	group, ok := g.groupsMap[gid]
 	if ok {
@@ -67,12 +65,12 @@ func (g *GroupMap) Get(gid uint64) *Group {
 	return nil
 }
 
-func (g *GroupMap) Put(gid uint64, group *Group) {
+func (g *GroupMap) Put(gid int64, group *Group) {
 	defer g.LockUtilReturn()()
 	g.groupsMap[gid] = group
 }
 
-func (g *GroupMap) Delete(gid uint64) {
+func (g *GroupMap) Delete(gid int64) {
 	defer g.LockUtilReturn()()
 	delete(g.groupsMap, gid)
 }

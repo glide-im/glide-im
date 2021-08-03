@@ -101,6 +101,17 @@ func (a *api) Handle(client *Client, message *entity.Message) error {
 		return a.GetUserInfo(msg, en.(*entity.UserInfoRequest))
 	case entity.ActionUserInfo:
 		return a.UserInfo(msg)
+
+	case entity.ActionGroupCreate:
+		return a.CreateGroup(msg, en.(*entity.CreateGroupRequest))
+	case entity.ActionGroupExit:
+		return a.ExitGroup(msg, en.(*entity.ExitGroupRequest))
+	case entity.ActionGroupJoin:
+		return a.JoinGroup(msg, en.(*entity.JoinGroupRequest))
+	case entity.ActionGroupAddMember:
+		return a.AddGroupMember(msg, en.(*entity.AddMemberRequest))
+	case entity.ActionGroupGetMember:
+		return a.GetGroupMember(msg, en.(*entity.GetGroupMemberRequest))
 	default:
 		return ErrUnknownAction
 	}

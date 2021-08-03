@@ -28,17 +28,17 @@ func (c *clientManager) DispatchMessage(from int64, message *entity.Message) err
 		logger.E("sender chat senderMsg ", err)
 		return err
 	}
-	logger.D("Chat message from=%d, cid=%d, senderMsg=%s", from, senderMsg.Cid, senderMsg.Message)
+	logger.D("DispatchMessage(from=%d): cid=%d, senderMsg=%s", from, senderMsg.Cid, senderMsg.Message)
 
 	if senderMsg.Cid <= 0 {
 		return errors.New("chat not create")
 	}
 
 	// update sender read time
-	_ = dao.MessageDao.UpdateChatEnterTime(senderMsg.UcId)
+	_ = dao.ChatDao.UpdateChatEnterTime(senderMsg.UcId)
 
 	// insert message to chat
-	chatMsg, err := dao.MessageDao.NewChatMessage(senderMsg.Cid, from, senderMsg.Message, senderMsg.MessageType)
+	chatMsg, err := dao.ChatDao.NewChatMessage(senderMsg.Cid, from, senderMsg.Message, senderMsg.MessageType)
 	if err != nil {
 		return err
 	}
@@ -50,7 +50,7 @@ func (c *clientManager) DispatchMessage(from int64, message *entity.Message) err
 	c.EnqueueMessage(from, affirm)
 
 	// update receiver's list chat
-	uChat, err := dao.MessageDao.UpdateUserChatMsgTime(senderMsg.Cid, senderMsg.Receiver)
+	uChat, err := dao.ChatDao.UpdateUserChatMsgTime(senderMsg.Cid, senderMsg.Receiver)
 	if err != nil {
 		return err
 	}
@@ -100,6 +100,14 @@ func (c *clientManager) EnqueueMessage(uid int64, msg *entity.Message) bool {
 func (c *clientManager) IsOnline(uid int64) bool {
 	_, online := c.clients[uid]
 	return online
+}
+
+func (c *clientManager) Update() {
+	for _, client := range c.clients {
+		if client.closed.Get() {
+			c.ClientSignOut(client)
+		}
+	}
 }
 
 func (c *clientManager) AllClient() map[int64]*Client {

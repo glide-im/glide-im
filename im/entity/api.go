@@ -38,21 +38,61 @@ type UserInfoListResponse struct {
 }
 
 type UserNewChatRequest struct {
-	Id   uint64
+	Id   int64
 	Type int8
 }
 
+type GroupResponse struct {
+	Gid    int64
+	Name   string
+	Avatar string
+}
+
 type RelationResponse struct {
-	Groups  []uint64
+	Groups  []GroupResponse
 	Friends []int64
 }
 
 type ChatHistoryRequest struct {
-	Cid  uint64
+	Cid  int64
 	Time int64
 	Type int8
 }
 
 type ChatInfoRequest struct {
-	Cid uint64
+	Cid int64
+}
+
+type CreateGroupRequest struct {
+	Name string
+}
+
+type JoinGroupRequest struct {
+	Gid int64
+}
+
+type ExitGroupRequest struct {
+	Gid int64
+}
+
+type GetGroupMemberRequest struct {
+	Gid int64
+}
+
+type GroupMemberResponse struct {
+	Uid        int64
+	Nickname   string
+	RemarkName string
+	Type       int8
+	Online     bool
+}
+
+type AddMemberRequest struct {
+	Gid int64
+	Uid []int64
+}
+
+type RemoveMemberRequest struct {
+	Gid int64
+	Uid []int64
 }

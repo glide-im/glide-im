@@ -39,3 +39,7 @@ func (u *Timestamp) UnmarshalJSON(bytes []byte) error {
 func (u *Timestamp) String() string {
 	return strconv.FormatInt(time.Time(*u).Unix(), 10)
 }
+
+func nowTimestamp() Timestamp {
+	return Timestamp(time.Now())
+}

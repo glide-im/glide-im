@@ -27,6 +27,17 @@ const (
 
 	ActionOnlineUser = MaskActionApi | 20
 
+	MaskActionGroupApi = MaskActionApi | 1<<21
+
+	ActionGroupCreate       = MaskActionGroupApi | 1
+	ActionGroupGetMember    = MaskActionGroupApi | 2
+	ActionGroupJoin         = MaskActionGroupApi | 3
+	ActionGroupExit         = MaskActionGroupApi | 4
+	ActionGroupRemoveMember = MaskActionGroupApi | 5
+	ActionGroupInfo         = MaskActionGroupApi | 6
+	ActionGroupUpdate       = MaskActionGroupApi | 7
+	ActionGroupAddMember    = MaskActionGroupApi | 8
+
 	MaskActionMessage  = 1 << 25
 	ActionGroupMessage = MaskActionMessage | 1
 	ActionChatMessage  = MaskActionMessage | 2
@@ -53,22 +64,30 @@ const (
 )
 
 var actionNameMap = map[Action]string{
-	ActionUserLogin:    "ActionUserLogin",
-	ActionUserRegister: "ActionUserRegister",
-	ActionUserGetInfo:  "ActionUserGetInfo",
-	ActionUserEditInfo: "ActionUserEditInfo",
-	ActionUserLogout:   "ActionUserLogout",
-	ActionUserChatList: "ActionUserChatList",
-	ActionUserInfo:     "ActionUserInfo",
-	ActionUserAuth:     "ActionUserAuth",
+	ActionUserLogin:       "ActionUserLogin",
+	ActionUserRegister:    "ActionUserRegister",
+	ActionUserGetInfo:     "ActionUserGetInfo",
+	ActionUserEditInfo:    "ActionUserEditInfo",
+	ActionUserLogout:      "ActionUserLogout",
+	ActionUserChatList:    "ActionUserChatList",
+	ActionUserInfo:        "ActionUserInfo",
+	ActionUserAuth:        "ActionUserAuth",
+	ActionUserRelation:    "ActionUserRelation",
+	ActionUserNewChat:     "ActionUserNewChat",
+	ActionUserChatHistory: "ActionUserChatHistory",
+	ActionUserChatInfo:    "ActionUserChatInfo",
 
-	ActionUserRelation: "ActionUserRelation",
+	ActionOnlineUser: "ActionOnlineUser",
 
 	MaskActionMessage:  "MaskActionMessage",
 	ActionGroupMessage: "ActionGroupMessage",
 	ActionChatMessage:  "ActionChatMessage",
 
 	ActionHeartbeat: "ActionHeartbeat",
+}
+
+func (a Action) String() string {
+	return actionNameMap[a]
 }
 
 var actionRequestMap map[Action]func() interface{}
@@ -155,6 +174,12 @@ func init() {
 		ActionUserChatInfo:    func() interface{} { return &ChatInfoRequest{} },
 		ActionUserInfo:        func() interface{} { return &UserInfoRequest{} },
 		ActionUserNewChat:     func() interface{} { return &UserNewChatRequest{} },
+
+		ActionGroupCreate:    func() interface{} { return &CreateGroupRequest{} },
+		ActionGroupJoin:      func() interface{} { return &JoinGroupRequest{} },
+		ActionGroupAddMember: func() interface{} { return &AddMemberRequest{} },
+		ActionGroupGetMember: func() interface{} { return &GetGroupMemberRequest{} },
+		ActionGroupExit:      func() interface{} { return &ExitGroupRequest{} },
 	}
 }
 

@@ -50,16 +50,27 @@ func (a *userApi) Login(msg *ApiMessage, request *entity.LoginRequest) (*entity.
 
 func (a *userApi) GetAndInitRelationList(msg *ApiMessage) error {
 
-	groups := dao.GroupDao.GetUserGroup(msg.uid)
-	for _, gid := range groups {
-		group := GroupManager.GetGroup(gid)
+	groups, err := dao.GroupDao.GetUserGroup(msg.uid)
+	if err != nil {
+		return err
+	}
+	gs := make([]entity.GroupResponse, len(groups))
+
+	for _, g := range groups {
+		gs = append(gs, entity.GroupResponse{
+			Gid:    g.Gid,
+			Name:   g.Name,
+			Avatar: g.Avatar,
+		})
+		group := GroupManager.GetGroup(g.Gid)
 		mc := ClientManager.GetClient(msg.uid).messages
 		group.Subscribe(msg.uid, mc)
 	}
 
 	friends := dao.UserDao.GetFriends(msg.uid)
+
 	relation := entity.RelationResponse{
-		Groups:  groups,
+		Groups:  gs,
 		Friends: friends,
 	}
 
@@ -103,7 +114,7 @@ func (a *userApi) GetUserInfo(msg *ApiMessage, request *entity.UserInfoRequest) 
 
 func (a *userApi) GetChatInfo(msg *ApiMessage, request *entity.ChatInfoRequest) error {
 
-	uc, err := dao.MessageDao.GetUserChatFromChat(request.Cid, msg.uid)
+	uc, err := dao.ChatDao.GetUserChatFromChat(request.Cid, msg.uid)
 	if err != nil {
 		return err
 	}
@@ -117,7 +128,7 @@ func (a *userApi) GetChatInfo(msg *ApiMessage, request *entity.ChatInfoRequest) 
 
 func (a *userApi) GetChatHistory(msg *ApiMessage, request *entity.ChatHistoryRequest) error {
 
-	chatMessages, err := dao.MessageDao.GetChatHistory(request.Cid, 20)
+	chatMessages, err := dao.ChatDao.GetChatHistory(request.Cid, 20)
 	if err != nil {
 		return err
 	}
@@ -142,6 +153,7 @@ func (a *userApi) GetOnlineUser(msg *ApiMessage) error {
 	}
 	var users []u
 
+	ClientManager.Update()
 	for k := range ClientManager.AllClient() {
 		us, err := dao.UserDao.GetUser(k)
 		if err != nil || len(us) == 0 {
@@ -162,18 +174,18 @@ func (a *userApi) NewChat(msg *ApiMessage, request *entity.UserNewChatRequest) e
 	uid := msg.uid
 	target := request.Id
 
-	c, err := dao.MessageDao.NewChat(uid, target, request.Type)
+	c, err := dao.ChatDao.NewChat(uid, target, request.Type)
 	if err != nil {
 		return err
 	}
 
 	// chat
 	if request.Type == 1 {
-		m2, err2 := dao.MessageDao.NewUserChat(c.Cid, uid, target, 1)
+		m2, err2 := dao.ChatDao.NewUserChat(c.Cid, uid, target, 1)
 		if err2 != nil {
 			return err2
 		}
-		_, err = dao.MessageDao.NewUserChat(c.Cid, int64(target), uint64(uid), 1)
+		_, err = dao.ChatDao.NewUserChat(c.Cid, int64(target), uid, 1)
 		if err != nil {
 			return err
 		}
@@ -191,7 +203,7 @@ func (a *userApi) NewChat(msg *ApiMessage, request *entity.UserNewChatRequest) e
 func (a *userApi) GetUserChatList(msg *ApiMessage) error {
 
 	resp := entity.NewMessage(msg.seq, entity.RespActionSuccess)
-	list, err := dao.MessageDao.GetUserChatList(msg.uid)
+	list, err := dao.ChatDao.GetUserChatList(msg.uid)
 	if err != nil {
 		return err
 	}

@@ -34,11 +34,12 @@ func NewClient(conn Connection) *Client {
 
 func (c *Client) AddGroup(group *Group) {
 	c.groups = append(c.groups, group)
+	group.Subscribe(c.uid, c.messages)
 }
 
 // EnqueueMessage enqueue blocking message channel
 func (c *Client) EnqueueMessage(message *entity.Message) {
-	logger.I("enqueue new message %v", message)
+	logger.I("EnqueueMessage(uid=%d, %s): %v", c.uid, message.Action, message)
 	if c.closed.Get() {
 		logger.W("connection closed, cannot enqueue message")
 		return
@@ -56,10 +57,10 @@ func (c *Client) SignIn(uid int64, deviceId int64) {
 
 func (c *Client) SignOut(reason string) {
 	logger.I("client sign out uid=%d, reason=%s", c.uid, reason)
-	c.uid = 0
 	for _, group := range c.groups {
 		group.Unsubscribe(c.uid)
 	}
+	c.uid = 0
 	ClientManager.ClientSignOut(c)
 	c.closed.Set(true)
 	_ = c.conn.Close()
@@ -88,7 +89,7 @@ func (c *Client) readMessage() {
 			}
 			break
 		}
-		logger.D("New message: %s", message)
+		logger.D("NewMessage(uid=%d, %s): %s", c.uid, message.Action, message)
 		if message.Action&entity.MaskActionApi != 0 {
 			err = Api.Handle(c, message)
 		} else if message.Action&entity.MaskActionMessage != 0 {
