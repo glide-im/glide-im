@@ -11,6 +11,14 @@ type User struct {
 	UpdateAt Timestamp `gorm:"type:datetime"`
 }
 
+type Friend struct {
+	Fid     int64 `gorm:"primary_key"`
+	Owner   int64
+	Uid     int64
+	Remark  string
+	AddTime Timestamp `gorm:"type:datetime"`
+}
+
 type Chat struct {
 	Cid          int64 `gorm:"primary_key"`
 	ChatType     int8

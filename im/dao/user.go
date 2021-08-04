@@ -112,9 +112,25 @@ func (d *userDao) GetUid(token string) int64 {
 	return uid
 }
 
-func (d *userDao) GetFriends(uid int64) []int64 {
+func (d *userDao) GetFriends(uid int64) ([]*Friend, error) {
 
-	return []int64{}
+	var ret []*Friend
+	err := db.DB.Table("im_friend").Where("owner = ?", uid).Find(&ret).Error
+	return ret, err
+}
+
+func (d *userDao) AddFriend(uid int64, fUid int64, remark string) (*Friend, error) {
+
+	f := &Friend{
+		Owner:   uid,
+		Uid:     fUid,
+		Remark:  remark,
+		AddTime: nowTimestamp(),
+	}
+	if db.DB.Model(f).Create(f).RowsAffected <= 0 {
+		return nil, errors.New("create friend error")
+	}
+	return f, nil
 }
 
 type redisConfig struct{}

@@ -99,6 +99,8 @@ func (a *api) Handle(client *Client, message *entity.Message) error {
 	case entity.ActionUserEditInfo:
 	case entity.ActionUserGetInfo:
 		return a.GetUserInfo(msg, en.(*entity.UserInfoRequest))
+	case entity.ActionUserAddFriend:
+		return a.AddFriend(msg, en.(*entity.AddFriendRequest))
 	case entity.ActionUserInfo:
 		return a.UserInfo(msg)
 

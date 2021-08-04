@@ -54,32 +54,76 @@ func (a *userApi) GetAndInitRelationList(msg *ApiMessage) error {
 	if err != nil {
 		return err
 	}
-	gs := make([]entity.GroupResponse, len(groups))
-
-	for _, g := range groups {
-		gs = append(gs, entity.GroupResponse{
-			Gid:    g.Gid,
-			Name:   g.Name,
-			Avatar: g.Avatar,
-		})
-		group := GroupManager.GetGroup(g.Gid)
-		mc := ClientManager.GetClient(msg.uid).messages
-		group.Subscribe(msg.uid, mc)
+	friends, err := dao.UserDao.GetFriends(msg.uid)
+	if err != nil {
+		return err
 	}
 
-	friends := dao.UserDao.GetFriends(msg.uid)
+	contacts := make([]entity.ContactResponse, len(groups))
 
-	relation := entity.RelationResponse{
-		Groups:  gs,
-		Friends: friends,
+	for _, g := range groups {
+		contacts = append(contacts, entity.ContactResponse{
+			Id:     g.Gid,
+			Avatar: g.Avatar,
+			Name:   g.Name,
+			Type:   2,
+		})
+		group := GroupManager.GetGroup(g.Gid)
+		client := ClientManager.GetClient(msg.uid)
+		client.AddGroup(group)
+	}
+
+	for _, friend := range friends {
+		contacts = append(contacts, entity.ContactResponse{
+			Id:     friend.Uid,
+			Avatar: "",
+			Name:   friend.Remark,
+			Type:   1,
+		})
 	}
 
 	resp := entity.NewMessage(msg.seq, entity.RespActionSuccess)
-	if err := resp.SetData(relation); err != nil {
+	if err = resp.SetData(contacts); err != nil {
 		return err
 	}
 
 	ClientManager.EnqueueMessage(msg.uid, resp)
+	return nil
+}
+
+func (a *userApi) AddFriend(msg *ApiMessage, request *entity.AddFriendRequest) error {
+
+	users, err := dao.UserDao.GetUser(request.Uid)
+	if err != nil {
+		return err
+	}
+	if len(users) == 0 {
+		resp := entity.NewSimpleMessage(msg.seq, entity.RespActionFailed, "user not exist.")
+		ClientManager.EnqueueMessage(msg.uid, resp)
+		return nil
+	}
+
+	friend, err := dao.UserDao.AddFriend(msg.uid, request.Uid, request.Remark)
+	if err != nil {
+		return err
+	}
+	resp := entity.NewMessage(msg.seq, entity.RespActionSuccess)
+	if err = resp.SetData(friend); err != nil {
+		return err
+	}
+	ClientManager.EnqueueMessage(msg.uid, resp)
+
+	// friend
+	f, err := dao.UserDao.AddFriend(request.Uid, msg.uid, "")
+	if err != nil {
+		return err
+	}
+	resp1 := entity.NewMessage(msg.seq, entity.RespActionFriendApproval)
+	if err = resp.SetData(f); err != nil {
+		return err
+	}
+	ClientManager.EnqueueMessage(request.Uid, resp1)
+
 	return nil
 }
 

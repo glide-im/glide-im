@@ -24,6 +24,7 @@ const (
 	ActionUserNewChat     = MaskActionApi | 11
 	ActionUserChatHistory = MaskActionApi | 12
 	ActionUserChatInfo    = MaskActionApi | 13
+	ActionUserAddFriend   = MaskActionApi | 14
 
 	ActionOnlineUser = MaskActionApi | 20
 
@@ -174,6 +175,7 @@ func init() {
 		ActionUserChatInfo:    func() interface{} { return &ChatInfoRequest{} },
 		ActionUserInfo:        func() interface{} { return &UserInfoRequest{} },
 		ActionUserNewChat:     func() interface{} { return &UserNewChatRequest{} },
+		ActionUserAddFriend:   func() interface{} { return &AddFriendRequest{} },
 
 		ActionGroupCreate:    func() interface{} { return &CreateGroupRequest{} },
 		ActionGroupJoin:      func() interface{} { return &JoinGroupRequest{} },

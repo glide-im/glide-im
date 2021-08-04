@@ -6,6 +6,7 @@ func Init() {
 
 	tables := []interface{}{
 		User{},
+		Friend{},
 		Chat{},
 		ChatMessage{},
 		UserChat{},

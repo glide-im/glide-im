@@ -42,15 +42,11 @@ type UserNewChatRequest struct {
 	Type int8
 }
 
-type GroupResponse struct {
-	Gid    int64
-	Name   string
+type ContactResponse struct {
+	Id     int64
 	Avatar string
-}
-
-type RelationResponse struct {
-	Groups  []GroupResponse
-	Friends []int64
+	Name   string
+	Type   int64
 }
 
 type ChatHistoryRequest struct {
@@ -90,6 +86,11 @@ type GroupMemberResponse struct {
 type AddMemberRequest struct {
 	Gid int64
 	Uid []int64
+}
+
+type AddFriendRequest struct {
+	Uid    int64
+	Remark string
 }
 
 type RemoveMemberRequest struct {
