@@ -103,6 +103,17 @@ func (a *userApi) AddFriend(msg *ApiMessage, request *entity.AddFriendRequest) e
 		return nil
 	}
 
+	hasFriend, err := dao.UserDao.HasFriend(request.Uid)
+	if err != nil {
+		return err
+	}
+
+	if hasFriend {
+		resp := entity.NewSimpleMessage(msg.seq, entity.RespActionFailed, "already added friends")
+		ClientManager.EnqueueMessage(msg.uid, resp)
+		return nil
+	}
+
 	friend, err := dao.UserDao.AddFriend(msg.uid, request.Uid, request.Remark)
 	if err != nil {
 		return err
@@ -145,7 +156,7 @@ func (a *userApi) GetUserInfo(msg *ApiMessage, request *entity.UserInfoRequest) 
 		retU := u{
 			Uid:      user.Uid,
 			Account:  user.Account,
-			Avatar:   user.Account,
+			Avatar:   user.Avatar,
 			Nickname: user.Nickname,
 		}
 		ret = append(ret, retU)
@@ -153,6 +164,8 @@ func (a *userApi) GetUserInfo(msg *ApiMessage, request *entity.UserInfoRequest) 
 	if err = resp.SetData(ret); err != nil {
 		return err
 	}
+
+	ClientManager.EnqueueMessage(msg.uid, resp)
 	return nil
 }
 
@@ -269,9 +282,9 @@ func (a *userApi) Register(msg *ApiMessage, registerEntity *entity.RegisterReque
 	err := dao.UserDao.AddUser(registerEntity.Account, registerEntity.Password)
 
 	if err != nil {
-		resp.Data = "seq err=" + err.Error()
+		_ = resp.SetData(err.Error())
 	} else {
-		resp.Data = "register success"
+		_ = resp.SetData("register success")
 	}
 
 	return resp, err

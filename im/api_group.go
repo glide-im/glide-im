@@ -112,6 +112,16 @@ func (m *groupApi) JoinGroup(msg *ApiMessage, request *entity.JoinGroupRequest) 
 
 	g := GroupManager.GetGroup(request.Gid)
 
+	has, err := dao.GroupDao.HasMember(request.Gid, msg.uid)
+	if err != nil {
+		return err
+	}
+	if has {
+		resp := entity.NewSimpleMessage(msg.seq, entity.RespActionFailed, "already joined group")
+		ClientManager.EnqueueMessage(msg.uid, resp)
+		return nil
+	}
+
 	if g == nil {
 		resp := entity.NewSimpleMessage(msg.seq, entity.RespActionFailed, "group not exist")
 		ClientManager.EnqueueMessage(msg.uid, resp)

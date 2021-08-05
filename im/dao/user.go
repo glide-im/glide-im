@@ -119,6 +119,12 @@ func (d *userDao) GetFriends(uid int64) ([]*Friend, error) {
 	return ret, err
 }
 
+func (d *userDao) HasFriend(fUid int64) (bool, error) {
+	row := 0
+	err := db.DB.Table("im_friend").Where("uid = ?", fUid).Count(&row).Error
+	return row > 0, err
+}
+
 func (d *userDao) AddFriend(uid int64, fUid int64, remark string) (*Friend, error) {
 
 	f := &Friend{

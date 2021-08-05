@@ -60,6 +60,12 @@ func (d *groupDao) RemoveMember(gid int64, uid int64) error {
 	return nil
 }
 
+func (d *groupDao) HasMember(gid int64, uid int64) (bool, error) {
+	row := 0
+	err := db.DB.Table("im_group_member").Where("gid = ? and uid = ?", gid, uid).Count(&row).Error
+	return row > 0, err
+}
+
 func (d *groupDao) AddMember(gid int64, uid int64, typ int8) error {
 
 	gm := GroupMember{

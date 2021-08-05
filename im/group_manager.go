@@ -13,6 +13,7 @@ type groupManager struct {
 
 func NewGroupManager() *groupManager {
 	ret := new(groupManager)
+	ret.mutex = new(mutex)
 	ret.groups = NewGroupMap()
 	return ret
 }
@@ -48,6 +49,7 @@ type GroupMap struct {
 
 func NewGroupMap() *GroupMap {
 	ret := new(GroupMap)
+	ret.mutex = new(mutex)
 	ret.groupsMap = make(map[int64]*Group)
 	return ret
 }
