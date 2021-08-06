@@ -5,25 +5,16 @@ import (
 	"go_im/pkg/db"
 )
 
-/**
-Member
-
-Type 1: 群员 2: 管理 3: 群主
-State 状态位 0000 : 0-0-通知开关-被禁言
-*/
-type Member struct {
-	Uid      int64
-	Nickname string
-	Avatar   string
-	Type     uint8
-	State    uint8
-}
+const (
+	GroupMemberUser  = 1
+	GroupMemberAdmin = 2
+)
 
 var GroupDao = new(groupDao)
 
 type groupDao struct{}
 
-func (d *groupDao) NewGroup(name string, owner int64) (*Group, error) {
+func (d *groupDao) CreateGroup(name string, owner int64) (*Group, error) {
 
 	g := Group{
 		Gid:      0,
@@ -66,22 +57,27 @@ func (d *groupDao) HasMember(gid int64, uid int64) (bool, error) {
 	return row > 0, err
 }
 
-func (d *groupDao) AddMember(gid int64, uid int64, typ int8) error {
+func (d *groupDao) AddMember(gid int64, typ int8, uid ...int64) ([]*GroupMember, error) {
 
-	gm := GroupMember{
-		Gid:    gid,
-		Uid:    uid,
-		Mute:   0,
-		Remark: "",
-		Type:   typ,
-		JoinAt: nowTimestamp(),
+	var members []*GroupMember
+
+	for _, i := range uid {
+		gm := &GroupMember{
+			Gid:    gid,
+			Uid:    i,
+			Mute:   0,
+			Remark: "",
+			Type:   typ,
+			JoinAt: nowTimestamp(),
+		}
+		members = append(members, gm)
 	}
 
-	if db.DB.Model(&gm).Create(&gm).RowsAffected <= 0 {
-		return errors.New("add member error")
+	if db.DB.Table("im_group_member").Create(members).RowsAffected <= 0 {
+		return nil, errors.New("add member error")
 	}
 
-	return nil
+	return members, nil
 }
 
 func (d *groupDao) GetMembers(gid int64) ([]*GroupMember, error) {

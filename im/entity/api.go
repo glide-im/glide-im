@@ -1,5 +1,7 @@
 package entity
 
+import "go_im/im/dao"
+
 type LoginRequest struct {
 	Device   int64  `json:"device"`
 	Account  string `json:"account"`
@@ -59,8 +61,21 @@ type ChatInfoRequest struct {
 	Cid int64
 }
 
+type GroupInfoRequest struct {
+	Gid []int64
+}
+
 type CreateGroupRequest struct {
-	Name string
+	Name   string
+	Member []int64
+}
+
+type GroupResponse struct {
+}
+
+type AddedGroupResponse struct {
+	Group     *dao.Group
+	GroupChat *dao.Chat
 }
 
 type JoinGroupRequest struct {
@@ -81,6 +96,7 @@ type GroupMemberResponse struct {
 	RemarkName string
 	Type       int8
 	Online     bool
+	Mute       bool
 }
 
 type AddMemberRequest struct {

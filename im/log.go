@@ -13,9 +13,10 @@ var logger = Logger{}
 type Logger struct {
 }
 
-func (l *Logger) E(msg string, err error) {
+func (l *Logger) E(msg string, log ...interface{}) {
 	l.log("E", msg)
-	l.log("E", err.Error())
+	f := strings.Repeat("%s, ", len(log))
+	l.log("E", fmt.Sprintf(f, log))
 }
 
 func (l *Logger) I(format string, args ...interface{}) {

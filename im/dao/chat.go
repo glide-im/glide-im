@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+const (
+	ChatTypeUser  = 1
+	ChatTypeGroup = 2
+)
+
 func InitMessageDao() {
 
 }
@@ -20,6 +25,13 @@ type chatDao struct {
 	keyMessageIdIncr  string
 	keyChatIdIncr     string
 	keyUserChatIdIncr string
+}
+
+func (m *chatDao) GetChat(target int64, typ int8) (*Chat, error) {
+
+	c := new(Chat)
+	err := db.DB.Table("im_chat").Where("target = ? and type = ?", target, typ).Limit(1).Find(c).Error
+	return c, err
 }
 
 func (m *chatDao) GetUserChatList(uid int64) ([]*UserChat, error) {
@@ -49,7 +61,7 @@ func (m *chatDao) UpdateUserChatMsgTime(cid int64, uid int64) (*UserChat, error)
 	return uc, err
 }
 
-func (m *chatDao) NewChat(uid int64, target int64, typ int8) (*Chat, error) {
+func (m *chatDao) CreateChat(typ int8, targetId int64) (*Chat, error) {
 
 	now := Timestamp(time.Now())
 	cid, err := db.Redis.Incr(m.keyChatIdIncr).Result()
@@ -58,14 +70,9 @@ func (m *chatDao) NewChat(uid int64, target int64, typ int8) (*Chat, error) {
 		return nil, err
 	}
 
-	row := 0
-	db.DB.Table("im_user_chat").Where("owner = ? and target = ?", uid, target).Count(&row)
-	if row > 0 {
-		return nil, errors.New("chat exist")
-	}
-
 	c := Chat{
 		Cid:          cid,
+		TargetId:     targetId,
 		ChatType:     typ,
 		CreateAt:     now,
 		NewMessageAt: now,
@@ -141,7 +148,7 @@ func (m *chatDao) GetChatHistory(cid int64, size int) ([]*ChatMessage, error) {
 func (m *chatDao) GetUserChatFromChat(cid int64, uid int64) (*UserChat, error) {
 
 	c := new(UserChat)
-	err := db.DB.Table("im_user_chat").Where("cid = ? and uid = ?", cid, uid).Find(c).Error
+	err := db.DB.Table("im_user_chat").Where("cid = ? and owner = ?", cid, uid).Find(c).Error
 
 	return c, err
 }

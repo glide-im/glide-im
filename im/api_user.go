@@ -103,7 +103,7 @@ func (a *userApi) AddFriend(msg *ApiMessage, request *entity.AddFriendRequest) e
 		return nil
 	}
 
-	hasFriend, err := dao.UserDao.HasFriend(request.Uid)
+	hasFriend, err := dao.UserDao.HasFriend(msg.uid, request.Uid)
 	if err != nil {
 		return err
 	}
@@ -231,7 +231,7 @@ func (a *userApi) NewChat(msg *ApiMessage, request *entity.UserNewChatRequest) e
 	uid := msg.uid
 	target := request.Id
 
-	c, err := dao.ChatDao.NewChat(uid, target, request.Type)
+	c, err := dao.ChatDao.CreateChat(request.Type, target)
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,7 @@
 package im
 
 import (
+	"go_im/im/dao"
 	"go_im/im/entity"
 )
 
@@ -18,13 +19,38 @@ func NewGroupManager() *groupManager {
 	return ret
 }
 
+func (m *groupManager) AddGroup(group *Group) {
+	defer m.LockUtilReturn()()
+
+	m.groups.Put(group.Gid, group)
+}
+
 func (m *groupManager) GetGroup(gid int64) *Group {
 	defer m.LockUtilReturn()()
+
 	g := m.groups.Get(gid)
 	if g != nil {
 		return g
 	}
-	//group, err := dao.GroupDao.GetGroup(gid)
+
+	group, err := dao.GroupDao.GetGroup(gid)
+	if err != nil {
+		logger.E("GroupManager.GetGroup", "load group", gid, err)
+		return nil
+	}
+
+	members, err := dao.GroupDao.GetMembers(gid)
+	if err != nil {
+		logger.E("GroupManager.GetGroup", "load members", gid, err)
+		return nil
+	}
+
+	chat, err := dao.ChatDao.GetChat(gid, 2)
+	if err != nil {
+		logger.E("GroupManager.GetGroup", "load chat", gid, err)
+		return nil
+	}
+	g = NewGroup(gid, group, chat.Cid, members)
 	m.groups.Put(gid, g)
 	return g
 }
@@ -41,6 +67,8 @@ func (m *groupManager) DispatchMessage(c *Client, message *entity.Message) error
 	group := m.GetGroup(groupMsg.Gid)
 	return group.SendMessage(c.uid, message)
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 type GroupMap struct {
 	*mutex

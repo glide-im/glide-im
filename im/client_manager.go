@@ -78,6 +78,12 @@ func (c *clientManager) DispatchMessage(from int64, message *entity.Message) err
 	return nil
 }
 
+func (c *clientManager) EnqueueMessageMulti(uid int64, msg ...*entity.Message) {
+	for _, message := range msg {
+		c.EnqueueMessage(uid, message)
+	}
+}
+
 func (c *clientManager) EnqueueMessage(uid int64, msg *entity.Message) bool {
 	client, ok := c.clients[uid]
 	if ok {

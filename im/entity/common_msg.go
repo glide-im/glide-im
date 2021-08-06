@@ -52,12 +52,14 @@ const (
 	RespActionSuccess          = MaskRespActionApi | 2
 	RespActionUserUnauthorized = MaskRespActionApi | 3
 
-	MaskRespActionNotify    = 1 << 30
-	RespActionGroupRemoved  = MaskRespActionNotify | 1
-	RespActionGroupApproval = MaskRespActionNotify | 3
-	RespActionGroupApproved = MaskRespActionNotify | 4
-	RespActionGroupRefused  = MaskRespActionNotify | 5
-	RespActionEcho          = MaskRespActionNotify | 100
+	MaskRespActionNotify     = 1 << 30
+	RespActionGroupRemoved   = MaskRespActionNotify | 1
+	RespActionGroupApproval  = MaskRespActionNotify | 3
+	RespActionGroupApproved  = MaskRespActionNotify | 4
+	RespActionGroupRefused   = MaskRespActionNotify | 5
+	RespActionGroupAddMember = MaskRespActionNotify | 6
+
+	RespActionEcho = MaskRespActionNotify | 100
 
 	RespActionFriendApproval = MaskRespActionNotify | 6
 	RespActionFriendApproved = MaskRespActionNotify | 7
@@ -161,6 +163,12 @@ func NewMessage(seq int64, action Action) *Message {
 	return ret
 }
 
+func NewMessage2(seq int64, action Action, data interface{}) *Message {
+	m := NewMessage(seq, action)
+	_ = m.SetData(data)
+	return m
+}
+
 func init() {
 	actionRequestMap = map[Action]func() interface{}{
 		ActionUserLogin:    func() interface{} { return &LoginRequest{} },
@@ -178,6 +186,7 @@ func init() {
 		ActionUserAddFriend:   func() interface{} { return &AddFriendRequest{} },
 
 		ActionGroupCreate:    func() interface{} { return &CreateGroupRequest{} },
+		ActionGroupInfo:      func() interface{} { return &GroupInfoRequest{} },
 		ActionGroupJoin:      func() interface{} { return &JoinGroupRequest{} },
 		ActionGroupAddMember: func() interface{} { return &AddMemberRequest{} },
 		ActionGroupGetMember: func() interface{} { return &GetGroupMemberRequest{} },

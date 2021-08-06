@@ -1,45 +1,70 @@
 package im
 
-import "go_im/im/entity"
+import (
+	"go_im/im/dao"
+	"go_im/im/entity"
+)
 
 type Group struct {
 	*mutex
 
-	Gid  int64
-	Name string
+	Gid   int64
+	Cid   int64
+	group *dao.Group
 
-	member   []int64
+	members  map[int64]*dao.GroupMember
 	memberCh map[int64]chan *entity.Message
 }
 
-func NewGroup(gid int64, name string, member []int64) *Group {
+func NewGroup(gid int64, group *dao.Group, cid int64, member []*dao.GroupMember) *Group {
 	ret := new(Group)
+	ret.mutex = new(mutex)
+	ret.members = map[int64]*dao.GroupMember{}
+	ret.memberCh = map[int64]chan *entity.Message{}
 	ret.Gid = gid
-	ret.Name = name
-	ret.member = member
+	ret.group = group
+	for _, m := range member {
+		ret.memberCh[m.Uid] = nil
+		ret.members[m.Uid] = m
+	}
 	return ret
 }
 
-func (g *Group) GetOnlineMember() []int64 {
+func (g *Group) PutMember(member *dao.GroupMember, c chan *entity.Message) {
+	g.memberCh[member.Uid] = c
+	g.members[member.Uid] = member
+}
+
+func (g *Group) HasMember(uid int64) bool {
+	_, ok := g.members[uid]
+	return ok
+}
+
+func (g *Group) IsMemberOnline(uid int64) bool {
+	return g.memberCh[uid] != nil
+}
+
+func (g *Group) GetOnlineMember() []*dao.GroupMember {
 	defer g.LockUtilReturn()()
 
-	m := make([]int64, 1)
-	for k := range g.memberCh {
-		m = append(m, k)
+	onlineMember := make([]*dao.GroupMember, 1)
+	for k, v := range g.memberCh {
+		m, exist := g.members[k]
+		if v != nil && exist {
+			onlineMember = append(onlineMember, m)
+		}
 	}
-	return m
+	return onlineMember
 }
 
 func (g *Group) SendMessage(uid int64, message *entity.Message) error {
 	defer g.LockUtilReturn()()
 
-	for i := range g.memberCh {
-		if uid == i {
-			continue
+	for _, v := range g.memberCh {
+		if v != nil {
+			v <- message
 		}
-		g.memberCh[i] <- message
 	}
-
 	return nil
 }
 
@@ -50,8 +75,10 @@ func (g *Group) Subscribe(uid int64, mc chan *entity.Message) {
 
 func (g *Group) Unsubscribe(uid int64) {
 	defer g.LockUtilReturn()()
-	delete(g.memberCh, uid)
+	g.memberCh[uid] = nil
 }
+
+//////////////////////////////////////////////////////////////////////////////////
 
 type Int64Set struct {
 	m map[int64]interface{}

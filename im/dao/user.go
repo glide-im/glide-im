@@ -119,9 +119,9 @@ func (d *userDao) GetFriends(uid int64) ([]*Friend, error) {
 	return ret, err
 }
 
-func (d *userDao) HasFriend(fUid int64) (bool, error) {
+func (d *userDao) HasFriend(owner int64, fUid int64) (bool, error) {
 	row := 0
-	err := db.DB.Table("im_friend").Where("uid = ?", fUid).Count(&row).Error
+	err := db.DB.Table("im_friend").Where("uid = ? and owner = ?", fUid, owner).Count(&row).Error
 	return row > 0, err
 }
 

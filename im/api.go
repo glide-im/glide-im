@@ -106,6 +106,8 @@ func (a *api) Handle(client *Client, message *entity.Message) error {
 
 	case entity.ActionGroupCreate:
 		return a.CreateGroup(msg, en.(*entity.CreateGroupRequest))
+	case entity.ActionGroupInfo:
+		return a.GetGroupInfo(msg, en.(*entity.GroupInfoRequest))
 	case entity.ActionGroupExit:
 		return a.ExitGroup(msg, en.(*entity.ExitGroupRequest))
 	case entity.ActionGroupJoin:

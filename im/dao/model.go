@@ -22,6 +22,7 @@ type Friend struct {
 type Chat struct {
 	Cid          int64 `gorm:"primary_key"`
 	ChatType     int8
+	TargetId     int64
 	NewMessageAt Timestamp `gorm:"type:datetime"`
 	CreateAt     Timestamp `gorm:"type:datetime"`
 }
