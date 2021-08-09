@@ -144,7 +144,7 @@ func (a *userApi) GetUserInfo(msg *ApiMessage, request *entity.UserInfoRequest) 
 		Avatar   string
 		Nickname string
 	}
-	ret := make([]u, len(users))
+	ret := make([]u, 0, len(users))
 	for _, user := range users {
 		retU := u{
 			Uid:      user.Uid,

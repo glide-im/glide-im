@@ -213,6 +213,7 @@ func (m *groupApi) ExitGroup(msg *ApiMessage, request *entity.ExitGroupRequest) 
 
 func (m *groupApi) JoinGroup(msg *ApiMessage, request *entity.JoinGroupRequest) error {
 
+	client := ClientManager.GetClient(msg.uid)
 	g := GroupManager.GetGroup(request.Gid)
 
 	if g == nil {
@@ -227,10 +228,11 @@ func (m *groupApi) JoinGroup(msg *ApiMessage, request *entity.JoinGroupRequest) 
 		return nil
 	}
 
-	_, err := dao.GroupDao.AddMember(request.Gid, dao.GroupMemberUser, msg.uid)
+	members, err := dao.GroupDao.AddMember(request.Gid, dao.GroupMemberUser, msg.uid)
 	if err != nil {
 		return err
 	}
+	g.PutMember(members[0], client.messages)
 
 	contacts, err := dao.UserDao.AddContacts(msg.uid, g.Gid, dao.ContactsTypeGroup, "")
 	ClientManager.EnqueueMessage(msg.uid, entity.NewMessage2(-1, entity.ActionUserAddFriend, contacts))
@@ -241,7 +243,6 @@ func (m *groupApi) JoinGroup(msg *ApiMessage, request *entity.JoinGroupRequest) 
 		return err
 	}
 
-	client := ClientManager.GetClient(msg.uid)
 	if client != nil {
 		client.AddGroup(g)
 	}

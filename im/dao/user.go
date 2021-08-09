@@ -18,6 +18,31 @@ const (
 	ContactsTypeGroup = 2
 )
 
+var avatars = []string{
+	"https://dengzii.com/static/a.webp",
+	"https://dengzii.com/static/b.webp",
+	"https://dengzii.com/static/c.webp",
+	"https://dengzii.com/static/d.webp",
+	"https://dengzii.com/static/e.webp",
+	"https://dengzii.com/static/f.webp",
+	"https://dengzii.com/static/g.webp",
+	"https://dengzii.com/static/h.webp",
+	"https://dengzii.com/static/i.webp",
+	"https://dengzii.com/static/j.webp",
+	"https://dengzii.com/static/k.webp",
+	"https://dengzii.com/static/l.webp",
+	"https://dengzii.com/static/m.webp",
+	"https://dengzii.com/static/n.webp",
+	"https://dengzii.com/static/o.webp",
+	"https://dengzii.com/static/p.webp",
+	"https://dengzii.com/static/q.webp",
+	"https://dengzii.com/static/r.webp",
+}
+var nextAvatar = 0
+
+var nickName = []string{"佐菲", "赛文", "杰克", "艾斯", "泰罗", "雷欧", "阿斯特拉", "艾迪", "迪迦", "杰斯", "奈克斯", "梦比优斯", "盖亚", "戴拿"}
+var nextNickName = 0
+
 type userDao struct {
 	redisConfig
 	mySqlConf
@@ -57,10 +82,13 @@ func (d *userDao) AddUser(account string, password string) error {
 	u := User{
 		Account:  account,
 		Password: password,
-		Avatar:   "",
+		Nickname: nickName[nextNickName%13],
+		Avatar:   avatars[nextAvatar%16],
 		CreateAt: t,
 		UpdateAt: t,
 	}
+	nextAvatar++
+	nextNickName++
 
 	if db.DB.Model(&u).Create(&u).RowsAffected > 0 {
 		return nil

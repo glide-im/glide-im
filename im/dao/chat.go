@@ -122,7 +122,7 @@ func (m *chatDao) NewChatMessage(cid int64, sender int64, msg string, typ int8) 
 	cm := ChatMessage{
 		Mid:         mid,
 		Cid:         cid,
-		SenderUid:   sender,
+		Sender:      sender,
 		SendAt:      Timestamp(time.Now()),
 		Message:     msg,
 		MessageType: typ,
