@@ -13,6 +13,11 @@ var UserDao *userDao
 const userTokenLen = 10
 const userTokenExpireDuration = time.Hour * 24 * 3
 
+const (
+	ContactsTypeUser  = 1
+	ContactsTypeGroup = 2
+)
+
 type userDao struct {
 	redisConfig
 	mySqlConf
@@ -112,26 +117,27 @@ func (d *userDao) GetUid(token string) int64 {
 	return uid
 }
 
-func (d *userDao) GetFriends(uid int64) ([]*Friend, error) {
+func (d *userDao) GetAllContacts(uid int64) ([]*Contacts, error) {
 
-	var ret []*Friend
-	err := db.DB.Table("im_friend").Where("owner = ?", uid).Find(&ret).Error
+	var ret []*Contacts
+	err := db.DB.Table("im_contacts").Where("owner = ?", uid).Find(&ret).Error
 	return ret, err
 }
 
-func (d *userDao) HasFriend(owner int64, fUid int64) (bool, error) {
+func (d *userDao) HasContacts(owner int64, targetId int64, typ int8) (bool, error) {
 	row := 0
-	err := db.DB.Table("im_friend").Where("uid = ? and owner = ?", fUid, owner).Count(&row).Error
+	err := db.DB.Table("im_contacts").Where("target_id = ? and owner = ? and type = ?", targetId, owner, typ).Count(&row).Error
 	return row > 0, err
 }
 
-func (d *userDao) AddFriend(uid int64, fUid int64, remark string) (*Friend, error) {
+func (d *userDao) AddContacts(uid int64, targetId int64, typ int8, remark string) (*Contacts, error) {
 
-	f := &Friend{
-		Owner:   uid,
-		Uid:     fUid,
-		Remark:  remark,
-		AddTime: nowTimestamp(),
+	f := &Contacts{
+		Owner:    uid,
+		TargetId: targetId,
+		Remark:   remark,
+		Type:     typ,
+		AddTime:  nowTimestamp(),
 	}
 	if db.DB.Model(f).Create(f).RowsAffected <= 0 {
 		return nil, errors.New("create friend error")

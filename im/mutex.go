@@ -3,7 +3,11 @@ package im
 import "sync"
 
 type mutex struct {
-	*sync.Mutex
+	sync.Mutex
+}
+
+func NewMutex() *mutex {
+	return &mutex{sync.Mutex{}}
 }
 
 func (m *mutex) LockUtilReturn() func() {

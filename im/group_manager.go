@@ -1,6 +1,7 @@
 package im
 
 import (
+	"errors"
 	"go_im/im/dao"
 	"go_im/im/entity"
 )
@@ -56,6 +57,7 @@ func (m *groupManager) GetGroup(gid int64) *Group {
 }
 
 func (m *groupManager) DispatchMessage(c *Client, message *entity.Message) error {
+	logger.D("GroupManager.DispatchMessage: %s", message)
 
 	groupMsg := new(entity.GroupMessage)
 	err := message.DeserializeData(groupMsg)
@@ -64,8 +66,31 @@ func (m *groupManager) DispatchMessage(c *Client, message *entity.Message) error
 		return err
 	}
 
-	group := m.GetGroup(groupMsg.Gid)
-	return group.SendMessage(c.uid, message)
+	group := m.GetGroup(groupMsg.TargetId)
+
+	if group == nil {
+		return errors.New("group not exist")
+	}
+
+	//
+	chatMsg, err := dao.ChatDao.NewChatMessage(groupMsg.Cid, c.uid, groupMsg.Message, groupMsg.MessageType)
+	if err != nil {
+		return err
+	}
+
+	msg := entity.ReceiverChatMessage{
+		Mid:         chatMsg.Mid,
+		Cid:         groupMsg.Cid,
+		UcId:        groupMsg.UcId,
+		Sender:      c.uid,
+		MessageType: 1,
+		Message:     groupMsg.Message,
+		SendAt:      groupMsg.SendAt,
+	}
+
+	resp := entity.NewMessage2(-1, entity.ActionChatMessage, msg)
+
+	return group.SendMessage(c.uid, resp)
 }
 
 ////////////////////////////////////////////////////////////////////////////////

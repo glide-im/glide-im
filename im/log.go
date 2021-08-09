@@ -15,7 +15,7 @@ type Logger struct {
 
 func (l *Logger) E(msg string, log ...interface{}) {
 	l.log("E", msg)
-	f := strings.Repeat("%s, ", len(log))
+	f := strings.Repeat("%v, ", len(log))
 	l.log("E", fmt.Sprintf(f, log))
 }
 

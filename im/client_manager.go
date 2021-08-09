@@ -50,7 +50,7 @@ func (c *clientManager) DispatchMessage(from int64, message *entity.Message) err
 	c.EnqueueMessage(from, affirm)
 
 	// update receiver's list chat
-	uChat, err := dao.ChatDao.UpdateUserChatMsgTime(senderMsg.Cid, senderMsg.Receiver)
+	uChat, err := dao.ChatDao.UpdateUserChatMsgTime(senderMsg.Cid, senderMsg.TargetId)
 	if err != nil {
 		return err
 	}
@@ -65,13 +65,9 @@ func (c *clientManager) DispatchMessage(from int64, message *entity.Message) err
 		SendAt:      chatMsg.SendAt,
 	}
 
-	dispatchMsg := entity.NewMessage(-1, entity.ActionChatMessage)
+	dispatchMsg := entity.NewMessage2(-1, entity.ActionChatMessage, receiverMsg)
 
-	if err = dispatchMsg.SetData(receiverMsg); err != nil {
-		return err
-	}
-
-	if c.EnqueueMessage(senderMsg.Receiver, dispatchMsg) {
+	if c.EnqueueMessage(senderMsg.TargetId, dispatchMsg) {
 		// offline
 	}
 

@@ -2,6 +2,7 @@ package dao
 
 import (
 	"errors"
+	"fmt"
 	"go_im/pkg/db"
 )
 
@@ -16,8 +17,13 @@ type groupDao struct{}
 
 func (d *groupDao) CreateGroup(name string, owner int64) (*Group, error) {
 
+	gid, err := db.Redis.Incr("user:contact:group:incr_id").Result()
+	if err != nil {
+		return nil, err
+	}
+
 	g := Group{
-		Gid:      0,
+		Gid:      gid,
 		Name:     name,
 		Avatar:   "",
 		Owner:    owner,
@@ -62,7 +68,7 @@ func (d *groupDao) AddMember(gid int64, typ int8, uid ...int64) ([]*GroupMember,
 	var members []*GroupMember
 
 	for _, i := range uid {
-		gm := &GroupMember{
+		gm := GroupMember{
 			Gid:    gid,
 			Uid:    i,
 			Mute:   0,
@@ -70,13 +76,15 @@ func (d *groupDao) AddMember(gid int64, typ int8, uid ...int64) ([]*GroupMember,
 			Type:   typ,
 			JoinAt: nowTimestamp(),
 		}
-		members = append(members, gm)
+		if db.DB.Model(&gm).Create(&gm).RowsAffected <= 0 {
+			return members, errors.New("add member error")
+		}
+		members = append(members, &gm)
 	}
 
-	if db.DB.Table("im_group_member").Create(members).RowsAffected <= 0 {
-		return nil, errors.New("add member error")
+	if len(members) != len(uid) {
+		return nil, errors.New(fmt.Sprintf("add member error, expect size: %d, actully: %d", len(uid), len(members)))
 	}
-
 	return members, nil
 }
 
@@ -84,7 +92,7 @@ func (d *groupDao) GetMembers(gid int64) ([]*GroupMember, error) {
 
 	var gm []*GroupMember
 
-	err := db.DB.Model(gm).Where("gid = ?", gid).Find(gm).Error
+	err := db.DB.Table("im_group_member").Where("gid = ?", gid).Find(&gm).Error
 
 	return gm, err
 }

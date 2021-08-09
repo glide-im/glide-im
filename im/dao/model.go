@@ -11,12 +11,13 @@ type User struct {
 	UpdateAt Timestamp `gorm:"type:datetime"`
 }
 
-type Friend struct {
-	Fid     int64 `gorm:"primary_key"`
-	Owner   int64
-	Uid     int64
-	Remark  string
-	AddTime Timestamp `gorm:"type:datetime"`
+type Contacts struct {
+	Fid      int64 `gorm:"primary_key"`
+	Owner    int64
+	TargetId int64
+	Remark   string
+	Type     int8
+	AddTime  Timestamp `gorm:"type:datetime"`
 }
 
 type Chat struct {
@@ -57,6 +58,7 @@ type Group struct {
 	Mute     bool
 	Notice   string
 	CreateAt Timestamp `gorm:"type:datetime"`
+	Members  []*GroupMember
 }
 
 type GroupMember struct {

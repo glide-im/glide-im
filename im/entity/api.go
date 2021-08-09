@@ -48,7 +48,7 @@ type ContactResponse struct {
 	Id     int64
 	Avatar string
 	Name   string
-	Type   int64
+	Type   int8
 }
 
 type ChatHistoryRequest struct {
@@ -71,6 +71,8 @@ type CreateGroupRequest struct {
 }
 
 type GroupResponse struct {
+	dao.Group
+	Members []*dao.GroupMember
 }
 
 type AddedGroupResponse struct {

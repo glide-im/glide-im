@@ -30,7 +30,7 @@ type chatDao struct {
 func (m *chatDao) GetChat(target int64, typ int8) (*Chat, error) {
 
 	c := new(Chat)
-	err := db.DB.Table("im_chat").Where("target = ? and type = ?", target, typ).Limit(1).Find(c).Error
+	err := db.DB.Table("im_chat").Where("target_id = ? and chat_type = ?", target, typ).Limit(1).Find(c).Error
 	return c, err
 }
 

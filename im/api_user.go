@@ -1,6 +1,7 @@
 package im
 
 import (
+	"errors"
 	"go_im/im/dao"
 	"go_im/im/entity"
 )
@@ -50,36 +51,28 @@ func (a *userApi) Login(msg *ApiMessage, request *entity.LoginRequest) (*entity.
 
 func (a *userApi) GetAndInitRelationList(msg *ApiMessage) error {
 
-	groups, err := dao.GroupDao.GetUserGroup(msg.uid)
-	if err != nil {
-		return err
-	}
-	friends, err := dao.UserDao.GetFriends(msg.uid)
+	friends, err := dao.UserDao.GetAllContacts(msg.uid)
 	if err != nil {
 		return err
 	}
 
-	contacts := make([]entity.ContactResponse, len(groups))
-
-	for _, g := range groups {
-		contacts = append(contacts, entity.ContactResponse{
-			Id:     g.Gid,
-			Avatar: g.Avatar,
-			Name:   g.Name,
-			Type:   2,
-		})
-		group := GroupManager.GetGroup(g.Gid)
-		client := ClientManager.GetClient(msg.uid)
-		client.AddGroup(group)
-	}
+	contacts := make([]entity.ContactResponse, 0, len(friends))
 
 	for _, friend := range friends {
+
 		contacts = append(contacts, entity.ContactResponse{
-			Id:     friend.Uid,
+			Id:     friend.TargetId,
 			Avatar: "",
 			Name:   friend.Remark,
-			Type:   1,
+			Type:   friend.Type,
 		})
+
+		group := GroupManager.GetGroup(friend.TargetId)
+		if group == nil {
+			return newApiFatalError("load user group error: nil")
+		}
+		client := ClientManager.GetClient(msg.uid)
+		client.AddGroup(group)
 	}
 
 	resp := entity.NewMessage(msg.seq, entity.RespActionSuccess)
@@ -103,7 +96,7 @@ func (a *userApi) AddFriend(msg *ApiMessage, request *entity.AddFriendRequest) e
 		return nil
 	}
 
-	hasFriend, err := dao.UserDao.HasFriend(msg.uid, request.Uid)
+	hasFriend, err := dao.UserDao.HasContacts(msg.uid, request.Uid, dao.ContactsTypeUser)
 	if err != nil {
 		return err
 	}
@@ -114,7 +107,7 @@ func (a *userApi) AddFriend(msg *ApiMessage, request *entity.AddFriendRequest) e
 		return nil
 	}
 
-	friend, err := dao.UserDao.AddFriend(msg.uid, request.Uid, request.Remark)
+	friend, err := dao.UserDao.AddContacts(msg.uid, request.Uid, dao.ContactsTypeUser, request.Remark)
 	if err != nil {
 		return err
 	}
@@ -125,7 +118,7 @@ func (a *userApi) AddFriend(msg *ApiMessage, request *entity.AddFriendRequest) e
 	ClientManager.EnqueueMessage(msg.uid, resp)
 
 	// friend
-	f, err := dao.UserDao.AddFriend(request.Uid, msg.uid, "")
+	f, err := dao.UserDao.AddContacts(request.Uid, msg.uid, dao.ContactsTypeUser, "")
 	if err != nil {
 		return err
 	}
@@ -151,7 +144,7 @@ func (a *userApi) GetUserInfo(msg *ApiMessage, request *entity.UserInfoRequest) 
 		Avatar   string
 		Nickname string
 	}
-	var ret []u
+	ret := make([]u, len(users))
 	for _, user := range users {
 		retU := u{
 			Uid:      user.Uid,
@@ -208,10 +201,11 @@ func (a *userApi) GetOnlineUser(msg *ApiMessage) error {
 		Avatar   string
 		Nickname string
 	}
-	var users []u
+	allClient := ClientManager.AllClient()
+	users := make([]u, len(allClient))
 
 	ClientManager.Update()
-	for k := range ClientManager.AllClient() {
+	for k := range allClient {
 		us, err := dao.UserDao.GetUser(k)
 		if err != nil || len(us) == 0 {
 			logger.D("get online uid=%d error, error=%v", k, err)
@@ -231,18 +225,23 @@ func (a *userApi) NewChat(msg *ApiMessage, request *entity.UserNewChatRequest) e
 	uid := msg.uid
 	target := request.Id
 
+	// todo remove
+	chat, _ := dao.ChatDao.GetChat(target, request.Type)
+	if chat != nil {
+		return errors.New("chat exist")
+	}
+
 	c, err := dao.ChatDao.CreateChat(request.Type, target)
 	if err != nil {
 		return err
 	}
 
-	// chat
-	if request.Type == 1 {
-		m2, err2 := dao.ChatDao.NewUserChat(c.Cid, uid, target, 1)
+	if request.Type == dao.ChatTypeUser {
+		m2, err2 := dao.ChatDao.NewUserChat(c.Cid, uid, target, dao.ChatTypeUser)
 		if err2 != nil {
 			return err2
 		}
-		_, err = dao.ChatDao.NewUserChat(c.Cid, int64(target), uid, 1)
+		_, err = dao.ChatDao.NewUserChat(c.Cid, target, uid, dao.ChatTypeUser)
 		if err != nil {
 			return err
 		}
@@ -251,8 +250,15 @@ func (a *userApi) NewChat(msg *ApiMessage, request *entity.UserNewChatRequest) e
 			return err
 		}
 		ClientManager.EnqueueMessage(msg.uid, resp)
+	} else if request.Type == dao.ChatTypeGroup {
+		m, e := dao.ChatDao.NewUserChat(c.Cid, uid, target, dao.ChatTypeGroup)
+		if e != nil {
+			return e
+		}
+		resp := entity.NewMessage2(msg.seq, entity.ActionUserChatInfo, m)
+		ClientManager.EnqueueMessage(msg.uid, resp)
 	} else {
-		ClientManager.EnqueueMessage(msg.uid, entity.NewAckMessage(msg.seq))
+		return errors.New("unknown chat type")
 	}
 	return nil
 }

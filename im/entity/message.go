@@ -5,17 +5,19 @@ import (
 )
 
 type GroupMessage struct {
-	Gid         int64
-	Uid         int64
-	MessageType uint
-	Content     string
+	TargetId    int64
+	Cid         int64
+	UcId        int64
+	MessageType int8
+	Message     string
+	SendAt      dao.Timestamp
 }
 
 // SenderChatMessage simple chat room message
 type SenderChatMessage struct {
 	Cid         int64
 	UcId        int64
-	Receiver    int64
+	TargetId    int64
 	MessageType int8
 	Message     string
 	SendAt      dao.Timestamp

@@ -22,7 +22,7 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
-	//DB.LogMode(true)
+	DB.LogMode(true)
 	DB.SingularTable(true)
 	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
 		return "im_" + defaultTableName
