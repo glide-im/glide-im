@@ -34,7 +34,7 @@ func (d *userDao) GetUser(uid ...int64) ([]*User, error) {
 		if index == 0 {
 			continue
 		}
-		query.Or("uid=?", id)
+		query = query.Or("uid = ?", id)
 	}
 
 	return u, query.Find(&u).Error
