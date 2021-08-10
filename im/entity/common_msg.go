@@ -43,27 +43,13 @@ const (
 	ActionGroupMessage = MaskActionMessage | 1
 	ActionChatMessage  = MaskActionMessage | 2
 
-	ActionHeartbeat Action = 1<<30 | 1
-)
-
-const (
-	MaskRespActionApi          = 1 << 20
-	RespActionFailed           = MaskRespActionApi | 1
-	RespActionSuccess          = MaskRespActionApi | 2
-	RespActionUserUnauthorized = MaskRespActionApi | 3
-
-	MaskRespActionNotify     = 1 << 30
-	RespActionGroupRemoved   = MaskRespActionNotify | 1
-	RespActionGroupApproval  = MaskRespActionNotify | 3
-	RespActionGroupApproved  = MaskRespActionNotify | 4
-	RespActionGroupRefused   = MaskRespActionNotify | 5
-	RespActionGroupAddMember = MaskRespActionNotify | 6
-
-	RespActionEcho = MaskRespActionNotify | 100
-
-	RespActionFriendApproval = MaskRespActionNotify | 6
-	RespActionFriendApproved = MaskRespActionNotify | 7
-	RespActionFriendRefused  = MaskRespActionNotify | 8
+	MasActionOther         = 1 << 30
+	ActionFailed           = MasActionOther | 1
+	ActionSuccess          = MasActionOther | 2
+	ActionUserUnauthorized = MasActionOther | 3
+	ActionNotify           = MasActionOther | 4
+	ActionHeartbeat        = MasActionOther | 6
+	ActionEcho             = MasActionOther | 100
 )
 
 var actionNameMap = map[Action]string{
@@ -79,6 +65,15 @@ var actionNameMap = map[Action]string{
 	ActionUserNewChat:     "ActionUserNewChat",
 	ActionUserChatHistory: "ActionUserChatHistory",
 	ActionUserChatInfo:    "ActionUserChatInfo",
+	ActionUserAddFriend:   "",
+
+	ActionGroupRemoveMember: "ActionGroupRemoveMember",
+	ActionGroupAddMember:    "ActionGroupAddMember",
+	ActionGroupJoin:         "ActionGroupJoin",
+	ActionGroupGetMember:    "ActionGroupGetMember",
+	ActionGroupExit:         "ActionGroupExit",
+	ActionGroupCreate:       "ActionGroupCreate",
+	ActionGroupUpdate:       "ActionGroupUpdate",
 
 	ActionOnlineUser: "ActionOnlineUser",
 
@@ -141,6 +136,13 @@ func NewErrMessage(seq int64, err error) *Message {
 	return resp
 }
 
+func NewErrMessage2(seq int64, msg string) *Message {
+	resp := new(Message)
+	resp.Seq = seq
+	resp.Data = msg
+	return resp
+}
+
 func NewAckMessage(seq int64) *Message {
 	resp := new(Message)
 	resp.Seq = seq
@@ -171,19 +173,15 @@ func NewMessage2(seq int64, action Action, data interface{}) *Message {
 
 func init() {
 	actionRequestMap = map[Action]func() interface{}{
-		ActionUserLogin:    func() interface{} { return &LoginRequest{} },
-		ActionUserRegister: func() interface{} { return &RegisterRequest{} },
-		ActionUserGetInfo:  func() interface{} { return &UserInfoRequest{} },
-
+		ActionUserLogin:       func() interface{} { return &LoginRequest{} },
+		ActionUserRegister:    func() interface{} { return &RegisterRequest{} },
+		ActionUserGetInfo:     func() interface{} { return &UserInfoRequest{} },
 		ActionUserEditInfo:    func() interface{} { return &RegisterRequest{} },
-		ActionUserLogout:      nil,
-		ActionUserRelation:    nil,
-		ActionUserChatList:    nil,
 		ActionUserChatHistory: func() interface{} { return &ChatHistoryRequest{} },
 		ActionUserChatInfo:    func() interface{} { return &ChatInfoRequest{} },
 		ActionUserInfo:        func() interface{} { return &UserInfoRequest{} },
 		ActionUserNewChat:     func() interface{} { return &UserNewChatRequest{} },
-		ActionUserAddFriend:   func() interface{} { return &AddFriendRequest{} },
+		ActionUserAddFriend:   func() interface{} { return &AddContacts{} },
 
 		ActionGroupCreate:    func() interface{} { return &CreateGroupRequest{} },
 		ActionGroupInfo:      func() interface{} { return &GroupInfoRequest{} },

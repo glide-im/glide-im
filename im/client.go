@@ -33,6 +33,9 @@ func NewClient(conn Connection) *Client {
 }
 
 func (c *Client) AddGroup(group *Group) {
+	if c.closed.Get() {
+		return
+	}
 	c.groups = append(c.groups, group)
 	group.Subscribe(c.uid, c.messages)
 }
@@ -99,7 +102,7 @@ func (c *Client) readMessage() {
 		} else {
 			// echo
 			m, _ := message.Serialize()
-			c.EnqueueMessage(entity.NewSimpleMessage(1, entity.RespActionEcho, string(m)))
+			c.EnqueueMessage(entity.NewSimpleMessage(1, entity.ActionEcho, string(m)))
 		}
 		if err != nil {
 			if !c.handleError(message.Seq, err) {

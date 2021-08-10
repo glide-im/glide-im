@@ -90,7 +90,8 @@ func (m *groupManager) DispatchMessage(c *Client, message *entity.Message) error
 
 	resp := entity.NewMessage2(-1, entity.ActionChatMessage, msg)
 
-	return group.SendMessage(c.uid, resp)
+	group.SendMessage(c.uid, resp)
+	return nil
 }
 
 ////////////////////////////////////////////////////////////////////////////////

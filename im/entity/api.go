@@ -32,6 +32,7 @@ type UserInfoRequest struct {
 type UserInfoResponse struct {
 	Uid      int64
 	Nickname string
+	Account  string
 	Avatar   string
 }
 
@@ -45,10 +46,8 @@ type UserNewChatRequest struct {
 }
 
 type ContactResponse struct {
-	Id     int64
-	Avatar string
-	Name   string
-	Type   int8
+	Friends []*UserInfoResponse
+	Groups  []*GroupResponse
 }
 
 type ChatHistoryRequest struct {
@@ -72,6 +71,11 @@ type CreateGroupRequest struct {
 
 type GroupResponse struct {
 	dao.Group
+	Members []*dao.GroupMember
+}
+
+type GroupAddMemberResponse struct {
+	Gid     int64
 	Members []*dao.GroupMember
 }
 
@@ -106,7 +110,7 @@ type AddMemberRequest struct {
 	Uid []int64
 }
 
-type AddFriendRequest struct {
+type AddContacts struct {
 	Uid    int64
 	Remark string
 }

@@ -66,7 +66,7 @@ func (g *Group) GetMembers() []*dao.GroupMember {
 	return members
 }
 
-func (g *Group) SendMessage(uid int64, message *entity.Message) error {
+func (g *Group) SendMessage(uid int64, message *entity.Message) {
 	defer g.LockUtilReturn()()
 
 	for id, v := range g.memberCh {
@@ -74,7 +74,6 @@ func (g *Group) SendMessage(uid int64, message *entity.Message) error {
 			ClientManager.EnqueueMessage(id, message)
 		}
 	}
-	return nil
 }
 
 func (g *Group) Subscribe(uid int64, mc chan *entity.Message) {

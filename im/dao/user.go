@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"go_im/pkg/db"
+	"math/rand"
 	"time"
 )
 
@@ -82,13 +83,11 @@ func (d *userDao) AddUser(account string, password string) error {
 	u := User{
 		Account:  account,
 		Password: password,
-		Nickname: nickName[nextNickName%13],
-		Avatar:   avatars[nextAvatar%16],
+		Nickname: nickName[rand.Intn(14)],
+		Avatar:   avatars[rand.Intn(17)],
 		CreateAt: t,
 		UpdateAt: t,
 	}
-	nextAvatar++
-	nextNickName++
 
 	if db.DB.Model(&u).Create(&u).RowsAffected > 0 {
 		return nil

@@ -6,7 +6,10 @@ import (
 	"go_im/im/entity"
 )
 
-var ClientManager = &clientManager{clients: map[int64]*Client{}}
+var ClientManager = &clientManager{
+	mutex:   NewMutex(),
+	clients: map[int64]*Client{},
+}
 
 type clientManager struct {
 	*mutex
@@ -90,7 +93,7 @@ func (c *clientManager) EnqueueMessage(uid int64, msg *entity.Message) bool {
 				msg.Seq = client.getNextSeq()
 			}
 			if uid <= 0 {
-				client.EnqueueMessage(entity.NewSimpleMessage(msg.Seq, entity.RespActionFailed, "unauthorized"))
+				client.EnqueueMessage(entity.NewSimpleMessage(msg.Seq, entity.ActionFailed, "unauthorized"))
 				return false
 			}
 			client.EnqueueMessage(msg)

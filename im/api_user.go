@@ -22,7 +22,7 @@ type userApi struct{}
 
 func (a *userApi) Auth(msg *ApiMessage, request *entity.AuthRequest) (*entity.Message, bool, error) {
 
-	var resp = entity.NewMessage(msg.seq, entity.RespActionSuccess)
+	var resp = entity.NewMessage(msg.seq, entity.ActionSuccess)
 	uid := dao.UserDao.GetUid(request.Token)
 	if uid == request.Uid {
 		return resp, true, nil
@@ -34,7 +34,7 @@ func (a *userApi) Auth(msg *ApiMessage, request *entity.AuthRequest) (*entity.Me
 func (a *userApi) Login(msg *ApiMessage, request *entity.LoginRequest) (*entity.Message, int64, error) {
 
 	if len(request.Account) == 0 || len(request.Password) == 0 {
-		return entity.NewSimpleMessage(msg.seq, entity.RespActionUserUnauthorized, "account or password empty"), -1, nil
+		return entity.NewSimpleMessage(msg.seq, entity.ActionUserUnauthorized, "account or password empty"), -1, nil
 	}
 
 	uid, token, err := dao.UserDao.GetUidByLogin(request.Account, request.Password)
@@ -42,7 +42,7 @@ func (a *userApi) Login(msg *ApiMessage, request *entity.LoginRequest) (*entity.
 		return nil, uid, err
 	}
 
-	m := entity.NewMessage(msg.seq, entity.RespActionSuccess)
+	m := entity.NewMessage(msg.seq, entity.ActionSuccess)
 	if err = m.SetData(entity.AuthorResponse{Token: token, Uid: uid}); err != nil {
 		return nil, uid, err
 	}
@@ -51,81 +51,93 @@ func (a *userApi) Login(msg *ApiMessage, request *entity.LoginRequest) (*entity.
 
 func (a *userApi) GetAndInitRelationList(msg *ApiMessage) error {
 
-	friends, err := dao.UserDao.GetAllContacts(msg.uid)
+	allContacts, err := dao.UserDao.GetAllContacts(msg.uid)
 	if err != nil {
 		return err
 	}
 
-	contacts := make([]entity.ContactResponse, 0, len(friends))
+	var friends []*entity.UserInfoResponse
+	var groups []*entity.GroupResponse
 
-	for _, friend := range friends {
+	var uids []int64
+	for _, contacts := range allContacts {
 
-		contacts = append(contacts, entity.ContactResponse{
-			Id:     friend.TargetId,
-			Avatar: "",
-			Name:   friend.Remark,
-			Type:   friend.Type,
-		})
-
-		group := GroupManager.GetGroup(friend.TargetId)
-		if group == nil {
-			return newApiFatalError("load user group error: nil")
+		if contacts.Type == dao.ContactsTypeGroup {
+			group := GroupManager.GetGroup(contacts.TargetId)
+			if group == nil {
+				return newApiFatalError("load user group error: nil")
+			}
+			ClientManager.GetClient(msg.uid).AddGroup(group)
+			groups = append(groups, &entity.GroupResponse{
+				Group:   *group.group,
+				Members: group.GetMembers(),
+			})
+		} else if contacts.Type == dao.ContactsTypeUser {
+			uids = append(uids, contacts.TargetId)
 		}
-		client := ClientManager.GetClient(msg.uid)
-		client.AddGroup(group)
+	}
+	if len(uids) > 0 {
+		user, err := dao.UserDao.GetUser(uids...)
+		if err != nil {
+			return err
+		}
+		for _, u := range user {
+			friends = append(friends, &entity.UserInfoResponse{
+				Uid:      u.Uid,
+				Account:  u.Account,
+				Nickname: u.Nickname,
+				Avatar:   u.Avatar,
+			})
+		}
 	}
 
-	resp := entity.NewMessage(msg.seq, entity.RespActionSuccess)
-	if err = resp.SetData(contacts); err != nil {
-		return err
+	body := entity.ContactResponse{
+		Friends: friends,
+		Groups:  groups,
 	}
 
+	resp := entity.NewMessage2(msg.seq, entity.ActionSuccess, body)
 	ClientManager.EnqueueMessage(msg.uid, resp)
 	return nil
 }
 
-func (a *userApi) AddFriend(msg *ApiMessage, request *entity.AddFriendRequest) error {
+func (a *userApi) AddContacts(msg *ApiMessage, request *entity.AddContacts) error {
 
 	users, err := dao.UserDao.GetUser(request.Uid)
 	if err != nil {
 		return err
 	}
 	if len(users) == 0 {
-		resp := entity.NewSimpleMessage(msg.seq, entity.RespActionFailed, "user not exist.")
+		resp := entity.NewErrMessage2(msg.seq, "user not exist")
 		ClientManager.EnqueueMessage(msg.uid, resp)
 		return nil
 	}
 
-	hasFriend, err := dao.UserDao.HasContacts(msg.uid, request.Uid, dao.ContactsTypeUser)
+	hasContacts, err := dao.UserDao.HasContacts(msg.uid, request.Uid, dao.ContactsTypeUser)
 	if err != nil {
 		return err
 	}
 
-	if hasFriend {
-		resp := entity.NewSimpleMessage(msg.seq, entity.RespActionFailed, "already added friends")
+	if hasContacts {
+		resp := entity.NewErrMessage2(msg.seq, "already added contacts")
 		ClientManager.EnqueueMessage(msg.uid, resp)
 		return nil
 	}
 
+	// add to self
 	friend, err := dao.UserDao.AddContacts(msg.uid, request.Uid, dao.ContactsTypeUser, request.Remark)
 	if err != nil {
 		return err
 	}
-	resp := entity.NewMessage(msg.seq, entity.RespActionSuccess)
-	if err = resp.SetData(friend); err != nil {
-		return err
-	}
+	resp := entity.NewMessage2(msg.seq, entity.ActionSuccess, friend)
 	ClientManager.EnqueueMessage(msg.uid, resp)
 
-	// friend
+	// add to friend
 	f, err := dao.UserDao.AddContacts(request.Uid, msg.uid, dao.ContactsTypeUser, "")
 	if err != nil {
 		return err
 	}
-	resp1 := entity.NewMessage(msg.seq, entity.RespActionFriendApproval)
-	if err = resp.SetData(f); err != nil {
-		return err
-	}
+	resp1 := entity.NewMessage2(-1, entity.ActionUserAddFriend, f)
 	ClientManager.EnqueueMessage(request.Uid, resp1)
 
 	return nil
@@ -226,32 +238,31 @@ func (a *userApi) NewChat(msg *ApiMessage, request *entity.UserNewChatRequest) e
 	target := request.Id
 
 	// todo remove
-	chat, _ := dao.ChatDao.GetChat(target, request.Type)
-	if chat != nil {
-		return errors.New("chat exist")
-	}
+	chat, err := dao.ChatDao.GetChat(target, request.Type)
 
-	c, err := dao.ChatDao.CreateChat(request.Type, target)
 	if err != nil {
-		return err
-	}
-
-	if request.Type == dao.ChatTypeUser {
-		m2, err2 := dao.ChatDao.NewUserChat(c.Cid, uid, target, dao.ChatTypeUser)
-		if err2 != nil {
-			return err2
-		}
-		_, err = dao.ChatDao.NewUserChat(c.Cid, target, uid, dao.ChatTypeUser)
+		chat, err = dao.ChatDao.CreateChat(request.Type, target)
 		if err != nil {
 			return err
 		}
-		resp := entity.NewMessage(msg.seq, entity.RespActionSuccess)
+	}
+
+	if request.Type == dao.ChatTypeUser {
+		m2, err2 := dao.ChatDao.NewUserChat(chat.Cid, uid, target, dao.ChatTypeUser)
+		if err2 != nil {
+			return err2
+		}
+		_, err = dao.ChatDao.NewUserChat(chat.Cid, target, uid, dao.ChatTypeUser)
+		if err != nil {
+			return err
+		}
+		resp := entity.NewMessage(msg.seq, entity.ActionSuccess)
 		if err = resp.SetData(m2); err != nil {
 			return err
 		}
 		ClientManager.EnqueueMessage(msg.uid, resp)
 	} else if request.Type == dao.ChatTypeGroup {
-		m, e := dao.ChatDao.NewUserChat(c.Cid, uid, target, dao.ChatTypeGroup)
+		m, e := dao.ChatDao.NewUserChat(chat.Cid, uid, target, dao.ChatTypeGroup)
 		if e != nil {
 			return e
 		}
@@ -265,7 +276,7 @@ func (a *userApi) NewChat(msg *ApiMessage, request *entity.UserNewChatRequest) e
 
 func (a *userApi) GetUserChatList(msg *ApiMessage) error {
 
-	resp := entity.NewMessage(msg.seq, entity.RespActionSuccess)
+	resp := entity.NewMessage(msg.seq, entity.ActionSuccess)
 	list, err := dao.ChatDao.GetUserChatList(msg.uid)
 	if err != nil {
 		return err
@@ -284,7 +295,7 @@ func (a *userApi) UserInfo(msg *ApiMessage) error {
 
 func (a *userApi) Register(msg *ApiMessage, registerEntity *entity.RegisterRequest) (*entity.Message, error) {
 
-	resp := entity.NewMessage(msg.seq, entity.RespActionSuccess)
+	resp := entity.NewMessage(msg.seq, entity.ActionSuccess)
 	err := dao.UserDao.AddUser(registerEntity.Account, registerEntity.Password)
 
 	if err != nil {
