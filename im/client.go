@@ -15,7 +15,7 @@ type Client struct {
 	time     time.Time
 	closed   *AtomicBool
 
-	groups   []*Group
+	groups   []int64
 	messages chan *entity.Message
 
 	seq *AtomicInt64
@@ -32,12 +32,15 @@ func NewClient(conn Connection) *Client {
 	return client
 }
 
-func (c *Client) AddGroup(group *Group) {
+func (c *Client) AddGroup(gid int64) {
 	if c.closed.Get() {
 		return
 	}
-	c.groups = append(c.groups, group)
-	group.Subscribe(c.uid, c.messages)
+	GroupManager.UserSignIn(c.uid, gid)
+}
+
+func (c *Client) RemoveGroup(gid int64) {
+
 }
 
 // EnqueueMessage enqueue blocking message channel
@@ -60,8 +63,8 @@ func (c *Client) SignIn(uid int64, deviceId int64) {
 
 func (c *Client) SignOut(reason string) {
 	logger.I("client sign out uid=%d, reason=%s", c.uid, reason)
-	for _, group := range c.groups {
-		group.Unsubscribe(c.uid)
+	for _, gid := range c.groups {
+		GroupManager.UserSignIn(c.uid, gid)
 	}
 	c.uid = 0
 	ClientManager.ClientSignOut(c)

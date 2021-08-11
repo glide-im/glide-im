@@ -70,10 +70,7 @@ func (c *clientManager) DispatchMessage(from int64, message *entity.Message) err
 
 	dispatchMsg := entity.NewMessage2(-1, entity.ActionChatMessage, receiverMsg)
 
-	if c.EnqueueMessage(senderMsg.TargetId, dispatchMsg) {
-		// offline
-	}
-
+	c.EnqueueMessage(senderMsg.TargetId, dispatchMsg)
 	return nil
 }
 
@@ -83,23 +80,24 @@ func (c *clientManager) EnqueueMessageMulti(uid int64, msg ...*entity.Message) {
 	}
 }
 
-func (c *clientManager) EnqueueMessage(uid int64, msg *entity.Message) bool {
+func (c *clientManager) EnqueueMessage(uid int64, msg *entity.Message) {
 	client, ok := c.clients[uid]
 	if ok {
 		if client.closed.Get() {
 			ok = false
 		} else {
-			if msg.Seq == -1 {
+			if msg.Seq <= 0 {
 				msg.Seq = client.getNextSeq()
 			}
 			if uid <= 0 {
 				client.EnqueueMessage(entity.NewSimpleMessage(msg.Seq, entity.ActionFailed, "unauthorized"))
-				return false
 			}
 			client.EnqueueMessage(msg)
 		}
 	}
-	return ok
+	if !ok {
+		// send failed
+	}
 }
 
 func (c *clientManager) IsOnline(uid int64) bool {
@@ -115,10 +113,17 @@ func (c *clientManager) Update() {
 	}
 }
 
-func (c *clientManager) AllClient() map[int64]*Client {
-	return c.clients
+func (c *clientManager) SubscribeGroup(uid int64, gid int64) {
+	client, ok := c.clients[uid]
+	if ok {
+		client.AddGroup(gid)
+	}
 }
 
-func (c *clientManager) GetClient(uid int64) *Client {
-	return c.clients[uid]
+func (c *clientManager) AllClient() []int64 {
+	var ret []int64
+	for k := range c.clients {
+		ret = append(ret, k)
+	}
+	return ret
 }

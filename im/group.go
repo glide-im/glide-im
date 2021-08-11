@@ -12,27 +12,23 @@ type Group struct {
 	Cid   int64
 	group *dao.Group
 
-	members  map[int64]*dao.GroupMember
-	memberCh map[int64]chan *entity.Message
+	members map[int64]*dao.GroupMember
 }
 
 func NewGroup(gid int64, group *dao.Group, cid int64, member []*dao.GroupMember) *Group {
 	ret := new(Group)
 	ret.mutex = NewMutex()
 	ret.members = map[int64]*dao.GroupMember{}
-	ret.memberCh = make(map[int64]chan *entity.Message)
 	ret.Gid = gid
 	ret.Cid = cid
 	ret.group = group
 	for _, m := range member {
-		ret.memberCh[m.Uid] = nil
 		ret.members[m.Uid] = m
 	}
 	return ret
 }
 
-func (g *Group) PutMember(member *dao.GroupMember, c chan *entity.Message) {
-	g.memberCh[member.Uid] = c
+func (g *Group) PutMember(member *dao.GroupMember) {
 	g.members[member.Uid] = member
 }
 
@@ -42,20 +38,14 @@ func (g *Group) HasMember(uid int64) bool {
 }
 
 func (g *Group) IsMemberOnline(uid int64) bool {
-	return g.memberCh[uid] != nil
+	// TODO
+	return false
 }
 
 func (g *Group) GetOnlineMember() []*dao.GroupMember {
 	defer g.LockUtilReturn()()
 
-	onlineMember := make([]*dao.GroupMember, 0, len(g.members))
-	for k, v := range g.memberCh {
-		m, exist := g.members[k]
-		if v != nil && exist {
-			onlineMember = append(onlineMember, m)
-		}
-	}
-	return onlineMember
+	return []*dao.GroupMember{}
 }
 
 func (g *Group) GetMembers() []*dao.GroupMember {
@@ -69,21 +59,16 @@ func (g *Group) GetMembers() []*dao.GroupMember {
 func (g *Group) SendMessage(uid int64, message *entity.Message) {
 	defer g.LockUtilReturn()()
 
-	for id, v := range g.memberCh {
+	for id, v := range g.members {
 		if v != nil {
 			ClientManager.EnqueueMessage(id, message)
 		}
 	}
 }
 
-func (g *Group) Subscribe(uid int64, mc chan *entity.Message) {
-	defer g.LockUtilReturn()()
-	g.memberCh[uid] = mc
-}
-
 func (g *Group) Unsubscribe(uid int64) {
 	defer g.LockUtilReturn()()
-	g.memberCh[uid] = nil
+
 }
 
 //////////////////////////////////////////////////////////////////////////////////

@@ -49,6 +49,7 @@ func (a *userApi) Login(msg *ApiMessage, request *entity.LoginRequest) (*entity.
 	return m, uid, nil
 }
 
+//goland:noinspection GoPreferNilSlice
 func (a *userApi) GetAndInitRelationList(msg *ApiMessage) error {
 
 	allContacts, err := dao.UserDao.GetAllContacts(msg.uid)
@@ -56,8 +57,8 @@ func (a *userApi) GetAndInitRelationList(msg *ApiMessage) error {
 		return err
 	}
 
-	var friends []*entity.UserInfoResponse
-	var groups []*entity.GroupResponse
+	friends := []*entity.UserInfoResponse{}
+	groups := []*entity.GroupResponse{}
 
 	var uids []int64
 	for _, contacts := range allContacts {
@@ -67,7 +68,7 @@ func (a *userApi) GetAndInitRelationList(msg *ApiMessage) error {
 			if group == nil {
 				return newApiFatalError("load user group error: nil")
 			}
-			ClientManager.GetClient(msg.uid).AddGroup(group)
+			ClientManager.SubscribeGroup(msg.uid, group.Gid)
 			groups = append(groups, &entity.GroupResponse{
 				Group:   *group.group,
 				Members: group.GetMembers(),
@@ -217,7 +218,7 @@ func (a *userApi) GetOnlineUser(msg *ApiMessage) error {
 	users := make([]u, len(allClient))
 
 	ClientManager.Update()
-	for k := range allClient {
+	for _, k := range allClient {
 		us, err := dao.UserDao.GetUser(k)
 		if err != nil || len(us) == 0 {
 			logger.D("get online uid=%d error, error=%v", k, err)

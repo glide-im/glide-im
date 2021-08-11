@@ -94,6 +94,14 @@ func (m *groupManager) DispatchMessage(c *Client, message *entity.Message) error
 	return nil
 }
 
+func (m *groupManager) UserSignIn(uid int64, gid int64) {
+
+}
+
+func (m *groupManager) UserSignOut(uid int64, gid int64) {
+
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 type GroupMap struct {
