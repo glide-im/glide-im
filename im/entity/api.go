@@ -80,8 +80,8 @@ type GroupAddMemberResponse struct {
 }
 
 type AddedGroupResponse struct {
-	Group     *dao.Group
-	GroupChat *dao.Chat
+	Group *dao.Group
+	UcId  int64
 }
 
 type JoinGroupRequest struct {

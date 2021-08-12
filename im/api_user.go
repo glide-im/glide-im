@@ -126,19 +126,43 @@ func (a *userApi) AddContacts(msg *ApiMessage, request *entity.AddContacts) erro
 	}
 
 	// add to self
-	friend, err := dao.UserDao.AddContacts(msg.uid, request.Uid, dao.ContactsTypeUser, request.Remark)
+	_, err = dao.UserDao.AddContacts(msg.uid, request.Uid, dao.ContactsTypeUser, request.Remark)
 	if err != nil {
 		return err
 	}
-	resp := entity.NewMessage2(msg.seq, entity.ActionSuccess, friend)
+
+	userInfos, err := dao.UserDao.GetUser(msg.uid, request.Uid)
+	if err != nil {
+		return err
+	}
+	c1 := entity.ContactResponse{
+		Friends: []*entity.UserInfoResponse{{
+			Uid:      msg.uid,
+			Nickname: userInfos[0].Nickname,
+			Account:  userInfos[0].Account,
+			Avatar:   userInfos[0].Avatar,
+		}},
+		Groups: []*entity.GroupResponse{},
+	}
+	resp := entity.NewMessage2(msg.seq, entity.ActionSuccess, c1)
 	ClientManager.EnqueueMessage(msg.uid, resp)
 
 	// add to friend
-	f, err := dao.UserDao.AddContacts(request.Uid, msg.uid, dao.ContactsTypeUser, "")
+	_, err = dao.UserDao.AddContacts(request.Uid, msg.uid, dao.ContactsTypeUser, "")
 	if err != nil {
 		return err
 	}
-	resp1 := entity.NewMessage2(-1, entity.ActionUserAddFriend, f)
+
+	c := entity.ContactResponse{
+		Friends: []*entity.UserInfoResponse{{
+			Uid:      msg.uid,
+			Nickname: userInfos[1].Nickname,
+			Account:  userInfos[1].Account,
+			Avatar:   userInfos[1].Avatar,
+		}},
+		Groups: []*entity.GroupResponse{},
+	}
+	resp1 := entity.NewMessage2(-1, entity.ActionUserAddFriend, c)
 	ClientManager.EnqueueMessage(request.Uid, resp1)
 
 	return nil

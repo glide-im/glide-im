@@ -13,6 +13,7 @@ func (m *groupApi) CreateGroup(msg *ApiMessage, request *entity.CreateGroupReque
 	if err != nil {
 		return err
 	}
+	// create group chat
 	chat, err := dao.ChatDao.CreateChat(dao.ChatTypeGroup, group.Gid)
 	if err != nil {
 		return err
@@ -26,16 +27,23 @@ func (m *groupApi) CreateGroup(msg *ApiMessage, request *entity.CreateGroupReque
 		return err
 	}
 	// add group to self contacts list
-	c, err := dao.UserDao.AddContacts(msg.uid, group.Gid, dao.ContactsTypeGroup, "")
+	_, err = dao.UserDao.AddContacts(msg.uid, group.Gid, dao.ContactsTypeGroup, "")
 	if err != nil {
 		return err
+	}
+	c := entity.ContactResponse{
+		Friends: []*entity.UserInfoResponse{},
+		Groups: []*entity.GroupResponse{{
+			Group:   *g.group,
+			Members: g.GetMembers(),
+		}},
 	}
 	ClientManager.EnqueueMessage(msg.uid, entity.NewMessage2(-1, entity.ActionUserAddFriend, c))
 
 	// create user chat by default
 	uc, err := dao.ChatDao.NewUserChat(chat.Cid, msg.uid, g.Gid, dao.ChatTypeGroup)
 	if err != nil {
-
+		return err
 	}
 	ClientManager.EnqueueMessage(msg.uid, entity.NewMessage2(-1, entity.ActionUserNewChat, uc))
 
@@ -60,11 +68,7 @@ func (m *groupApi) CreateGroup(msg *ApiMessage, request *entity.CreateGroupReque
 		}
 	}
 
-	body := entity.AddedGroupResponse{
-		Group:     group,
-		GroupChat: chat,
-	}
-	ClientManager.EnqueueMessage(msg.uid, entity.NewMessage2(msg.seq, entity.ActionSuccess, body))
+	ClientManager.EnqueueMessage(msg.uid, entity.NewMessage2(msg.seq, entity.ActionSuccess, "create group success"))
 	return nil
 }
 
@@ -147,10 +151,26 @@ func (m *groupApi) AddGroupMember(msg *ApiMessage, request *entity.AddMemberRequ
 		return nil
 	}
 
+	// TODO query user info and notify group members, optimize query time
+	exist, err2 := dao.UserDao.HasUser(uids...)
+	if err2 != nil {
+		return err2
+	}
+	if !exist {
+		ClientManager.EnqueueMessage(msg.uid, entity.NewErrMessage2(msg.seq, "user does not exist"))
+		return nil
+	}
+
 	members, err := dao.GroupDao.AddMember(request.Gid, dao.GroupMemberUser, uids...)
 	if err != nil {
 		return err
 	}
+	// notify group member update group
+	groupNotify := entity.GroupAddMemberResponse{
+		Gid:     g.Gid,
+		Members: members,
+	}
+	g.SendMessage(msg.uid, entity.NewMessage2(-1, entity.ActionGroupAddMember, groupNotify))
 
 	for _, member := range members {
 
@@ -160,14 +180,20 @@ func (m *groupApi) AddGroupMember(msg *ApiMessage, request *entity.AddMemberRequ
 			continue
 		}
 		//notify update contacts list
-		//ClientManager.EnqueueMessage(member.Uid, entity.NewMessage2(-1, entity.ActionUserAddFriend, contacts))
+		c := entity.ContactResponse{
+			Friends: []*entity.UserInfoResponse{},
+			Groups: []*entity.GroupResponse{{
+				Group:   *g.group,
+				Members: g.GetMembers(),
+			}},
+		}
+		ClientManager.EnqueueMessage(member.Uid, entity.NewMessage2(-1, entity.ActionUserAddFriend, c))
 
 		// default add user chat
 		chat, er := dao.ChatDao.NewUserChat(g.Cid, member.Uid, g.Gid, dao.ChatTypeGroup)
 		if er != nil {
 			continue
 		}
-
 		// member subscribe group message
 		g.PutMember(member)
 		ClientManager.SubscribeGroup(msg.uid, g.Gid)
@@ -177,20 +203,6 @@ func (m *groupApi) AddGroupMember(msg *ApiMessage, request *entity.AddMemberRequ
 
 	}
 
-	body := entity.GroupResponse{
-		Group:   *g.group,
-		Members: g.group.Members,
-	}
-	r := entity.NewMessage2(-1, entity.ActionGroupJoin, body)
-	for _, member := range members {
-		ClientManager.EnqueueMessage(member.Uid, r)
-	}
-
-	groupNotify := entity.GroupAddMemberResponse{
-		Gid:     g.Gid,
-		Members: members,
-	}
-	g.SendMessage(msg.uid, entity.NewMessage2(-1, entity.ActionGroupAddMember, groupNotify))
 	return nil
 }
 
@@ -212,7 +224,7 @@ func (m *groupApi) JoinGroup(msg *ApiMessage, request *entity.JoinGroupRequest) 
 	g := GroupManager.GetGroup(request.Gid)
 
 	if g == nil {
-		ClientManager.EnqueueMessage(msg.uid, entity.NewErrMessage2(msg.seq, "group not exist"))
+		ClientManager.EnqueueMessage(msg.uid, entity.NewErrMessage2(msg.seq, "group does not exist"))
 		return nil
 	}
 
@@ -227,8 +239,15 @@ func (m *groupApi) JoinGroup(msg *ApiMessage, request *entity.JoinGroupRequest) 
 	}
 	g.PutMember(members[0])
 
-	contacts, err := dao.UserDao.AddContacts(msg.uid, g.Gid, dao.ContactsTypeGroup, "")
-	ClientManager.EnqueueMessage(msg.uid, entity.NewMessage2(-1, entity.ActionUserAddFriend, contacts))
+	_, err = dao.UserDao.AddContacts(msg.uid, g.Gid, dao.ContactsTypeGroup, "")
+	c := entity.ContactResponse{
+		Friends: []*entity.UserInfoResponse{},
+		Groups: []*entity.GroupResponse{{
+			Group:   *g.group,
+			Members: g.GetMembers(),
+		}},
+	}
+	ClientManager.EnqueueMessage(msg.uid, entity.NewMessage2(-1, entity.ActionUserAddFriend, c))
 
 	chat, err := dao.ChatDao.NewUserChat(g.Cid, msg.uid, g.Gid, dao.ChatTypeGroup)
 	if err != nil {

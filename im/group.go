@@ -58,11 +58,10 @@ func (g *Group) GetMembers() []*dao.GroupMember {
 
 func (g *Group) SendMessage(uid int64, message *entity.Message) {
 	defer g.LockUtilReturn()()
+	logger.D("Group.SendMessage: %s", message)
 
-	for id, v := range g.members {
-		if v != nil {
-			ClientManager.EnqueueMessage(id, message)
-		}
+	for id, _ := range g.members {
+		ClientManager.EnqueueMessage(id, message)
 	}
 }
 

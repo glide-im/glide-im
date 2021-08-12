@@ -73,6 +73,7 @@ var actionNameMap = map[Action]string{
 	ActionGroupGetMember:    "ActionGroupGetMember",
 	ActionGroupExit:         "ActionGroupExit",
 	ActionGroupCreate:       "ActionGroupCreate",
+	ActionGroupInfo:         "",
 	ActionGroupUpdate:       "ActionGroupUpdate",
 
 	ActionOnlineUser: "ActionOnlineUser",
@@ -81,7 +82,12 @@ var actionNameMap = map[Action]string{
 	ActionGroupMessage: "ActionGroupMessage",
 	ActionChatMessage:  "ActionChatMessage",
 
-	ActionHeartbeat: "ActionHeartbeat",
+	ActionHeartbeat:        "ActionHeartbeat",
+	ActionFailed:           "ActionFailed",
+	ActionSuccess:          "ActionSuccess",
+	ActionUserUnauthorized: "ActionUserUnauthorized",
+	ActionNotify:           "ActionNotify",
+	ActionEcho:             "ActionEcho",
 }
 
 func (a Action) String() string {

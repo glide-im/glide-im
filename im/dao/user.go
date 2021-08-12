@@ -56,6 +56,22 @@ func InitUserDao() {
 	}
 }
 
+func (d *userDao) HasUser(uid ...int64) (bool, error) {
+
+	query := db.DB.Table("im_user").Where("uid = ?", uid[0])
+
+	for index, id := range uid {
+		if index == 0 {
+			continue
+		}
+		query = query.Or("uid = ?", id)
+	}
+	rows := -1
+	err := query.Count(&rows).Error
+
+	return rows == len(uid), err
+}
+
 func (d *userDao) GetUser(uid ...int64) ([]*User, error) {
 
 	var u []*User
