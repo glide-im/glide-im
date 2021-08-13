@@ -102,15 +102,14 @@ func (a *userApi) GetAndInitRelationList(msg *ApiMessage) error {
 	return nil
 }
 
-func (a *userApi) AddContacts(msg *ApiMessage, request *entity.AddContacts) error {
+func (a *userApi) AddFriend(msg *ApiMessage, request *entity.AddContacts) error {
 
-	users, err := dao.UserDao.GetUser(request.Uid)
+	hasUser, err := dao.UserDao.HasUser(request.Uid)
 	if err != nil {
 		return err
 	}
-	if len(users) == 0 {
-		resp := entity.NewErrMessage2(msg.seq, "user not exist")
-		ClientManager.EnqueueMessage(msg.uid, resp)
+	if !hasUser {
+		ClientManager.EnqueueMessage(msg.uid, entity.NewErrMessage2(msg.seq, "user not exist"))
 		return nil
 	}
 
@@ -120,8 +119,7 @@ func (a *userApi) AddContacts(msg *ApiMessage, request *entity.AddContacts) erro
 	}
 
 	if hasContacts {
-		resp := entity.NewErrMessage2(msg.seq, "already added contacts")
-		ClientManager.EnqueueMessage(msg.uid, resp)
+		ClientManager.EnqueueMessage(msg.uid, entity.NewErrMessage2(msg.seq, "already added contacts"))
 		return nil
 	}
 
@@ -132,15 +130,25 @@ func (a *userApi) AddContacts(msg *ApiMessage, request *entity.AddContacts) erro
 	}
 
 	userInfos, err := dao.UserDao.GetUser(msg.uid, request.Uid)
+	var me *dao.User
+	var friend *dao.User
+	if userInfos[0].Uid == msg.uid {
+		me = userInfos[0]
+		friend = userInfos[1]
+	} else {
+		me = userInfos[1]
+		friend = userInfos[0]
+	}
 	if err != nil {
 		return err
 	}
+
 	c1 := entity.ContactResponse{
 		Friends: []*entity.UserInfoResponse{{
 			Uid:      msg.uid,
-			Nickname: userInfos[0].Nickname,
-			Account:  userInfos[0].Account,
-			Avatar:   userInfos[0].Avatar,
+			Nickname: friend.Nickname,
+			Account:  friend.Account,
+			Avatar:   friend.Avatar,
 		}},
 		Groups: []*entity.GroupResponse{},
 	}
@@ -156,9 +164,9 @@ func (a *userApi) AddContacts(msg *ApiMessage, request *entity.AddContacts) erro
 	c := entity.ContactResponse{
 		Friends: []*entity.UserInfoResponse{{
 			Uid:      msg.uid,
-			Nickname: userInfos[1].Nickname,
-			Account:  userInfos[1].Account,
-			Avatar:   userInfos[1].Avatar,
+			Nickname: me.Nickname,
+			Account:  me.Account,
+			Avatar:   me.Avatar,
 		}},
 		Groups: []*entity.GroupResponse{},
 	}

@@ -100,7 +100,7 @@ func (a *api) Handle(client *Client, message *entity.Message) error {
 	case entity.ActionUserGetInfo:
 		return a.GetUserInfo(msg, en.(*entity.UserInfoRequest))
 	case entity.ActionUserAddFriend:
-		return a.AddContacts(msg, en.(*entity.AddContacts))
+		return a.AddFriend(msg, en.(*entity.AddContacts))
 	case entity.ActionUserInfo:
 		return a.UserInfo(msg)
 

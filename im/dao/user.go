@@ -84,6 +84,10 @@ func (d *userDao) GetUser(uid ...int64) ([]*User, error) {
 		query = query.Or("uid = ?", id)
 	}
 
+	if len(u) != len(uid) {
+		return nil, errors.New("get user info error")
+	}
+
 	return u, query.Find(&u).Error
 }
 

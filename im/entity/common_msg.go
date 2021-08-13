@@ -137,6 +137,7 @@ func (m *Message) String() string {
 
 func NewErrMessage(seq int64, err error) *Message {
 	resp := new(Message)
+	resp.Action = ActionFailed
 	resp.Seq = seq
 	resp.Data = err.Error()
 	return resp
@@ -144,6 +145,7 @@ func NewErrMessage(seq int64, err error) *Message {
 
 func NewErrMessage2(seq int64, msg string) *Message {
 	resp := new(Message)
+	resp.Action = ActionFailed
 	resp.Seq = seq
 	resp.Data = msg
 	return resp
