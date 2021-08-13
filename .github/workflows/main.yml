@@ -4,7 +4,7 @@ on:
   push:
     branches: [ master ]
     tags:
-      - 'v*'
+      - 'v*.*.*'
 
 jobs:
   build-and-deploy:
@@ -14,6 +14,13 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@master
+
+      - name: Get Tag
+        id: get_tag
+        run: |
+          echo ::set-output name=TAG::${GITHUB_REF/refs\/tags\//}
+          echo go_im_${GITHUB_REF/refs\/tags\//}.tar.gz
+
 
       - name: Set Up Go
         uses: actions/setup-go@master
@@ -25,7 +32,9 @@ jobs:
           go get -v -t -d ./...
 
       - name: Build
-        run: go build -v .
+        run: |
+          chmod +x ./build.sh
+          ./build.sh
 
       - name: Create Release
         id: create_release
@@ -33,10 +42,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GitAction }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{ github.hash }}
+          release_name: release_${{ steps.get_tag.outputs.TAG }}
           draft: false
           prerelease: false
+
+      - name: build TAR PACKAGE
+        run: tar -czvf go_im.tar.gz ./dist/go_im
 
       - name: Upload Release Asset
         id: upload-release-asset
@@ -45,9 +57,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GitAction }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./release.tgz
-          asset_name: release.tgz
-          asset_content_type: application/x-tgz
+          asset_path: ./go_im.tar.gz
+          asset_name: go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz
+          asset_content_type: application/gzip
 
       - name: Deploy
         uses: appleboy/ssh-action@master
@@ -58,6 +70,6 @@ jobs:
           port: ${{ secrets.PORT }}
           script: |
             cd /home/im_server
-            wget https://github.com/dengzii/go_im/releases/latest/download/release.tgz -O release.tgz
-            tar zxvf release.tgz
+            wget https://github.com/dengzii/go_im/releases/latest/download/go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz -O go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz
+            tar zxvf go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz
             ./main
