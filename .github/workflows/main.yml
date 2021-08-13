@@ -47,7 +47,7 @@ jobs:
           prerelease: false
 
       - name: build TAR PACKAGE
-        run: tar -czvf go_im.tar.gz ./dist/go_im
+        run: tar -czvf go_im.tar.gz go_im
 
       - name: Upload Release Asset
         id: upload-release-asset
@@ -72,4 +72,6 @@ jobs:
             cd /home/im_server
             wget https://github.com/dengzii/go_im/releases/latest/download/go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz -O go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz
             tar zxvf go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz
-            ./main
+            pkill go_im
+            nohup ./go_im >> log.output &
+            rm go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz
