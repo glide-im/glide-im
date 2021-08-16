@@ -68,10 +68,14 @@ func (a *userApi) GetAndInitRelationList(msg *ApiMessage) error {
 			if group == nil {
 				return newApiFatalError("load user group error: nil")
 			}
-			ClientManager.SubscribeGroup(msg.uid, group.Gid)
+			ClientManager.AddGroup(msg.uid, group.Gid)
+			members, err := GroupManager.GetMembers(group.Gid)
+			if err != nil {
+				return err
+			}
 			groups = append(groups, &entity.GroupResponse{
 				Group:   *group.group,
-				Members: group.GetMembers(),
+				Members: members,
 			})
 		} else if contacts.Type == dao.ContactsTypeUser {
 			uids = append(uids, contacts.TargetId)
@@ -132,6 +136,7 @@ func (a *userApi) AddFriend(msg *ApiMessage, request *entity.AddContacts) error 
 	userInfos, err := dao.UserDao.GetUser(msg.uid, request.Uid)
 	var me *dao.User
 	var friend *dao.User
+
 	if userInfos[0].Uid == msg.uid {
 		me = userInfos[0]
 		friend = userInfos[1]
@@ -143,17 +148,16 @@ func (a *userApi) AddFriend(msg *ApiMessage, request *entity.AddContacts) error 
 		return err
 	}
 
-	c1 := entity.ContactResponse{
+	ccontactResponse := entity.ContactResponse{
 		Friends: []*entity.UserInfoResponse{{
-			Uid:      msg.uid,
+			Uid:      friend.Uid,
 			Nickname: friend.Nickname,
 			Account:  friend.Account,
 			Avatar:   friend.Avatar,
 		}},
 		Groups: []*entity.GroupResponse{},
 	}
-	resp := entity.NewMessage2(msg.seq, entity.ActionSuccess, c1)
-	ClientManager.EnqueueMessage(msg.uid, resp)
+	ClientManager.EnqueueMessage(msg.uid, entity.NewMessage2(msg.seq, entity.ActionSuccess, ccontactResponse))
 
 	// add to friend
 	_, err = dao.UserDao.AddContacts(request.Uid, msg.uid, dao.ContactsTypeUser, "")
@@ -161,7 +165,7 @@ func (a *userApi) AddFriend(msg *ApiMessage, request *entity.AddContacts) error 
 		return err
 	}
 
-	c := entity.ContactResponse{
+	contactRespFriend := entity.ContactResponse{
 		Friends: []*entity.UserInfoResponse{{
 			Uid:      msg.uid,
 			Nickname: me.Nickname,
@@ -170,8 +174,7 @@ func (a *userApi) AddFriend(msg *ApiMessage, request *entity.AddContacts) error 
 		}},
 		Groups: []*entity.GroupResponse{},
 	}
-	resp1 := entity.NewMessage2(-1, entity.ActionUserAddFriend, c)
-	ClientManager.EnqueueMessage(request.Uid, resp1)
+	ClientManager.EnqueueMessage(request.Uid, entity.NewMessage2(-1, entity.ActionUserAddFriend, contactRespFriend))
 
 	return nil
 }

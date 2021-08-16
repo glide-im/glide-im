@@ -15,7 +15,7 @@ type Client struct {
 	time     time.Time
 	closed   *AtomicBool
 
-	groups   []int64
+	groups   *Int64Set
 	messages chan *entity.Message
 
 	seq *AtomicInt64
@@ -24,11 +24,11 @@ type Client struct {
 func NewClient(conn Connection) *Client {
 	client := new(Client)
 	client.conn = conn
+	client.groups = NewInt64Set()
 	client.closed = NewAtomicBool(false)
 	client.messages = make(chan *entity.Message, 200)
 	client.time = time.Now()
 	client.seq = new(AtomicInt64)
-
 	return client
 }
 
@@ -36,11 +36,12 @@ func (c *Client) AddGroup(gid int64) {
 	if c.closed.Get() {
 		return
 	}
-	GroupManager.UserSignIn(c.uid, gid)
+	c.groups.Add(gid)
 }
 
 func (c *Client) RemoveGroup(gid int64) {
-
+	c.groups.Remove(gid)
+	GroupManager.UnsubscribeGroup(c.uid, gid)
 }
 
 // EnqueueMessage enqueue blocking message channel
@@ -63,9 +64,9 @@ func (c *Client) SignIn(uid int64, deviceId int64) {
 
 func (c *Client) SignOut(reason string) {
 	logger.I("client sign out uid=%d, reason=%s", c.uid, reason)
-	for _, gid := range c.groups {
-		GroupManager.UserSignIn(c.uid, gid)
-	}
+	c.groups.ForEach(func(value int64) {
+		c.RemoveGroup(value)
+	})
 	c.uid = 0
 	ClientManager.ClientSignOut(c)
 	c.closed.Set(true)
@@ -172,7 +173,7 @@ func (c *Client) handleMessage(message *entity.Message) error {
 	case entity.ActionChatMessage:
 		return ClientManager.DispatchMessage(c.uid, message)
 	case entity.ActionGroupMessage:
-		return GroupManager.DispatchMessage(c, message)
+		return GroupManager.DispatchMessage(c.uid, message)
 	}
 	return nil
 }

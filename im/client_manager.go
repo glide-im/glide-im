@@ -81,28 +81,20 @@ func (c *clientManager) EnqueueMessageMulti(uid int64, msg ...*entity.Message) {
 }
 
 func (c *clientManager) EnqueueMessage(uid int64, msg *entity.Message) {
-	client, ok := c.clients[uid]
-	if ok {
-		if client.closed.Get() {
-			ok = false
-		} else {
-			if msg.Seq <= 0 {
-				msg.Seq = client.getNextSeq()
-			}
-			if uid <= 0 {
-				client.EnqueueMessage(entity.NewSimpleMessage(msg.Seq, entity.ActionFailed, "unauthorized"))
-			}
-			client.EnqueueMessage(msg)
+	client := c.clients[uid]
+	if c.IsOnline(uid) {
+		if msg.Seq <= 0 {
+			msg.Seq = client.getNextSeq()
 		}
-	}
-	if !ok {
-		// send failed
+		client.EnqueueMessage(msg)
+	} else {
+		// TODO user offline
 	}
 }
 
 func (c *clientManager) IsOnline(uid int64) bool {
-	_, online := c.clients[uid]
-	return online
+	client, online := c.clients[uid]
+	return online && !client.closed.Get()
 }
 
 func (c *clientManager) Update() {
@@ -113,10 +105,17 @@ func (c *clientManager) Update() {
 	}
 }
 
-func (c *clientManager) SubscribeGroup(uid int64, gid int64) {
+func (c *clientManager) AddGroup(uid int64, gid int64) {
 	client, ok := c.clients[uid]
 	if ok {
 		client.AddGroup(gid)
+	}
+}
+
+func (c *clientManager) RemoveGroup(uid int64, gid int64) {
+	client, ok := c.clients[uid]
+	if ok {
+		client.RemoveGroup(gid)
 	}
 }
 
