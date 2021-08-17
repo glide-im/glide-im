@@ -5,7 +5,7 @@ type Int64Set struct {
 }
 
 func NewInt64Set() *Int64Set {
-	return &Int64Set{m: map[int64]interface{}{}}
+	return &Int64Set{m: make(map[int64]interface{})}
 }
 
 func (i *Int64Set) Add(v int64) {
@@ -23,7 +23,7 @@ func (i *Int64Set) Remove(v int64) {
 }
 
 func (i *Int64Set) Clear() {
-	i.m = map[int64]interface{}{}
+	i.m = make(map[int64]interface{})
 }
 
 func (i *Int64Set) ForEach(it func(value int64)) {

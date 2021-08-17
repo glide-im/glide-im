@@ -72,7 +72,6 @@ func (a *userApi) GetAndInitRelationList(msg *ApiMessage) error {
 			if group == nil {
 				return newApiFatalError("load user group error: nil")
 			}
-			ClientManager.AddGroup(msg.uid, group.Gid)
 			members, err := GroupManager.GetMembers(group.Gid)
 			if err != nil {
 				return err

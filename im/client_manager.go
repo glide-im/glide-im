@@ -9,15 +9,12 @@ import (
 var ClientManager = newClientManager()
 
 type clientManager struct {
-	*mutex
-	clients *clientMap
-
+	clients     *clientMap
 	nextConnUid *AtomicInt64
 }
 
 func newClientManager() *clientManager {
 	ret := new(clientManager)
-	ret.mutex = NewMutex()
 	ret.clients = newClientMap()
 	ret.nextConnUid = new(AtomicInt64)
 	ret.nextConnUid.Set(-1)
@@ -33,7 +30,6 @@ func (c *clientManager) ClientConnected(conn Connection) {
 
 func (c *clientManager) ClientSignIn(oldUid, uid int64, device int64) {
 	logger.D("ClientManager.ClientSignIn: connUid=%d, uid=%d", oldUid, uid)
-	defer c.clients.LockUtilReturn()()
 
 	client := c.clients.Get(oldUid)
 	if client == nil {
@@ -47,7 +43,6 @@ func (c *clientManager) ClientSignIn(oldUid, uid int64, device int64) {
 
 func (c *clientManager) UserLogout(uid int64) {
 	logger.D("ClientManager.UserLogout: uid=%d", uid)
-	defer c.clients.LockUtilReturn()()
 	c.clients.Delete(uid)
 }
 
@@ -123,20 +118,6 @@ func (c *clientManager) Update() {
 	}
 }
 
-func (c *clientManager) AddGroup(uid int64, gid int64) {
-	client := c.clients.Get(uid)
-	if client != nil {
-		client.AddGroup(gid)
-	}
-}
-
-func (c *clientManager) RemoveGroup(uid int64, gid int64) {
-	client := c.clients.Get(uid)
-	if client != nil {
-		client.RemoveGroup(gid)
-	}
-}
-
 func (c *clientManager) AllClient() []int64 {
 	var ret []int64
 	for k := range c.clients.clients {
@@ -166,6 +147,7 @@ func (g *clientMap) Size() int {
 }
 
 func (g *clientMap) Get(uid int64) *Client {
+	defer g.LockUtilReturn()()
 	client, ok := g.clients[uid]
 	if ok {
 		return client
@@ -174,9 +156,11 @@ func (g *clientMap) Get(uid int64) *Client {
 }
 
 func (g *clientMap) Put(uid int64, client *Client) {
+	defer g.LockUtilReturn()()
 	g.clients[uid] = client
 }
 
 func (g *clientMap) Delete(uid int64) {
+	defer g.LockUtilReturn()()
 	delete(g.clients, uid)
 }

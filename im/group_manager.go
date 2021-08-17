@@ -20,72 +20,18 @@ func NewGroupManager() *groupManager {
 	return ret
 }
 
-func (m *groupManager) CreateGroup(name string, uid int64) (*Group, error) {
-
-	group, err := dao.GroupDao.CreateGroup(name, uid)
-	if err != nil {
-		return nil, err
-	}
-	// create group chat
-	chat, err := dao.ChatDao.CreateChat(dao.ChatTypeGroup, group.Gid)
-	if err != nil {
-		// TODO undo
-		return nil, err
-	}
-	g := NewGroup(group.Gid, group, chat.Cid, []*dao.GroupMember{})
-
-	owner, err := dao.GroupDao.AddMember(group.Gid, dao.GroupMemberAdmin, uid)
-	if err != nil {
-		// TODO undo create group
-		return nil, err
-	}
-	_, err = dao.UserDao.AddContacts(uid, group.Gid, dao.ContactsTypeGroup, "")
-	if err != nil {
-		// TODO undo
-		return nil, err
-	}
-	g.PutMember(owner[0])
-
-	defer m.LockUtilReturn()()
-	m.groups.Put(g.Gid, g)
-
-	return g, nil
+func (m *groupManager) PutMember(gid int64, mb *dao.GroupMember) {
+	m.GetGroup(gid).PutMember(mb)
 }
 
-func (m groupManager) AddGroupMember(gid int64, uid ...int64) ([]*dao.GroupMember, error) {
-
-	g := m.GetGroup(gid)
-	memberUid := make([]int64, 0, len(uid))
-	for _, u := range uid {
-		// member exist
-		if !g.HasMember(u) {
-			memberUid = append(memberUid, u)
-		}
-	}
-	if len(memberUid) == 0 {
-		return nil, errors.New("already added")
-	}
-
-	// TODO query user info and notify group members, optimize query time
-	exist, err2 := dao.UserDao.HasUser(memberUid...)
-	if err2 != nil {
-		return nil, err2
-	}
-	if !exist {
-		return nil, errors.New("user does not exist")
-	}
-
-	members, err := dao.GroupDao.AddMember(gid, dao.GroupMemberUser, memberUid...)
-	if err != nil {
-		return nil, err
-	}
-	return members, nil
+func (m *groupManager) UnsubscribeGroup(uid int64, gid int64) {
+	m.GetGroup(gid).RemoveMember(uid)
 }
 
 func (m *groupManager) RemoveMember(gid int64, uid ...int64) error {
 	group := m.GetGroup(gid)
 	if group == nil {
-		return errors.New("")
+		return errors.New("unknown group")
 	}
 	for _, id := range uid {
 		if group.HasMember(id) {
@@ -101,6 +47,10 @@ func (m *groupManager) GetMembers(gid int64) ([]*dao.GroupMember, error) {
 		return []*dao.GroupMember{}, nil
 	}
 	return group.GetMembers(), nil
+}
+
+func (m *groupManager) AddGroup(group *Group) {
+	m.groups.Put(group.Gid, group)
 }
 
 func (m *groupManager) GetGroup(gid int64) *Group {
@@ -175,14 +125,6 @@ func (m *groupManager) DispatchMessage(uid int64, message *entity.Message) error
 
 	group.SendMessage(uid, resp)
 	return nil
-}
-
-func (m *groupManager) SubscribeGroup(gid int64, mb *dao.GroupMember) {
-	m.GetGroup(gid).PutMember(mb)
-}
-
-func (m *groupManager) UnsubscribeGroup(uid int64, gid int64) {
-	m.GetGroup(gid).RemoveMember(uid)
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,6 +1,7 @@
 package im
 
 import (
+	"errors"
 	"go_im/im/dao"
 	"go_im/im/entity"
 )
@@ -9,7 +10,7 @@ type groupApi struct{}
 
 func (m *groupApi) CreateGroup(msg *ApiMessage, request *entity.CreateGroupRequest) error {
 
-	group, err := GroupManager.CreateGroup(request.Name, msg.uid)
+	group, err := m.createGroup(request.Name, msg.uid)
 	if err != nil {
 		return err
 	}
@@ -29,7 +30,6 @@ func (m *groupApi) CreateGroup(msg *ApiMessage, request *entity.CreateGroupReque
 		return err
 	}
 	ClientManager.EnqueueMessage(msg.uid, entity.NewMessage2(-1, entity.ActionUserNewChat, uc))
-	ClientManager.AddGroup(msg.uid, group.Gid)
 
 	// add invited member to group
 	if len(request.Member) > 0 {
@@ -103,7 +103,7 @@ func (m *groupApi) RemoveMember(msg *ApiMessage, request *entity.RemoveMemberReq
 		if err != nil {
 			return err
 		}
-		ClientManager.RemoveGroup(uid, request.Gid)
+		_ = GroupManager.RemoveMember(request.Gid, uid)
 		notifyResp := entity.NewSimpleMessage(-1, entity.ActionGroupRemoveMember, "you have been removed from the group xxx by xxx")
 		ClientManager.EnqueueMessage(uid, notifyResp)
 	}
@@ -118,7 +118,7 @@ func (m *groupApi) AddGroupMember(msg *ApiMessage, request *entity.AddMemberRequ
 
 	g := GroupManager.GetGroup(request.Gid)
 
-	members, err := GroupManager.AddGroupMember(g.Gid, request.Uid...)
+	members, err := m.addGroupMember(g.Gid, request.Uid...)
 	if err != nil {
 		return err
 	}
@@ -158,8 +158,7 @@ func (m *groupApi) AddGroupMember(msg *ApiMessage, request *entity.AddMemberRequ
 			continue
 		}
 		// member subscribe group message
-		GroupManager.SubscribeGroup(g.Gid, member)
-		ClientManager.AddGroup(msg.uid, g.Gid)
+		GroupManager.PutMember(g.Gid, member)
 
 		// notify update chat list
 		ClientManager.EnqueueMessage(member.Uid, entity.NewMessage2(-1, entity.ActionUserNewChat, chat))
@@ -170,9 +169,12 @@ func (m *groupApi) AddGroupMember(msg *ApiMessage, request *entity.AddMemberRequ
 
 func (m *groupApi) ExitGroup(msg *ApiMessage, request *entity.ExitGroupRequest) error {
 
-	ClientManager.RemoveGroup(msg.uid, request.Gid)
+	err := GroupManager.RemoveMember(request.Gid, msg.uid)
+	if err != nil {
+		return err
+	}
 
-	err := dao.GroupDao.RemoveMember(request.Gid, msg.uid)
+	err = dao.GroupDao.RemoveMember(request.Gid, msg.uid)
 	if err != nil {
 		return err
 	}
@@ -190,7 +192,7 @@ func (m *groupApi) JoinGroup(msg *ApiMessage, request *entity.JoinGroupRequest) 
 		return nil
 	}
 
-	_, err := GroupManager.AddGroupMember(request.Gid, msg.uid)
+	ms, err := m.addGroupMember(request.Gid, msg.uid)
 	if err != nil {
 		return err
 	}
@@ -216,10 +218,67 @@ func (m *groupApi) JoinGroup(msg *ApiMessage, request *entity.JoinGroupRequest) 
 		_ = dao.GroupDao.RemoveMember(request.Gid, msg.uid)
 		return err
 	}
+	GroupManager.PutMember(g.Gid, ms[0])
 	ClientManager.EnqueueMessage(msg.uid, entity.NewMessage2(-1, entity.ActionUserNewChat, chat))
-
-	ClientManager.AddGroup(msg.uid, g.Gid)
 	ClientManager.EnqueueMessage(msg.uid, entity.NewSimpleMessage(msg.seq, entity.ActionSuccess, "join group success"))
-
 	return nil
+}
+
+func (m *groupApi) createGroup(name string, uid int64) (*Group, error) {
+
+	group, err := dao.GroupDao.CreateGroup(name, uid)
+	if err != nil {
+		return nil, err
+	}
+	// create group chat
+	chat, err := dao.ChatDao.CreateChat(dao.ChatTypeGroup, group.Gid)
+	if err != nil {
+		// TODO undo
+		return nil, err
+	}
+	g := NewGroup(group.Gid, group, chat.Cid, []*dao.GroupMember{})
+
+	owner, err := dao.GroupDao.AddMember(group.Gid, dao.GroupMemberAdmin, uid)
+	if err != nil {
+		// TODO undo create group
+		return nil, err
+	}
+	_, err = dao.UserDao.AddContacts(uid, group.Gid, dao.ContactsTypeGroup, "")
+	if err != nil {
+		// TODO undo
+		return nil, err
+	}
+	GroupManager.AddGroup(g)
+	GroupManager.PutMember(g.Gid, owner[0])
+	return g, nil
+}
+
+func (m *groupApi) addGroupMember(gid int64, uid ...int64) ([]*dao.GroupMember, error) {
+
+	g := GroupManager.GetGroup(gid)
+	memberUid := make([]int64, 0, len(uid))
+	for _, u := range uid {
+		// member exist
+		if !g.HasMember(u) {
+			memberUid = append(memberUid, u)
+		}
+	}
+	if len(memberUid) == 0 {
+		return nil, errors.New("already added")
+	}
+
+	// TODO query user info and notify group members, optimize query time
+	exist, err2 := dao.UserDao.HasUser(memberUid...)
+	if err2 != nil {
+		return nil, err2
+	}
+	if !exist {
+		return nil, errors.New("user does not exist")
+	}
+
+	members, err := dao.GroupDao.AddMember(gid, dao.GroupMemberUser, memberUid...)
+	if err != nil {
+		return nil, err
+	}
+	return members, nil
 }

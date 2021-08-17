@@ -15,7 +15,6 @@ type Client struct {
 	time     time.Time
 	closed   *AtomicBool
 
-	groups   *Int64Set
 	messages chan *entity.Message
 
 	seq *AtomicInt64
@@ -24,25 +23,12 @@ type Client struct {
 func NewClient(conn Connection, connUid int64) *Client {
 	client := new(Client)
 	client.conn = conn
-	client.groups = NewInt64Set()
 	client.closed = NewAtomicBool(false)
 	client.messages = make(chan *entity.Message, 200)
 	client.time = time.Now()
 	client.uid = connUid
 	client.seq = new(AtomicInt64)
 	return client
-}
-
-func (c *Client) AddGroup(gid int64) {
-	if c.closed.Get() {
-		return
-	}
-	c.groups.Add(gid)
-}
-
-func (c *Client) RemoveGroup(gid int64) {
-	c.groups.Remove(gid)
-	GroupManager.UnsubscribeGroup(c.uid, gid)
 }
 
 // EnqueueMessage enqueue blocking message channel
@@ -65,10 +51,6 @@ func (c *Client) SignOut(reason string) {
 	}
 	logger.I("client sign out uid=%d, reason=%s", c.uid, reason)
 	ClientManager.UserLogout(c.uid)
-	c.groups.ForEach(func(value int64) {
-		GroupManager.UnsubscribeGroup(c.uid, value)
-	})
-	c.groups.Clear()
 	c.closed.Set(true)
 	close(c.messages)
 	_ = c.conn.Close()
