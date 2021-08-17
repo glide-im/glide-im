@@ -107,7 +107,7 @@ func (c *clientManager) EnqueueMessage(uid int64, msg *entity.Message) {
 
 func (c *clientManager) IsOnline(uid int64) bool {
 	client := c.clients.Get(uid)
-	return client != nil && client.uid > 0 && !client.closed.Get()
+	return client != nil && !client.closed.Get()
 }
 
 func (c *clientManager) Update() {

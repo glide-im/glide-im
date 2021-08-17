@@ -51,6 +51,10 @@ func (c *Client) SignOut(reason string) {
 	}
 	logger.I("client sign out uid=%d, reason=%s", c.uid, reason)
 	ClientManager.UserLogout(c.uid)
+	c.Exit()
+}
+
+func (c *Client) Exit() {
 	c.closed.Set(true)
 	close(c.messages)
 	_ = c.conn.Close()
@@ -64,10 +68,10 @@ func (c *Client) getNextSeq() int64 {
 
 func (c *Client) readMessage() {
 	defer func() {
-		//err := recover()
-		//if err != nil {
-		//	logger.D("Recover: client read message error: %v", err)
-		//}
+		err := recover()
+		if err != nil {
+			logger.D("Recover: client read message error: %v", err)
+		}
 	}()
 
 	logger.I("start read message")

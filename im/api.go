@@ -80,7 +80,6 @@ func (a *api) Handle(uid int64, message *entity.Message) error {
 		return a.AddFriend(msg, en.(*entity.AddContacts))
 	case entity.ActionUserInfo:
 		return a.UserInfo(msg)
-
 	case entity.ActionGroupCreate:
 		return a.CreateGroup(msg, en.(*entity.CreateGroupRequest))
 	case entity.ActionGroupInfo:
