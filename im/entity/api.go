@@ -11,7 +11,6 @@ type LoginRequest struct {
 type AuthRequest struct {
 	Token    string `json:"token"`
 	DeviceId int64  `json:"device_id"`
-	Uid      int64  `json:"uid"`
 }
 
 type RegisterRequest struct {

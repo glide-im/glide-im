@@ -52,7 +52,7 @@ func (ws *WsServer) handleWebSocketRequest(writer http.ResponseWriter, request *
 	}
 
 	con := NewWsConnection(conn, ws.options)
-	NewClient(con).Run()
+	ClientManager.ClientConnected(con)
 }
 
 func (ws *WsServer) Run() {

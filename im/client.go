@@ -21,13 +21,14 @@ type Client struct {
 	seq *AtomicInt64
 }
 
-func NewClient(conn Connection) *Client {
+func NewClient(conn Connection, connUid int64) *Client {
 	client := new(Client)
 	client.conn = conn
 	client.groups = NewInt64Set()
 	client.closed = NewAtomicBool(false)
 	client.messages = make(chan *entity.Message, 200)
 	client.time = time.Now()
+	client.uid = connUid
 	client.seq = new(AtomicInt64)
 	return client
 }
@@ -51,25 +52,25 @@ func (c *Client) EnqueueMessage(message *entity.Message) {
 		logger.W("connection closed, cannot enqueue message")
 		return
 	}
+	if message.Seq <= 0 {
+		message.Seq = c.getNextSeq()
+	}
 	c.messages <- message
 }
 
-func (c *Client) SignIn(uid int64, deviceId int64) {
-	logger.I("client sign in")
-	c.uid = uid
-	c.deviceId = deviceId
-	ClientManager.ClientSignIn(c)
-	logger.D("client sign in uid=%d", uid)
-}
-
 func (c *Client) SignOut(reason string) {
+	if c.closed.Get() {
+		logger.E("Client.SignOut", "client has already sign out")
+		return
+	}
 	logger.I("client sign out uid=%d, reason=%s", c.uid, reason)
+	ClientManager.UserLogout(c.uid)
 	c.groups.ForEach(func(value int64) {
-		c.RemoveGroup(value)
+		GroupManager.UnsubscribeGroup(c.uid, value)
 	})
-	c.uid = 0
-	ClientManager.ClientSignOut(c)
+	c.groups.Clear()
 	c.closed.Set(true)
+	close(c.messages)
 	_ = c.conn.Close()
 }
 
@@ -98,7 +99,7 @@ func (c *Client) readMessage() {
 		}
 		logger.D("NewMessage(uid=%d, %s): %s", c.uid, message.Action, message)
 		if message.Action&entity.MaskActionApi != 0 {
-			err = Api.Handle(c, message)
+			err = Api.Handle(c.uid, message)
 		} else if message.Action&entity.MaskActionMessage != 0 {
 			err = c.handleMessage(message)
 		} else if message.Action == entity.ActionHeartbeat {
@@ -115,14 +116,12 @@ func (c *Client) readMessage() {
 			break
 		}
 	}
-	c.uid = 0
 }
 
 func (c *Client) writeMessage() {
 	logger.I("start write message")
 
-	hello := entity.NewMessage(time.Now().Unix(), entity.ActionAck)
-	_ = hello.SetData("hello")
+	hello := entity.NewMessage2(time.Now().Unix(), entity.ActionAck, "hello")
 	c.EnqueueMessage(hello)
 
 	for {
@@ -158,7 +157,6 @@ func (c *Client) handleError(seq int64, err error) bool {
 		return true
 	}
 
-	//c.SignOut(fmt.Sprintf("%v", err))
 	c.messages <- entity.NewErrMessage(seq, err)
 
 	return false

@@ -20,33 +20,37 @@ func newApiFatalError(msg string) *ApiFatalError {
 
 type userApi struct{}
 
-func (a *userApi) Auth(msg *ApiMessage, request *entity.AuthRequest) (*entity.Message, bool, error) {
+func (a *userApi) Auth(msg *ApiMessage, request *entity.AuthRequest) error {
 
 	var resp = entity.NewMessage(msg.seq, entity.ActionSuccess)
 	uid := dao.UserDao.GetUid(request.Token)
-	if uid == request.Uid {
-		return resp, true, nil
+	if uid > 0 {
+		ClientManager.ClientSignIn(msg.uid, uid, request.DeviceId)
+		ClientManager.EnqueueMessage(uid, resp)
+		return nil
 	} else {
-		return resp, false, nil
+		return errors.New("login failed")
 	}
 }
 
-func (a *userApi) Login(msg *ApiMessage, request *entity.LoginRequest) (*entity.Message, int64, error) {
+func (a *userApi) Login(msg *ApiMessage, request *entity.LoginRequest) error {
 
 	if len(request.Account) == 0 || len(request.Password) == 0 {
-		return entity.NewSimpleMessage(msg.seq, entity.ActionUserUnauthorized, "account or password empty"), -1, nil
+		return errors.New("account or password empty")
 	}
 
 	uid, token, err := dao.UserDao.GetUidByLogin(request.Account, request.Password)
 	if err != nil {
-		return nil, uid, err
+		return err
 	}
 
 	m := entity.NewMessage(msg.seq, entity.ActionSuccess)
 	if err = m.SetData(entity.AuthorResponse{Token: token, Uid: uid}); err != nil {
-		return nil, uid, err
+		return err
 	}
-	return m, uid, nil
+	ClientManager.ClientSignIn(msg.uid, uid, request.Device)
+	ClientManager.EnqueueMessage(uid, m)
+	return nil
 }
 
 //goland:noinspection GoPreferNilSlice
@@ -329,7 +333,7 @@ func (a *userApi) UserInfo(msg *ApiMessage) error {
 	return nil
 }
 
-func (a *userApi) Register(msg *ApiMessage, registerEntity *entity.RegisterRequest) (*entity.Message, error) {
+func (a *userApi) Register(msg *ApiMessage, registerEntity *entity.RegisterRequest) error {
 
 	resp := entity.NewMessage(msg.seq, entity.ActionSuccess)
 	err := dao.UserDao.AddUser(registerEntity.Account, registerEntity.Password)
@@ -339,6 +343,6 @@ func (a *userApi) Register(msg *ApiMessage, registerEntity *entity.RegisterReque
 	} else {
 		_ = resp.SetData("register success")
 	}
-
-	return resp, err
+	ClientManager.EnqueueMessage(msg.uid, resp)
+	return err
 }

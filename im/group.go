@@ -12,33 +12,32 @@ type Group struct {
 	Cid   int64
 	group *dao.Group
 
-	members map[int64]*dao.GroupMember
+	members *groupMemberMap
 }
 
 func NewGroup(gid int64, group *dao.Group, cid int64, member []*dao.GroupMember) *Group {
 	ret := new(Group)
 	ret.mutex = NewMutex()
-	ret.members = map[int64]*dao.GroupMember{}
+	ret.members = newGroupMemberMap()
 	ret.Gid = gid
 	ret.Cid = cid
 	ret.group = group
 	for _, m := range member {
-		ret.members[m.Uid] = m
+		ret.members.Put(m.Uid, m)
 	}
 	return ret
 }
 
 func (g *Group) PutMember(member *dao.GroupMember) {
-	g.members[member.Uid] = member
+	g.members.Put(member.Uid, member)
 }
 
 func (g *Group) RemoveMember(uid int64) {
-	delete(g.members, uid)
+	g.members.Delete(uid)
 }
 
 func (g *Group) HasMember(uid int64) bool {
-	_, ok := g.members[uid]
-	return ok
+	return g.members.Contain(uid)
 }
 
 func (g *Group) IsMemberOnline(uid int64) bool {
@@ -46,10 +45,8 @@ func (g *Group) IsMemberOnline(uid int64) bool {
 }
 
 func (g *Group) GetOnlineMember() []*dao.GroupMember {
-	defer g.LockUtilReturn()()
-
 	var online []*dao.GroupMember
-	for id, member := range g.members {
+	for id, member := range g.members.members {
 		if ClientManager.IsOnline(id) {
 			online = append(online, member)
 		}
@@ -58,18 +55,60 @@ func (g *Group) GetOnlineMember() []*dao.GroupMember {
 }
 
 func (g *Group) GetMembers() []*dao.GroupMember {
-	members := make([]*dao.GroupMember, 0, len(g.members))
-	for _, v := range g.members {
+	defer g.LockUtilReturn()()
+	members := make([]*dao.GroupMember, 0, g.members.Size())
+	for _, v := range g.members.members {
 		members = append(members, v)
 	}
 	return members
 }
 
 func (g *Group) SendMessage(uid int64, message *entity.Message) {
-	defer g.LockUtilReturn()()
 	logger.D("Group.SendMessage: %s", message)
 
-	for id := range g.members {
+	for id := range g.members.members {
 		ClientManager.EnqueueMessage(id, message)
 	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+type groupMemberMap struct {
+	*mutex
+	members map[int64]*dao.GroupMember
+}
+
+func newGroupMemberMap() *groupMemberMap {
+	ret := new(groupMemberMap)
+	ret.mutex = new(mutex)
+	ret.members = make(map[int64]*dao.GroupMember)
+	return ret
+}
+
+func (g *groupMemberMap) Size() int {
+	return len(g.members)
+}
+
+func (g *groupMemberMap) Get(id int64) *dao.GroupMember {
+	defer g.LockUtilReturn()()
+	member, ok := g.members[id]
+	if ok {
+		return member
+	}
+	return nil
+}
+
+func (g *groupMemberMap) Contain(id int64) bool {
+	_, ok := g.members[id]
+	return ok
+}
+
+func (g *groupMemberMap) Put(id int64, member *dao.GroupMember) {
+	defer g.LockUtilReturn()()
+	g.members[id] = member
+}
+
+func (g *groupMemberMap) Delete(id int64) {
+	defer g.LockUtilReturn()()
+	delete(g.members, id)
 }

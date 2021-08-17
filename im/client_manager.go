@@ -6,22 +6,49 @@ import (
 	"go_im/im/entity"
 )
 
-var ClientManager = &clientManager{
-	mutex:   NewMutex(),
-	clients: map[int64]*Client{},
-}
+var ClientManager = newClientManager()
 
 type clientManager struct {
 	*mutex
-	clients map[int64]*Client
+	clients *clientMap
+
+	nextConnUid *AtomicInt64
 }
 
-func (c *clientManager) ClientSignIn(client *Client) {
-	c.clients[client.uid] = client
+func newClientManager() *clientManager {
+	ret := new(clientManager)
+	ret.mutex = NewMutex()
+	ret.clients = newClientMap()
+	ret.nextConnUid = new(AtomicInt64)
+	ret.nextConnUid.Set(-1)
+	return ret
 }
 
-func (c *clientManager) ClientSignOut(client *Client) {
-	delete(c.clients, client.uid)
+func (c *clientManager) ClientConnected(conn Connection) {
+	client := NewClient(conn, c.nextConnUid.Get())
+	c.nextConnUid.Set(client.uid - 1)
+	c.clients.Put(client.uid, client)
+	client.Run()
+}
+
+func (c *clientManager) ClientSignIn(oldUid, uid int64, device int64) {
+	logger.D("ClientManager.ClientSignIn: connUid=%d, uid=%d", oldUid, uid)
+	defer c.clients.LockUtilReturn()()
+
+	client := c.clients.Get(oldUid)
+	if client == nil {
+		return
+	}
+	client.uid = uid
+	client.deviceId = device
+	c.clients.Delete(oldUid)
+	c.clients.Put(uid, client)
+}
+
+func (c *clientManager) UserLogout(uid int64) {
+	logger.D("ClientManager.UserLogout: uid=%d", uid)
+	defer c.clients.LockUtilReturn()()
+	c.clients.Delete(uid)
 }
 
 func (c *clientManager) DispatchMessage(from int64, message *entity.Message) error {
@@ -74,18 +101,9 @@ func (c *clientManager) DispatchMessage(from int64, message *entity.Message) err
 	return nil
 }
 
-func (c *clientManager) EnqueueMessageMulti(uid int64, msg ...*entity.Message) {
-	for _, message := range msg {
-		c.EnqueueMessage(uid, message)
-	}
-}
-
 func (c *clientManager) EnqueueMessage(uid int64, msg *entity.Message) {
-	client := c.clients[uid]
+	client := c.clients.Get(uid)
 	if c.IsOnline(uid) {
-		if msg.Seq <= 0 {
-			msg.Seq = client.getNextSeq()
-		}
 		client.EnqueueMessage(msg)
 	} else {
 		// TODO user offline
@@ -93,36 +111,72 @@ func (c *clientManager) EnqueueMessage(uid int64, msg *entity.Message) {
 }
 
 func (c *clientManager) IsOnline(uid int64) bool {
-	client, online := c.clients[uid]
-	return online && !client.closed.Get()
+	client := c.clients.Get(uid)
+	return client != nil && client.uid > 0 && !client.closed.Get()
 }
 
 func (c *clientManager) Update() {
-	for _, client := range c.clients {
+	for _, client := range c.clients.clients {
 		if client.closed.Get() {
-			c.ClientSignOut(client)
+			c.UserLogout(client.uid)
 		}
 	}
 }
 
 func (c *clientManager) AddGroup(uid int64, gid int64) {
-	client, ok := c.clients[uid]
-	if ok {
+	client := c.clients.Get(uid)
+	if client != nil {
 		client.AddGroup(gid)
 	}
 }
 
 func (c *clientManager) RemoveGroup(uid int64, gid int64) {
-	client, ok := c.clients[uid]
-	if ok {
+	client := c.clients.Get(uid)
+	if client != nil {
 		client.RemoveGroup(gid)
 	}
 }
 
 func (c *clientManager) AllClient() []int64 {
 	var ret []int64
-	for k := range c.clients {
-		ret = append(ret, k)
+	for k := range c.clients.clients {
+		if k > 0 {
+			ret = append(ret, k)
+		}
 	}
 	return ret
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+type clientMap struct {
+	*mutex
+	clients map[int64]*Client
+}
+
+func newClientMap() *clientMap {
+	ret := new(clientMap)
+	ret.mutex = new(mutex)
+	ret.clients = make(map[int64]*Client)
+	return ret
+}
+
+func (g *clientMap) Size() int {
+	return len(g.clients)
+}
+
+func (g *clientMap) Get(uid int64) *Client {
+	client, ok := g.clients[uid]
+	if ok {
+		return client
+	}
+	return nil
+}
+
+func (g *clientMap) Put(uid int64, client *Client) {
+	g.clients[uid] = client
+}
+
+func (g *clientMap) Delete(uid int64) {
+	delete(g.clients, uid)
 }

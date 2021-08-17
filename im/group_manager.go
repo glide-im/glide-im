@@ -10,7 +10,7 @@ var GroupManager = NewGroupManager()
 
 type groupManager struct {
 	*mutex
-	groups *GroupMap
+	groups *groupMap
 }
 
 func NewGroupManager() *groupManager {
@@ -104,7 +104,6 @@ func (m *groupManager) GetMembers(gid int64) ([]*dao.GroupMember, error) {
 }
 
 func (m *groupManager) GetGroup(gid int64) *Group {
-	defer m.LockUtilReturn()()
 
 	g := m.groups.Get(gid)
 	if g != nil {
@@ -188,23 +187,23 @@ func (m *groupManager) UnsubscribeGroup(uid int64, gid int64) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-type GroupMap struct {
+type groupMap struct {
 	*mutex
 	groupsMap map[int64]*Group
 }
 
-func NewGroupMap() *GroupMap {
-	ret := new(GroupMap)
+func NewGroupMap() *groupMap {
+	ret := new(groupMap)
 	ret.mutex = new(mutex)
 	ret.groupsMap = make(map[int64]*Group)
 	return ret
 }
 
-func (g *GroupMap) Size() int {
+func (g *groupMap) Size() int {
 	return len(g.groupsMap)
 }
 
-func (g *GroupMap) Get(gid int64) *Group {
+func (g *groupMap) Get(gid int64) *Group {
 	defer g.LockUtilReturn()()
 	group, ok := g.groupsMap[gid]
 	if ok {
@@ -213,12 +212,12 @@ func (g *GroupMap) Get(gid int64) *Group {
 	return nil
 }
 
-func (g *GroupMap) Put(gid int64, group *Group) {
+func (g *groupMap) Put(gid int64, group *Group) {
 	defer g.LockUtilReturn()()
 	g.groupsMap[gid] = group
 }
 
-func (g *GroupMap) Delete(gid int64) {
+func (g *groupMap) Delete(gid int64) {
 	defer g.LockUtilReturn()()
 	delete(g.groupsMap, gid)
 }

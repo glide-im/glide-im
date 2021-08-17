@@ -33,9 +33,9 @@ func newApi() *api {
 	return ret
 }
 
-func (a *api) Handle(client *Client, message *entity.Message) error {
+func (a *api) Handle(uid int64, message *entity.Message) error {
 
-	if err := a.intercept(client, message); err != nil {
+	if err := a.intercept(uid, message); err != nil {
 		return err
 	}
 
@@ -49,40 +49,17 @@ func (a *api) Handle(client *Client, message *entity.Message) error {
 	}
 
 	msg := &ApiMessage{
-		uid: client.uid,
+		uid: uid,
 		seq: message.Seq,
 	}
 
 	switch message.Action {
 	case entity.ActionUserLogin:
-		req := en.(*entity.LoginRequest)
-		m, uid, err := a.Login(msg, req)
-		if err != nil {
-			return err
-		}
-		client.SignIn(uid, req.Device)
-		client.EnqueueMessage(m)
-		return nil
+		return a.Login(msg, en.(*entity.LoginRequest))
 	case entity.ActionUserAuth:
-		req := en.(*entity.AuthRequest)
-		m, success, err := a.Auth(msg, req)
-		if err != nil {
-			return err
-		}
-		if success {
-			client.SignIn(req.Uid, req.DeviceId)
-		}
-		client.EnqueueMessage(m)
-		return nil
+		return a.Auth(msg, en.(*entity.AuthRequest))
 	case entity.ActionUserRegister:
-		req := en.(*entity.RegisterRequest)
-		m, err := a.Register(msg, req)
-		if err != nil {
-			return err
-		}
-		client.EnqueueMessage(m)
-		return nil
-
+		return a.Register(msg, en.(*entity.RegisterRequest))
 	case entity.ActionUserChatList:
 		return a.GetUserChatList(msg)
 	case entity.ActionUserRelation:
@@ -123,10 +100,10 @@ func (a *api) Handle(client *Client, message *entity.Message) error {
 	return ErrUnknownAction
 }
 
-func (a *api) intercept(client *Client, message *entity.Message) error {
+func (a *api) intercept(uid int64, message *entity.Message) error {
 
 	_, ok := ActionDoNotNeedToken[message.Action]
-	if client.uid <= 0 && !ok {
+	if uid <= 0 && !ok {
 		return errors.New("unauthorized")
 	}
 
