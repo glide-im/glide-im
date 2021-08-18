@@ -90,6 +90,18 @@ var actionNameMap = map[Action]string{
 	ActionEcho:             "ActionEcho",
 }
 
+func (a Action) IsApi() bool {
+	return a&MaskActionApi != 0
+}
+
+func (a Action) IsMessage() bool {
+	return a&MaskActionMessage != 0
+}
+
+func (a Action) IsHeartbeat() bool {
+	return a == ActionHeartbeat
+}
+
 func (a Action) String() string {
 	return actionNameMap[a]
 }

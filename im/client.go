@@ -5,7 +5,9 @@ import (
 	"time"
 )
 
-// Client represent a user client conn
+const HeartbeatDuration = time.Second * 30
+
+// Client represent a user conn conn
 type Client struct {
 	conn Connection
 
@@ -17,6 +19,8 @@ type Client struct {
 	messages chan *entity.Message
 
 	seq *AtomicInt64
+
+	heartbeat *time.Timer
 }
 
 func NewClient(conn Connection, connUid int64) *Client {
@@ -27,10 +31,11 @@ func NewClient(conn Connection, connUid int64) *Client {
 	client.time = time.Now()
 	client.uid = connUid
 	client.seq = new(AtomicInt64)
+	client.heartbeat = time.AfterFunc(HeartbeatDuration, client.onDeath)
+	client.heartbeat.Stop()
 	return client
 }
 
-// EnqueueMessage enqueue blocking message channel
 func (c *Client) EnqueueMessage(message *entity.Message) {
 	logger.I("EnqueueMessage(uid=%d, %s): %v", c.uid, message.Action, message)
 	if c.closed.Get() {
@@ -48,23 +53,11 @@ func (c *Client) EnqueueMessage(message *entity.Message) {
 	}
 }
 
-func (c *Client) Exit() {
-	c.closed.Set(true)
-	close(c.messages)
-	_ = c.conn.Close()
-}
-
-func (c *Client) getNextSeq() int64 {
-	seq := c.seq.Get()
-	c.seq.Set(seq + 1)
-	return seq
-}
-
 func (c *Client) readMessage() {
 	defer func() {
 		err := recover()
 		if err != nil {
-			logger.D("Recover: client read message error: %v", err)
+			logger.D("Recover: conn read message error: %v", err)
 		}
 	}()
 
@@ -77,16 +70,14 @@ func (c *Client) readMessage() {
 			}
 			break
 		}
-		if message.Action&entity.MaskActionApi != 0 {
+		if message.Action.IsApi() {
 			Api.Handle(c.uid, message)
-		} else if message.Action&entity.MaskActionMessage != 0 {
-			err = c.handleMessage(message)
-		} else if message.Action == entity.ActionHeartbeat {
-			c.handleHeartbeat(message)
+		} else if message.Action.IsMessage() {
+			err = c.dispatch(message)
+		} else if message.Action.IsHeartbeat() {
+			c.heartbeat.Reset(HeartbeatDuration)
 		} else {
-			// echo
-			m, _ := message.Serialize()
-			c.EnqueueMessage(entity.NewMessage(1, entity.ActionEcho, string(m)))
+			// unknown action
 		}
 		if err != nil {
 			if !c.handleError(message.Seq, err) {
@@ -100,22 +91,12 @@ func (c *Client) readMessage() {
 func (c *Client) writeMessage() {
 	logger.I("start write message")
 
-	hello := entity.NewMessage(time.Now().Unix(), entity.ActionAck, "hello")
-	c.EnqueueMessage(hello)
-
-	for {
-		message, ok := <-c.messages
-		if !ok {
-			break
-		}
+	for message := range c.messages {
 		err := c.conn.Write(message)
 		if err != nil {
 			if c.handleError(-1, err) {
 				break
 			}
-		}
-		if c.closed.Get() {
-			break
 		}
 	}
 }
@@ -133,27 +114,41 @@ func (c *Client) handleError(seq int64, err error) bool {
 		ClientManager.UserLogout(c.uid)
 		return true
 	}
-
 	c.messages <- entity.NewMessage(seq, entity.ActionNotify, err.Error())
 	return false
 }
 
-func (c *Client) handleHeartbeat(message *entity.Message) {
-
+func (c *Client) onDeath() {
+	// TODO
 }
 
-func (c *Client) handleMessage(message *entity.Message) error {
+func (c *Client) dispatch(message *entity.Message) error {
 	switch message.Action {
 	case entity.ActionChatMessage:
 		return ClientManager.DispatchMessage(c.uid, message)
 	case entity.ActionGroupMessage:
 		return GroupManager.DispatchMessage(c.uid, message)
+	default:
+		// unknown message type
 	}
 	return nil
+}
+
+func (c *Client) Exit() {
+	c.closed.Set(true)
+	close(c.messages)
+	_ = c.conn.Close()
+}
+
+func (c *Client) getNextSeq() int64 {
+	seq := c.seq.Get()
+	c.seq.Set(seq + 1)
+	return seq
 }
 
 func (c *Client) Run() {
 	logger.D("///////////////////////// connection running /////////////////////////////")
 	go c.readMessage()
 	go c.writeMessage()
+	c.heartbeat.Reset(HeartbeatDuration)
 }

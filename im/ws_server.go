@@ -9,10 +9,10 @@ import (
 )
 
 type WsServerOptions struct {
-	Host          string
-	Port          int
-	ReadDeadLine  time.Duration
-	WriteDeadLine time.Duration
+	Host         string
+	Port         int
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
 }
 
 type WsServer struct {
@@ -25,10 +25,10 @@ func NewWsServer(options *WsServerOptions) *WsServer {
 
 	if options == nil {
 		options = &WsServerOptions{
-			Host:          "0.0.0.0",
-			Port:          8080,
-			ReadDeadLine:  12 * time.Minute,
-			WriteDeadLine: 12 * time.Minute,
+			Host:         "0.0.0.0",
+			Port:         8080,
+			ReadTimeout:  10 * time.Second,
+			WriteTimeout: 10 * time.Second,
 		}
 	}
 	ws := new(WsServer)
@@ -51,8 +51,10 @@ func (ws *WsServer) handleWebSocketRequest(writer http.ResponseWriter, request *
 		return
 	}
 
-	con := NewWsConnection(conn, ws.options)
-	ClientManager.ClientConnected(con)
+	proxy := ConnectionProxy{
+		conn: NewWsConnection(conn, ws.options),
+	}
+	ClientManager.ClientConnected(proxy)
 }
 
 func (ws *WsServer) Run() {

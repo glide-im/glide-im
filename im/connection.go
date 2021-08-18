@@ -2,10 +2,7 @@ package im
 
 import (
 	"errors"
-	"github.com/gorilla/websocket"
 	"go_im/im/entity"
-	"strings"
-	"time"
 )
 
 var (
@@ -15,68 +12,29 @@ var (
 	ErrBadPackage       = errors.New("bad package data")
 )
 
+// Connection expression a network keep-alive connection, WebSocket, tcp etc
 type Connection interface {
+	// Write write message to the connection.
 	Write(message *entity.Message) error
+	// Read read message from the connection.
 	Read() (*entity.Message, error)
+	// Close close the connection.
 	Close() error
 }
 
-type WsConnection struct {
-	options *WsServerOptions
-	conn    *websocket.Conn
+// ConnectionProxy expression a binder of Connection.
+type ConnectionProxy struct {
+	conn Connection
 }
 
-func NewWsConnection(conn *websocket.Conn, options *WsServerOptions) *WsConnection {
-	c := new(WsConnection)
-	c.conn = conn
-	c.options = options
-	c.conn.SetCloseHandler(func(code int, text string) error {
-		logger.D("connection closed")
-		return ErrClosed
-	})
-	return c
+func (c ConnectionProxy) Write(message *entity.Message) error {
+	return c.conn.Write(message)
 }
 
-func (c *WsConnection) Write(message *entity.Message) error {
-	deadLine := time.Now().Add(c.options.WriteDeadLine)
-	_ = c.conn.SetWriteDeadline(deadLine)
-
-	data, err := message.Serialize()
-	if err != nil {
-		if strings.Contains(err.Error(), "use of closed network connection") {
-			err = ErrConnectionClosed
-		}
-		return err
-	}
-	return c.conn.WriteMessage(1, data)
+func (c ConnectionProxy) Read() (*entity.Message, error) {
+	return c.conn.Read()
 }
 
-func (c *WsConnection) Read() (*entity.Message, error) {
-
-	_, bytes, err := c.conn.ReadMessage()
-	if err != nil {
-		if strings.Contains(err.Error(), "An existing connection was forcibly closed by the remote host") {
-			_ = c.conn.Close()
-			err = ErrForciblyClosed
-		}
-		return nil, err
-	}
-	m, err := entity.DeserializeMessage(bytes)
-	if err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func (c *WsConnection) error(err error) {
-	e := err.Error()
-	if strings.HasSuffix(e, "use of closed network conn") {
-		return
-	}
-	_ = c.Close()
-	//
-}
-
-func (c *WsConnection) Close() error {
+func (c ConnectionProxy) Close() error {
 	return c.conn.Close()
 }
