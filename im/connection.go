@@ -9,9 +9,10 @@ import (
 )
 
 var (
-	ErrForciblyClosed = errors.New("connection was forcibly closed")
-	ErrClosed         = errors.New("closed")
-	ErrBadPackage     = errors.New("bad package data")
+	ErrForciblyClosed   = errors.New("connection was forcibly closed")
+	ErrClosed           = errors.New("closed")
+	ErrConnectionClosed = errors.New("connection closed")
+	ErrBadPackage       = errors.New("bad package data")
 )
 
 type Connection interface {
@@ -42,6 +43,9 @@ func (c *WsConnection) Write(message *entity.Message) error {
 
 	data, err := message.Serialize()
 	if err != nil {
+		if strings.Contains(err.Error(), "use of closed network connection") {
+			err = ErrConnectionClosed
+		}
 		return err
 	}
 	return c.conn.WriteMessage(1, data)

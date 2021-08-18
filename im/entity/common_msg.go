@@ -117,6 +117,10 @@ func (m *Message) SetData(v interface{}) error {
 		m.Data = s
 		return nil
 	}
+	if s, ok := v.(error); ok {
+		m.Data = s.Error()
+		return nil
+	}
 
 	b, err := json.Marshal(v)
 	if err != nil {
@@ -135,48 +139,12 @@ func (m *Message) String() string {
 	return fmt.Sprintf("Message{Seq=%d, Action=%s, Data=%s}", m.Seq, n, m.Data)
 }
 
-func NewErrMessage(seq int64, err error) *Message {
-	resp := new(Message)
-	resp.Action = ActionFailed
-	resp.Seq = seq
-	resp.Data = err.Error()
-	return resp
-}
-
-func NewErrMessage2(seq int64, msg string) *Message {
-	resp := new(Message)
-	resp.Action = ActionFailed
-	resp.Seq = seq
-	resp.Data = msg
-	return resp
-}
-
-func NewAckMessage(seq int64) *Message {
-	resp := new(Message)
-	resp.Seq = seq
-	resp.Action = ActionAck
-	return resp
-}
-
-func NewSimpleMessage(seq int64, action Action, msg string) *Message {
+func NewMessage(seq int64, action Action, data interface{}) *Message {
 	ret := new(Message)
 	ret.Seq = seq
 	ret.Action = action
-	ret.Data = msg
+	_ = ret.SetData(data)
 	return ret
-}
-
-func NewMessage(seq int64, action Action) *Message {
-	ret := new(Message)
-	ret.Seq = seq
-	ret.Action = action
-	return ret
-}
-
-func NewMessage2(seq int64, action Action, data interface{}) *Message {
-	m := NewMessage(seq, action)
-	_ = m.SetData(data)
-	return m
 }
 
 func init() {

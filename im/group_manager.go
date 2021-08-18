@@ -121,7 +121,7 @@ func (m *groupManager) DispatchMessage(uid int64, message *entity.Message) error
 		SendAt:      groupMsg.SendAt,
 	}
 
-	resp := entity.NewMessage2(-1, entity.ActionChatMessage, msg)
+	resp := entity.NewMessage(-1, entity.ActionChatMessage, msg)
 
 	group.SendMessage(uid, resp)
 	return nil

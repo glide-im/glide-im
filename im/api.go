@@ -33,7 +33,15 @@ func newApi() *api {
 	return ret
 }
 
-func (a *api) Handle(uid int64, message *entity.Message) error {
+func (a *api) Handle(uid int64, message *entity.Message) {
+	// TODO async
+	err := a.handle(uid, message)
+	if err != nil {
+		a.onError(uid, message, err)
+	}
+}
+
+func (a *api) handle(uid int64, message *entity.Message) error {
 
 	if err := a.intercept(uid, message); err != nil {
 		return err
@@ -110,4 +118,11 @@ func (a *api) intercept(uid int64, message *entity.Message) error {
 
 	// something else
 	return nil
+}
+
+func (a *api) onError(uid int64, message *entity.Message, err error) {
+	logger.D("Api.onError: uid=%d, Action=%s, err=%s", uid, message.Action.String(), err.Error())
+
+	msg := entity.NewMessage(message.Seq, entity.ActionNotify, err.Error())
+	ClientManager.EnqueueMessage(uid, msg)
 }

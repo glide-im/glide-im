@@ -22,7 +22,7 @@ type userApi struct{}
 
 func (a *userApi) Auth(msg *ApiMessage, request *entity.AuthRequest) error {
 
-	var resp = entity.NewMessage(msg.seq, entity.ActionSuccess)
+	var resp = entity.NewMessage(msg.seq, entity.ActionSuccess, "success")
 	uid := dao.UserDao.GetUid(request.Token)
 	if uid > 0 {
 		ClientManager.ClientSignIn(msg.uid, uid, request.DeviceId)
@@ -44,7 +44,7 @@ func (a *userApi) Login(msg *ApiMessage, request *entity.LoginRequest) error {
 		return err
 	}
 
-	m := entity.NewMessage(msg.seq, entity.ActionSuccess)
+	m := entity.NewMessage(msg.seq, entity.ActionSuccess, "success")
 	if err = m.SetData(entity.AuthorResponse{Token: token, Uid: uid}); err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func (a *userApi) GetAndInitRelationList(msg *ApiMessage) error {
 		Groups:  groups,
 	}
 
-	resp := entity.NewMessage2(msg.seq, entity.ActionSuccess, body)
+	resp := entity.NewMessage(msg.seq, entity.ActionSuccess, body)
 	ClientManager.EnqueueMessage(msg.uid, resp)
 	return nil
 }
@@ -116,8 +116,7 @@ func (a *userApi) AddFriend(msg *ApiMessage, request *entity.AddContacts) error 
 		return err
 	}
 	if !hasUser {
-		ClientManager.EnqueueMessage(msg.uid, entity.NewErrMessage2(msg.seq, "user not exist"))
-		return nil
+		return errors.New("user not exist")
 	}
 
 	hasContacts, err := dao.UserDao.HasContacts(msg.uid, request.Uid, dao.ContactsTypeUser)
@@ -126,8 +125,7 @@ func (a *userApi) AddFriend(msg *ApiMessage, request *entity.AddContacts) error 
 	}
 
 	if hasContacts {
-		ClientManager.EnqueueMessage(msg.uid, entity.NewErrMessage2(msg.seq, "already added contacts"))
-		return nil
+		return errors.New("already added contacts")
 	}
 
 	// add to self
@@ -160,7 +158,7 @@ func (a *userApi) AddFriend(msg *ApiMessage, request *entity.AddContacts) error 
 		}},
 		Groups: []*entity.GroupResponse{},
 	}
-	ClientManager.EnqueueMessage(msg.uid, entity.NewMessage2(msg.seq, entity.ActionSuccess, ccontactResponse))
+	ClientManager.EnqueueMessage(msg.uid, entity.NewMessage(msg.seq, entity.ActionSuccess, ccontactResponse))
 
 	// add to friend
 	_, err = dao.UserDao.AddContacts(request.Uid, msg.uid, dao.ContactsTypeUser, "")
@@ -177,7 +175,7 @@ func (a *userApi) AddFriend(msg *ApiMessage, request *entity.AddContacts) error 
 		}},
 		Groups: []*entity.GroupResponse{},
 	}
-	ClientManager.EnqueueMessage(request.Uid, entity.NewMessage2(-1, entity.ActionUserAddFriend, contactRespFriend))
+	ClientManager.EnqueueMessage(request.Uid, entity.NewMessage(-1, entity.ActionUserAddFriend, contactRespFriend))
 
 	return nil
 }
@@ -188,7 +186,7 @@ func (a *userApi) GetUserInfo(msg *ApiMessage, request *entity.UserInfoRequest) 
 	if err != nil {
 		return err
 	}
-	resp := entity.NewMessage(msg.seq, entity.ActionOnlineUser)
+	resp := entity.NewMessage(msg.seq, entity.ActionOnlineUser, "success")
 	type u struct {
 		Uid      int64
 		Account  string
@@ -219,10 +217,7 @@ func (a *userApi) GetChatInfo(msg *ApiMessage, request *entity.ChatInfoRequest) 
 	if err != nil {
 		return err
 	}
-	resp := entity.NewMessage(msg.seq, entity.ActionUserChatInfo)
-	if err = resp.SetData(uc); err != nil {
-		return err
-	}
+	resp := entity.NewMessage(msg.seq, entity.ActionUserChatInfo, uc)
 	ClientManager.EnqueueMessage(msg.uid, resp)
 	return nil
 }
@@ -234,10 +229,7 @@ func (a *userApi) GetChatHistory(msg *ApiMessage, request *entity.ChatHistoryReq
 		return err
 	}
 
-	resp := entity.NewMessage(msg.seq, entity.ActionUserChatHistory)
-	if err = resp.SetData(chatMessages); err != nil {
-		return err
-	}
+	resp := entity.NewMessage(msg.seq, entity.ActionUserChatHistory, chatMessages)
 
 	ClientManager.EnqueueMessage(msg.uid, resp)
 	return nil
@@ -245,7 +237,6 @@ func (a *userApi) GetChatHistory(msg *ApiMessage, request *entity.ChatHistoryReq
 
 func (a *userApi) GetOnlineUser(msg *ApiMessage) error {
 
-	m := entity.NewMessage(msg.seq, entity.ActionOnlineUser)
 	type u struct {
 		Uid      int64
 		Account  string
@@ -266,7 +257,7 @@ func (a *userApi) GetOnlineUser(msg *ApiMessage) error {
 		users = append(users, u{Uid: user.Uid, Account: user.Account, Avatar: user.Avatar, Nickname: user.Nickname})
 	}
 
-	_ = m.SetData(users)
+	m := entity.NewMessage(msg.seq, entity.ActionOnlineUser, users)
 	ClientManager.EnqueueMessage(msg.uid, m)
 	return nil
 }
@@ -295,17 +286,14 @@ func (a *userApi) NewChat(msg *ApiMessage, request *entity.UserNewChatRequest) e
 		if err != nil {
 			return err
 		}
-		resp := entity.NewMessage(msg.seq, entity.ActionSuccess)
-		if err = resp.SetData(m2); err != nil {
-			return err
-		}
+		resp := entity.NewMessage(msg.seq, entity.ActionSuccess, m2)
 		ClientManager.EnqueueMessage(msg.uid, resp)
 	} else if request.Type == dao.ChatTypeGroup {
 		m, e := dao.ChatDao.NewUserChat(chat.Cid, uid, target, dao.ChatTypeGroup)
 		if e != nil {
 			return e
 		}
-		resp := entity.NewMessage2(msg.seq, entity.ActionUserChatInfo, m)
+		resp := entity.NewMessage(msg.seq, entity.ActionUserChatInfo, m)
 		ClientManager.EnqueueMessage(msg.uid, resp)
 	} else {
 		return errors.New("unknown chat type")
@@ -315,14 +303,11 @@ func (a *userApi) NewChat(msg *ApiMessage, request *entity.UserNewChatRequest) e
 
 func (a *userApi) GetUserChatList(msg *ApiMessage) error {
 
-	resp := entity.NewMessage(msg.seq, entity.ActionSuccess)
 	list, err := dao.ChatDao.GetUserChatList(msg.uid)
 	if err != nil {
 		return err
 	}
-	if err = resp.SetData(list); err != nil {
-		return err
-	}
+	resp := entity.NewMessage(msg.seq, entity.ActionSuccess, list)
 	ClientManager.EnqueueMessage(msg.uid, resp)
 	return nil
 }
@@ -334,13 +319,11 @@ func (a *userApi) UserInfo(msg *ApiMessage) error {
 
 func (a *userApi) Register(msg *ApiMessage, registerEntity *entity.RegisterRequest) error {
 
-	resp := entity.NewMessage(msg.seq, entity.ActionSuccess)
+	resp := entity.NewMessage(msg.seq, entity.ActionSuccess, "success")
 	err := dao.UserDao.AddUser(registerEntity.Account, registerEntity.Password)
 
 	if err != nil {
-		_ = resp.SetData(err.Error())
-	} else {
-		_ = resp.SetData("register success")
+		resp = entity.NewMessage(msg.seq, entity.ActionFailed, err)
 	}
 	ClientManager.EnqueueMessage(msg.uid, resp)
 	return err

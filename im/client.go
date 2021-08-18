@@ -2,7 +2,6 @@ package im
 
 import (
 	"go_im/im/entity"
-	"strings"
 	"time"
 )
 
@@ -41,17 +40,12 @@ func (c *Client) EnqueueMessage(message *entity.Message) {
 	if message.Seq <= 0 {
 		message.Seq = c.getNextSeq()
 	}
-	c.messages <- message
-}
-
-func (c *Client) SignOut(reason string) {
-	if c.closed.Get() {
-		logger.E("Client.SignOut", "client has already sign out")
-		return
+	select {
+	case c.messages <- message:
+		break
+	default:
+		logger.E("Client.EnqueueMessage", "message chan is full")
 	}
-	logger.I("client sign out uid=%d, reason=%s", c.uid, reason)
-	ClientManager.UserLogout(c.uid)
-	c.Exit()
 }
 
 func (c *Client) Exit() {
@@ -83,9 +77,8 @@ func (c *Client) readMessage() {
 			}
 			break
 		}
-		logger.D("NewMessage(uid=%d, %s): %s", c.uid, message.Action, message)
 		if message.Action&entity.MaskActionApi != 0 {
-			err = Api.Handle(c.uid, message)
+			Api.Handle(c.uid, message)
 		} else if message.Action&entity.MaskActionMessage != 0 {
 			err = c.handleMessage(message)
 		} else if message.Action == entity.ActionHeartbeat {
@@ -93,7 +86,7 @@ func (c *Client) readMessage() {
 		} else {
 			// echo
 			m, _ := message.Serialize()
-			c.EnqueueMessage(entity.NewSimpleMessage(1, entity.ActionEcho, string(m)))
+			c.EnqueueMessage(entity.NewMessage(1, entity.ActionEcho, string(m)))
 		}
 		if err != nil {
 			if !c.handleError(message.Seq, err) {
@@ -107,24 +100,21 @@ func (c *Client) readMessage() {
 func (c *Client) writeMessage() {
 	logger.I("start write message")
 
-	hello := entity.NewMessage2(time.Now().Unix(), entity.ActionAck, "hello")
+	hello := entity.NewMessage(time.Now().Unix(), entity.ActionAck, "hello")
 	c.EnqueueMessage(hello)
 
 	for {
-		select {
-		// blocking write
-		case message := <-c.messages:
-			err := c.conn.Write(message)
-			if err != nil {
-				logger.E("client write message error", err)
-				c.handleError(-1, err)
-				if c.closed.Get() {
-					break
-				}
+		message, ok := <-c.messages
+		if !ok {
+			break
+		}
+		err := c.conn.Write(message)
+		if err != nil {
+			if c.handleError(-1, err) {
+				break
 			}
 		}
 		if c.closed.Get() {
-			logger.D("write message break len=%d", len(c.messages))
 			break
 		}
 	}
@@ -133,18 +123,18 @@ func (c *Client) writeMessage() {
 // handleError return whether fatal error
 func (c *Client) handleError(seq int64, err error) bool {
 
-	if strings.Contains(err.Error(), "use of closed network connection") {
-		c.SignOut("connection closed")
+	fatalErr := map[error]int{
+		ErrForciblyClosed:   0,
+		ErrClosed:           0,
+		ErrConnectionClosed: 0,
+	}
+	_, ok := fatalErr[err]
+	if ok {
+		ClientManager.UserLogout(c.uid)
 		return true
 	}
 
-	if err == ErrForciblyClosed || err == ErrClosed {
-		c.SignOut("client forcibly closed")
-		return true
-	}
-
-	c.messages <- entity.NewErrMessage(seq, err)
-
+	c.messages <- entity.NewMessage(seq, entity.ActionNotify, err.Error())
 	return false
 }
 

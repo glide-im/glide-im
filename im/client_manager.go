@@ -43,6 +43,11 @@ func (c *clientManager) ClientSignIn(oldUid, uid int64, device int64) {
 
 func (c *clientManager) UserLogout(uid int64) {
 	logger.D("ClientManager.UserLogout: uid=%d", uid)
+	client := c.clients.Get(uid)
+	if client == nil {
+		return
+	}
+	client.Exit()
 	c.clients.Delete(uid)
 }
 
@@ -67,10 +72,7 @@ func (c *clientManager) DispatchMessage(from int64, message *entity.Message) err
 	if err != nil {
 		return err
 	}
-	affirm := entity.NewMessage(message.Seq, message.Action)
-	if err = affirm.SetData(chatMsg); err != nil {
-		return err
-	}
+	affirm := entity.NewMessage(message.Seq, message.Action, chatMsg)
 	// send success, return chat message
 	c.EnqueueMessage(from, affirm)
 
@@ -90,7 +92,7 @@ func (c *clientManager) DispatchMessage(from int64, message *entity.Message) err
 		SendAt:      chatMsg.SendAt,
 	}
 
-	dispatchMsg := entity.NewMessage2(-1, entity.ActionChatMessage, receiverMsg)
+	dispatchMsg := entity.NewMessage(-1, entity.ActionChatMessage, receiverMsg)
 
 	c.EnqueueMessage(senderMsg.TargetId, dispatchMsg)
 	return nil
