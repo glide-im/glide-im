@@ -21,15 +21,16 @@ func newClientManager() *clientManager {
 	return ret
 }
 
-func (c *clientManager) ClientConnected(conn Connection) {
+func (c *clientManager) ClientConnected(conn Connection) int64 {
 	client := NewClient(conn, c.nextConnUid.Get())
 	c.nextConnUid.Set(client.uid - 1)
 	c.clients.Put(client.uid, client)
 	client.Run()
+	return client.uid
 }
 
 func (c *clientManager) ClientSignIn(oldUid, uid int64, device int64) {
-	logger.D("ClientManager.ClientSignIn: connUid=%d, uid=%d", oldUid, uid)
+	logger.I("ClientManager.ClientSignIn: connUid=%d, uid=%d", oldUid, uid)
 
 	client := c.clients.Get(oldUid)
 	if client == nil {
@@ -42,7 +43,7 @@ func (c *clientManager) ClientSignIn(oldUid, uid int64, device int64) {
 }
 
 func (c *clientManager) UserLogout(uid int64) {
-	logger.D("ClientManager.UserLogout: uid=%d", uid)
+	logger.I("ClientManager.UserLogout: uid=%d", uid)
 	client := c.clients.Get(uid)
 	if client == nil {
 		return
@@ -54,7 +55,8 @@ func (c *clientManager) UserLogout(uid int64) {
 func (c *clientManager) DispatchMessage(from int64, message *entity.Message) error {
 
 	senderMsg := new(entity.SenderChatMessage)
-	if err := message.DeserializeData(senderMsg); err != nil {
+	err := message.DeserializeData(senderMsg)
+	if err != nil {
 		logger.E("sender chat senderMsg ", err)
 		return err
 	}
@@ -76,6 +78,11 @@ func (c *clientManager) DispatchMessage(from int64, message *entity.Message) err
 	// send success, return chat message
 	c.EnqueueMessage(from, affirm)
 
+	return c.dispatch(from, chatMsg, senderMsg)
+}
+
+func (c *clientManager) dispatch(from int64, chatMsg *dao.ChatMessage, senderMsg *entity.SenderChatMessage) error {
+
 	// update receiver's list chat
 	uChat, err := dao.ChatDao.UpdateUserChatMsgTime(senderMsg.Cid, senderMsg.TargetId)
 	if err != nil {
@@ -93,8 +100,8 @@ func (c *clientManager) DispatchMessage(from int64, message *entity.Message) err
 	}
 
 	dispatchMsg := entity.NewMessage(-1, entity.ActionChatMessage, receiverMsg)
-
 	c.EnqueueMessage(senderMsg.TargetId, dispatchMsg)
+
 	return nil
 }
 

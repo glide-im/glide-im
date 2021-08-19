@@ -16,6 +16,7 @@ type Client struct {
 	time     time.Time
 	closed   *AtomicBool
 
+	// buffered channel 40
 	messages chan *entity.Message
 
 	seq *AtomicInt64
@@ -27,10 +28,11 @@ func NewClient(conn Connection, connUid int64) *Client {
 	client := new(Client)
 	client.conn = conn
 	client.closed = NewAtomicBool(false)
-	client.messages = make(chan *entity.Message, 200)
+	client.messages = make(chan *entity.Message, 40)
 	client.time = time.Now()
 	client.uid = connUid
 	client.seq = new(AtomicInt64)
+	// TODO 优化内存
 	client.heartbeat = time.AfterFunc(HeartbeatDuration, client.onDeath)
 	client.heartbeat.Stop()
 	return client
@@ -147,7 +149,7 @@ func (c *Client) getNextSeq() int64 {
 }
 
 func (c *Client) Run() {
-	logger.D("///////////////////////// connection running /////////////////////////////")
+	logger.I("///////////////////////// connection running /////////////////////////////")
 	go c.readMessage()
 	go c.writeMessage()
 	c.heartbeat.Reset(HeartbeatDuration)
