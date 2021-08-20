@@ -1,8 +1,7 @@
-package im
+package conn
 
 import (
 	"github.com/gorilla/websocket"
-	"go_im/im/entity"
 	"strings"
 	"time"
 )
@@ -22,7 +21,7 @@ func NewWsConnection(conn *websocket.Conn, options *WsServerOptions) *WsConnecti
 	return c
 }
 
-func (c *WsConnection) Write(message *entity.Message) error {
+func (c *WsConnection) Write(message Serializable) error {
 	deadLine := time.Now().Add(c.options.WriteTimeout)
 	_ = c.conn.SetWriteDeadline(deadLine)
 
@@ -34,29 +33,26 @@ func (c *WsConnection) Write(message *entity.Message) error {
 	return c.wrapError(err)
 }
 
-func (c *WsConnection) Read() (*entity.Message, error) {
+func (c *WsConnection) Read(message Serializable) error {
 
 	deadLine := time.Now().Add(c.options.ReadTimeout)
 	_ = c.conn.SetReadDeadline(deadLine)
 
 	msgType, bytes, err := c.conn.ReadMessage()
 	if err != nil {
-		return nil, c.wrapError(err)
+		return c.wrapError(err)
 	}
+
 	switch msgType {
 	case websocket.TextMessage:
 		break
 	case websocket.PingMessage:
 	case websocket.BinaryMessage:
 	default:
-		return nil, ErrBadPackage
+		return ErrBadPackage
 	}
 
-	m, err := entity.DeserializeMessage(bytes)
-	if err != nil {
-		return nil, err
-	}
-	return m, nil
+	return message.Deserialize(bytes)
 }
 
 func (c *WsConnection) Close() error {

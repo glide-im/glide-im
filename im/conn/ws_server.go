@@ -1,7 +1,8 @@
-package im
+package conn
 
 import (
 	"fmt"
+	"go_im/im/comm"
 	"net/http"
 	"time"
 
@@ -18,6 +19,7 @@ type WsServerOptions struct {
 type WsServer struct {
 	options  *WsServerOptions
 	upgrader websocket.Upgrader
+	handler  ConnectionHandler
 }
 
 // NewWsServer options can be nil, use default value when nil.
@@ -47,14 +49,18 @@ func (ws *WsServer) handleWebSocketRequest(writer http.ResponseWriter, request *
 
 	conn, err := ws.upgrader.Upgrade(writer, request, nil)
 	if err != nil {
-		logger.E("upgrade http to ws error", err)
+		comm.Slog.E("upgrade http to ws error", err)
 		return
 	}
 
 	proxy := ConnectionProxy{
 		conn: NewWsConnection(conn, ws.options),
 	}
-	ClientManager.ClientConnected(proxy)
+	ws.handler(proxy)
+}
+
+func (ws *WsServer) Handler(handler ConnectionHandler) {
+	ws.handler = handler
 }
 
 func (ws *WsServer) Run() {

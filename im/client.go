@@ -1,6 +1,8 @@
 package im
 
 import (
+	"go_im/im/comm"
+	"go_im/im/conn"
 	"go_im/im/entity"
 	"time"
 )
@@ -9,29 +11,29 @@ const HeartbeatDuration = time.Second * 30
 
 // Client represent a user conn conn
 type Client struct {
-	conn Connection
+	conn conn.Connection
 
 	uid      int64
 	deviceId int64
 	time     time.Time
-	closed   *AtomicBool
+	closed   *comm.AtomicBool
 
 	// buffered channel 40
 	messages chan *entity.Message
 
-	seq *AtomicInt64
+	seq *comm.AtomicInt64
 
 	heartbeat *time.Timer
 }
 
-func NewClient(conn Connection, connUid int64) *Client {
+func NewClient(conn conn.Connection, connUid int64) *Client {
 	client := new(Client)
 	client.conn = conn
-	client.closed = NewAtomicBool(false)
+	client.closed = comm.NewAtomicBool(false)
 	client.messages = make(chan *entity.Message, 40)
 	client.time = time.Now()
 	client.uid = connUid
-	client.seq = new(AtomicInt64)
+	client.seq = new(comm.AtomicInt64)
 	// TODO 优化内存
 	client.heartbeat = time.AfterFunc(HeartbeatDuration, client.onDeath)
 	client.heartbeat.Stop()
@@ -39,9 +41,9 @@ func NewClient(conn Connection, connUid int64) *Client {
 }
 
 func (c *Client) EnqueueMessage(message *entity.Message) {
-	logger.I("EnqueueMessage(uid=%d, %s): %v", c.uid, message.Action, message)
+	comm.Slog.I("EnqueueMessage(uid=%d, %s): %v", c.uid, message.Action, message)
 	if c.closed.Get() {
-		logger.W("connection closed, cannot enqueue message")
+		comm.Slog.W("connection closed, cannot enqueue message")
 		return
 	}
 	if message.Seq <= 0 {
@@ -51,7 +53,7 @@ func (c *Client) EnqueueMessage(message *entity.Message) {
 	case c.messages <- message:
 		break
 	default:
-		logger.E("Client.EnqueueMessage", "message chan is full")
+		comm.Slog.E("Client.EnqueueMessage", "message chan is full")
 	}
 }
 
@@ -59,13 +61,14 @@ func (c *Client) readMessage() {
 	defer func() {
 		err := recover()
 		if err != nil {
-			logger.D("Recover: conn read message error: %v", err)
+			comm.Slog.D("Recover: conn read message error: %v", err)
 		}
 	}()
 
-	logger.I("start read message")
+	comm.Slog.I("start read message")
 	for {
-		message, err := c.conn.Read()
+		message := &entity.Message{}
+		err := c.conn.Read(message)
 		if err != nil {
 			if !c.handleError(-1, err) {
 				continue
@@ -91,7 +94,7 @@ func (c *Client) readMessage() {
 }
 
 func (c *Client) writeMessage() {
-	logger.I("start write message")
+	comm.Slog.I("start write message")
 
 	for message := range c.messages {
 		err := c.conn.Write(message)
@@ -107,9 +110,9 @@ func (c *Client) writeMessage() {
 func (c *Client) handleError(seq int64, err error) bool {
 
 	fatalErr := map[error]int{
-		ErrForciblyClosed:   0,
-		ErrClosed:           0,
-		ErrConnectionClosed: 0,
+		conn.ErrForciblyClosed:   0,
+		conn.ErrClosed:           0,
+		conn.ErrConnectionClosed: 0,
 	}
 	_, ok := fatalErr[err]
 	if ok {
@@ -149,7 +152,7 @@ func (c *Client) getNextSeq() int64 {
 }
 
 func (c *Client) Run() {
-	logger.I("///////////////////////// connection running /////////////////////////////")
+	comm.Slog.I("///////////////////////// connection running /////////////////////////////")
 	go c.readMessage()
 	go c.writeMessage()
 	c.heartbeat.Reset(HeartbeatDuration)

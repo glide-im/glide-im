@@ -2,6 +2,8 @@ package im
 
 import (
 	"errors"
+	"go_im/im/comm"
+	"go_im/im/conn"
 	"go_im/im/dao"
 	"go_im/im/entity"
 )
@@ -10,18 +12,18 @@ var ClientManager = newClientManager()
 
 type clientManager struct {
 	clients     *clientMap
-	nextConnUid *AtomicInt64
+	nextConnUid *comm.AtomicInt64
 }
 
 func newClientManager() *clientManager {
 	ret := new(clientManager)
 	ret.clients = newClientMap()
-	ret.nextConnUid = new(AtomicInt64)
+	ret.nextConnUid = new(comm.AtomicInt64)
 	ret.nextConnUid.Set(-1)
 	return ret
 }
 
-func (c *clientManager) ClientConnected(conn Connection) int64 {
+func (c *clientManager) ClientConnected(conn conn.Connection) int64 {
 	client := NewClient(conn, c.nextConnUid.Get())
 	c.nextConnUid.Set(client.uid - 1)
 	c.clients.Put(client.uid, client)
@@ -30,7 +32,7 @@ func (c *clientManager) ClientConnected(conn Connection) int64 {
 }
 
 func (c *clientManager) ClientSignIn(oldUid, uid int64, device int64) {
-	logger.I("ClientManager.ClientSignIn: connUid=%d, uid=%d", oldUid, uid)
+	comm.Slog.I("ClientManager.ClientSignIn: connUid=%d, uid=%d", oldUid, uid)
 
 	client := c.clients.Get(oldUid)
 	if client == nil {
@@ -43,7 +45,7 @@ func (c *clientManager) ClientSignIn(oldUid, uid int64, device int64) {
 }
 
 func (c *clientManager) UserLogout(uid int64) {
-	logger.I("ClientManager.UserLogout: uid=%d", uid)
+	comm.Slog.I("ClientManager.UserLogout: uid=%d", uid)
 	client := c.clients.Get(uid)
 	if client == nil {
 		return
@@ -57,10 +59,10 @@ func (c *clientManager) DispatchMessage(from int64, message *entity.Message) err
 	senderMsg := new(entity.SenderChatMessage)
 	err := message.DeserializeData(senderMsg)
 	if err != nil {
-		logger.E("sender chat senderMsg ", err)
+		comm.Slog.E("sender chat senderMsg ", err)
 		return err
 	}
-	logger.D("DispatchMessage(from=%d): cid=%d, senderMsg=%s", from, senderMsg.Cid, senderMsg.Message)
+	comm.Slog.D("DispatchMessage(from=%d): cid=%d, senderMsg=%s", from, senderMsg.Cid, senderMsg.Message)
 
 	if senderMsg.Cid <= 0 {
 		return errors.New("chat not create")
@@ -140,13 +142,13 @@ func (c *clientManager) AllClient() []int64 {
 //////////////////////////////////////////////////////////////////////////////
 
 type clientMap struct {
-	*mutex
+	*comm.Mutex
 	clients map[int64]*Client
 }
 
 func newClientMap() *clientMap {
 	ret := new(clientMap)
-	ret.mutex = new(mutex)
+	ret.Mutex = new(comm.Mutex)
 	ret.clients = make(map[int64]*Client)
 	return ret
 }

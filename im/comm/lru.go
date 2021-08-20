@@ -1,4 +1,4 @@
-package im
+package comm
 
 import (
 	"container/list"

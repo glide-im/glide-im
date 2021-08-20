@@ -1,9 +1,16 @@
 package im
 
-import "go_im/im/dao"
+import (
+	"go_im/im/conn"
+	"go_im/im/dao"
+)
 
 func Run() {
 
 	dao.Init()
-	NewWsServer(nil).Run()
+	wsServer := conn.NewWsServer(nil)
+	wsServer.Handler(func(conn conn.Connection) {
+		ClientManager.ClientConnected(conn)
+	})
+	wsServer.Run()
 }

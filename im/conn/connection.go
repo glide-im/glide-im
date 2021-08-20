@@ -1,9 +1,10 @@
-package im
+package conn
 
 import (
 	"errors"
-	"go_im/im/entity"
 )
+
+type ConnectionHandler func(conn Connection)
 
 var (
 	ErrForciblyClosed   = errors.New("connection was forcibly closed")
@@ -15,9 +16,9 @@ var (
 // Connection expression a network keep-alive connection, WebSocket, tcp etc
 type Connection interface {
 	// Write write message to the connection.
-	Write(message *entity.Message) error
+	Write(message Serializable) error
 	// Read read message from the connection.
-	Read() (*entity.Message, error)
+	Read(message Serializable) error
 	// Close close the connection.
 	Close() error
 }
@@ -27,12 +28,12 @@ type ConnectionProxy struct {
 	conn Connection
 }
 
-func (c ConnectionProxy) Write(message *entity.Message) error {
+func (c ConnectionProxy) Write(message Serializable) error {
 	return c.conn.Write(message)
 }
 
-func (c ConnectionProxy) Read() (*entity.Message, error) {
-	return c.conn.Read()
+func (c ConnectionProxy) Read(message Serializable) error {
+	return c.conn.Read(message)
 }
 
 func (c ConnectionProxy) Close() error {

@@ -1,4 +1,4 @@
-package im
+package conn
 
 import (
 	"github.com/gorilla/websocket"

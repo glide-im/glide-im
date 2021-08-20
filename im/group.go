@@ -1,12 +1,13 @@
 package im
 
 import (
+	"go_im/im/comm"
 	"go_im/im/dao"
 	"go_im/im/entity"
 )
 
 type Group struct {
-	*mutex
+	*comm.Mutex
 
 	Gid   int64
 	Cid   int64
@@ -17,7 +18,7 @@ type Group struct {
 
 func NewGroup(gid int64, group *dao.Group, cid int64, member []*dao.GroupMember) *Group {
 	ret := new(Group)
-	ret.mutex = NewMutex()
+	ret.Mutex = comm.NewMutex()
 	ret.members = newGroupMemberMap()
 	ret.Gid = gid
 	ret.Cid = cid
@@ -64,7 +65,7 @@ func (g *Group) GetMembers() []*dao.GroupMember {
 }
 
 func (g *Group) SendMessage(uid int64, message *entity.Message) {
-	logger.D("Group.SendMessage: %s", message)
+	comm.Slog.D("Group.SendMessage: %s", message)
 
 	for id := range g.members.members {
 		ClientManager.EnqueueMessage(id, message)
@@ -74,13 +75,13 @@ func (g *Group) SendMessage(uid int64, message *entity.Message) {
 ////////////////////////////////////////////////////////////////////////////////
 
 type groupMemberMap struct {
-	*mutex
+	*comm.Mutex
 	members map[int64]*dao.GroupMember
 }
 
 func newGroupMemberMap() *groupMemberMap {
 	ret := new(groupMemberMap)
-	ret.mutex = new(mutex)
+	ret.Mutex = new(comm.Mutex)
 	ret.members = make(map[int64]*dao.GroupMember)
 	return ret
 }

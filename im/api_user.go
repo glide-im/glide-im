@@ -2,6 +2,7 @@ package im
 
 import (
 	"errors"
+	"go_im/im/comm"
 	"go_im/im/dao"
 	"go_im/im/entity"
 )
@@ -250,7 +251,7 @@ func (a *userApi) GetOnlineUser(msg *ApiMessage) error {
 	for _, k := range allClient {
 		us, err := dao.UserDao.GetUser(k)
 		if err != nil || len(us) == 0 {
-			logger.D("get online uid=%d error, error=%v", k, err)
+			comm.Slog.D("get online uid=%d error, error=%v", k, err)
 			continue
 		}
 		user := us[0]

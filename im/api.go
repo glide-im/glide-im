@@ -2,6 +2,7 @@ package im
 
 import (
 	"errors"
+	"go_im/im/comm"
 	"go_im/im/entity"
 )
 
@@ -121,7 +122,7 @@ func (a *api) intercept(uid int64, message *entity.Message) error {
 }
 
 func (a *api) onError(uid int64, message *entity.Message, err error) {
-	logger.D("Api.onError: uid=%d, Action=%s, err=%s", uid, message.Action.String(), err.Error())
+	comm.Slog.D("Api.onError: uid=%d, Action=%s, err=%s", uid, message.Action.String(), err.Error())
 
 	msg := entity.NewMessage(message.Seq, entity.ActionNotify, err.Error())
 	ClientManager.EnqueueMessage(uid, msg)

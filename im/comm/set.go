@@ -1,4 +1,4 @@
-package im
+package comm
 
 type Int64Set struct {
 	m map[int64]interface{}

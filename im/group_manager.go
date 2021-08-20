@@ -2,6 +2,7 @@ package im
 
 import (
 	"errors"
+	"go_im/im/comm"
 	"go_im/im/dao"
 	"go_im/im/entity"
 )
@@ -9,13 +10,13 @@ import (
 var GroupManager = NewGroupManager()
 
 type groupManager struct {
-	*mutex
+	*comm.Mutex
 	groups *groupMap
 }
 
 func NewGroupManager() *groupManager {
 	ret := new(groupManager)
-	ret.mutex = new(mutex)
+	ret.Mutex = new(comm.Mutex)
 	ret.groups = NewGroupMap()
 	return ret
 }
@@ -62,19 +63,19 @@ func (m *groupManager) GetGroup(gid int64) *Group {
 
 	group, err := dao.GroupDao.GetGroup(gid)
 	if err != nil {
-		logger.E("GroupManager.GetGroup", "load group", gid, err)
+		comm.Slog.E("GroupManager.GetGroup", "load group", gid, err)
 		return nil
 	}
 
 	members, err := dao.GroupDao.GetMembers(gid)
 	if err != nil {
-		logger.E("GroupManager.GetGroup", "load members", gid, err)
+		comm.Slog.E("GroupManager.GetGroup", "load members", gid, err)
 		return nil
 	}
 
 	chat, err := dao.ChatDao.GetChat(gid, 2)
 	if err != nil {
-		logger.E("GroupManager.GetGroup", "load chat", gid, err)
+		comm.Slog.E("GroupManager.GetGroup", "load chat", gid, err)
 		return nil
 	}
 	g = NewGroup(gid, group, chat.Cid, members)
@@ -90,12 +91,12 @@ func (m *groupManager) DispatchNotifyMessage(uid int64, gid int64, message *enti
 }
 
 func (m *groupManager) DispatchMessage(uid int64, message *entity.Message) error {
-	logger.D("GroupManager.DispatchMessage: %s", message)
+	comm.Slog.D("GroupManager.DispatchMessage: %s", message)
 
 	groupMsg := new(entity.GroupMessage)
 	err := message.DeserializeData(groupMsg)
 	if err != nil {
-		logger.E("dispatch group message error", err)
+		comm.Slog.E("dispatch group message error", err)
 		return err
 	}
 
@@ -130,13 +131,13 @@ func (m *groupManager) DispatchMessage(uid int64, message *entity.Message) error
 ////////////////////////////////////////////////////////////////////////////////
 
 type groupMap struct {
-	*mutex
+	*comm.Mutex
 	groupsMap map[int64]*Group
 }
 
 func NewGroupMap() *groupMap {
 	ret := new(groupMap)
-	ret.mutex = new(mutex)
+	ret.Mutex = new(comm.Mutex)
 	ret.groupsMap = make(map[int64]*Group)
 	return ret
 }
