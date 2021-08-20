@@ -75,11 +75,11 @@ func (c *Client) readMessage() {
 			}
 			break
 		}
-		if message.Action.IsApi() {
-			Api.Handle(c.uid, message)
-		} else if message.Action.IsMessage() {
+		if message.Action.Contains(entity.ActionApi) {
+			ApiService.Handle(c.uid, message)
+		} else if message.Action.Contains(entity.ActionMessage) {
 			err = c.dispatch(message)
-		} else if message.Action.IsHeartbeat() {
+		} else if message.Action == entity.ActionHeartbeat {
 			c.heartbeat.Reset(HeartbeatDuration)
 		} else {
 			// unknown action

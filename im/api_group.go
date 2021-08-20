@@ -8,7 +8,7 @@ import (
 
 type groupApi struct{}
 
-func (m *groupApi) CreateGroup(msg *ApiMessage, request *entity.CreateGroupRequest) error {
+func (m *groupApi) CreateGroup(msg *RequestInfo, request *entity.CreateGroupRequest) error {
 
 	group, err := m.createGroup(request.Name, msg.uid)
 	if err != nil {
@@ -33,7 +33,7 @@ func (m *groupApi) CreateGroup(msg *ApiMessage, request *entity.CreateGroupReque
 
 	// add invited member to group
 	if len(request.Member) > 0 {
-		nMsg := &ApiMessage{
+		nMsg := &RequestInfo{
 			uid: msg.uid,
 			seq: -1,
 		}
@@ -52,7 +52,7 @@ func (m *groupApi) CreateGroup(msg *ApiMessage, request *entity.CreateGroupReque
 	return nil
 }
 
-func (m *groupApi) GetGroupMember(msg *ApiMessage, request *entity.GetGroupMemberRequest) error {
+func (m *groupApi) GetGroupMember(msg *RequestInfo, request *entity.GetGroupMemberRequest) error {
 
 	members, err := GroupManager.GetMembers(request.Gid)
 	if err != nil {
@@ -74,7 +74,7 @@ func (m *groupApi) GetGroupMember(msg *ApiMessage, request *entity.GetGroupMembe
 	return nil
 }
 
-func (m *groupApi) GetGroupInfo(msg *ApiMessage, request *entity.GroupInfoRequest) error {
+func (m *groupApi) GetGroupInfo(msg *RequestInfo, request *entity.GroupInfoRequest) error {
 
 	var groups []*entity.GroupResponse
 
@@ -96,7 +96,7 @@ func (m *groupApi) GetGroupInfo(msg *ApiMessage, request *entity.GroupInfoReques
 	return nil
 }
 
-func (m *groupApi) RemoveMember(msg *ApiMessage, request *entity.RemoveMemberRequest) error {
+func (m *groupApi) RemoveMember(msg *RequestInfo, request *entity.RemoveMemberRequest) error {
 
 	for _, uid := range request.Uid {
 		err := dao.GroupDao.RemoveMember(request.Gid, uid)
@@ -114,7 +114,7 @@ func (m *groupApi) RemoveMember(msg *ApiMessage, request *entity.RemoveMemberReq
 	return nil
 }
 
-func (m *groupApi) AddGroupMember(msg *ApiMessage, request *entity.AddMemberRequest) error {
+func (m *groupApi) AddGroupMember(msg *RequestInfo, request *entity.AddMemberRequest) error {
 
 	g := GroupManager.GetGroup(request.Gid)
 
@@ -167,7 +167,7 @@ func (m *groupApi) AddGroupMember(msg *ApiMessage, request *entity.AddMemberRequ
 	return nil
 }
 
-func (m *groupApi) ExitGroup(msg *ApiMessage, request *entity.ExitGroupRequest) error {
+func (m *groupApi) ExitGroup(msg *RequestInfo, request *entity.ExitGroupRequest) error {
 
 	err := GroupManager.RemoveMember(request.Gid, msg.uid)
 	if err != nil {
@@ -183,7 +183,7 @@ func (m *groupApi) ExitGroup(msg *ApiMessage, request *entity.ExitGroupRequest) 
 	return err
 }
 
-func (m *groupApi) JoinGroup(msg *ApiMessage, request *entity.JoinGroupRequest) error {
+func (m *groupApi) JoinGroup(msg *RequestInfo, request *entity.JoinGroupRequest) error {
 
 	g := GroupManager.GetGroup(request.Gid)
 

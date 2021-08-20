@@ -3,85 +3,41 @@ package entity
 const (
 	ActionAck = 1
 
-	MaskActionApi Action = 1 << 20
+	ActionUser            = ActionApi + ".user"
+	ActionUserAuth        = ActionUser + ".auth"
+	ActionUserLogin       = ActionUser + ".login"
+	ActionUserLogout      = ActionUser + ".logout"
+	ActionUserRegister    = ActionUser + ".register"
+	ActionUserGetInfo     = ActionUser + ".info.get"
+	ActionUserEditInfo    = ActionUser + ".info.edit"
+	ActionUserInfo        = ActionUser + ".info.user"
+	ActionUserChatList    = ActionUser + ".chat.list"
+	ActionUserNewChat     = ActionUser + ".chat.add"
+	ActionUserChatHistory = ActionUser + ".chat.history"
+	ActionUserChatInfo    = ActionUser + ".chat.info"
+	ActionUserContacts    = ActionUser + ".contacts.get"
+	ActionUserAddFriend   = ActionUser + ".contacts.add"
+	ActionOnlineUser      = ActionUser + ".online"
 
-	ActionUserLogin       = MaskActionApi | 1
-	ActionUserRegister    = MaskActionApi | 2
-	ActionUserGetInfo     = MaskActionApi | 3
-	ActionUserEditInfo    = MaskActionApi | 4
-	ActionUserLogout      = MaskActionApi | 5
-	ActionUserChatList    = MaskActionApi | 6
-	ActionUserInfo        = MaskActionApi | 7
-	ActionUserAuth        = MaskActionApi | 8
-	ActionUserRelation    = MaskActionApi | 10
-	ActionUserNewChat     = MaskActionApi | 11
-	ActionUserChatHistory = MaskActionApi | 12
-	ActionUserChatInfo    = MaskActionApi | 13
-	ActionUserAddFriend   = MaskActionApi | 14
+	ActionGroup             = ActionApi + ".group"
+	ActionGroupCreate       = ActionGroup + ".create"
+	ActionGroupJoin         = ActionGroup + ".join"
+	ActionGroupExit         = ActionGroup + ".exit"
+	ActionGroupUpdate       = ActionGroup + ".update"
+	ActionGroupGetMember    = ActionGroup + ".member.get"
+	ActionGroupRemoveMember = ActionGroup + ".member.remove"
+	ActionGroupAddMember    = ActionGroup + ".member.add"
+	ActionGroupInfo         = ActionGroup + ".info.get"
 
-	ActionOnlineUser = MaskActionApi | 20
+	ActionGroupMessage = ActionMessage + ".group"
+	ActionChatMessage  = ActionMessage + ".chat"
 
-	MaskActionGroupApi = MaskActionApi | 1<<21
-
-	ActionGroupCreate       = MaskActionGroupApi | 1
-	ActionGroupGetMember    = MaskActionGroupApi | 2
-	ActionGroupJoin         = MaskActionGroupApi | 3
-	ActionGroupExit         = MaskActionGroupApi | 4
-	ActionGroupRemoveMember = MaskActionGroupApi | 5
-	ActionGroupInfo         = MaskActionGroupApi | 6
-	ActionGroupUpdate       = MaskActionGroupApi | 7
-	ActionGroupAddMember    = MaskActionGroupApi | 8
-
-	MaskActionMessage  = 1 << 25
-	ActionGroupMessage = MaskActionMessage | 1
-	ActionChatMessage  = MaskActionMessage | 2
-
-	MasActionOther         = 1 << 30
-	ActionFailed           = MasActionOther | 1
-	ActionSuccess          = MasActionOther | 2
-	ActionUserUnauthorized = MasActionOther | 3
-	ActionNotify           = MasActionOther | 4
-	ActionHeartbeat        = MasActionOther | 6
-	ActionEcho             = MasActionOther | 100
+	ActionOther            = ""
+	ActionFailed           = ""
+	ActionSuccess          = ""
+	ActionUserUnauthorized = ""
+	ActionNotify           = ""
 )
-
-var actionNameMap = map[Action]string{
-	ActionUserLogin:       "ActionUserLogin",
-	ActionUserRegister:    "ActionUserRegister",
-	ActionUserGetInfo:     "ActionUserGetInfo",
-	ActionUserEditInfo:    "ActionUserEditInfo",
-	ActionUserLogout:      "ActionUserLogout",
-	ActionUserChatList:    "ActionUserChatList",
-	ActionUserInfo:        "ActionUserInfo",
-	ActionUserAuth:        "ActionUserAuth",
-	ActionUserRelation:    "ActionUserRelation",
-	ActionUserNewChat:     "ActionUserNewChat",
-	ActionUserChatHistory: "ActionUserChatHistory",
-	ActionUserChatInfo:    "ActionUserChatInfo",
-	ActionUserAddFriend:   "",
-
-	ActionGroupRemoveMember: "ActionGroupRemoveMember",
-	ActionGroupAddMember:    "ActionGroupAddMember",
-	ActionGroupJoin:         "ActionGroupJoin",
-	ActionGroupGetMember:    "ActionGroupGetMember",
-	ActionGroupExit:         "ActionGroupExit",
-	ActionGroupCreate:       "ActionGroupCreate",
-	ActionGroupInfo:         "",
-	ActionGroupUpdate:       "ActionGroupUpdate",
-
-	ActionOnlineUser: "ActionOnlineUser",
-
-	MaskActionMessage:  "MaskActionMessage",
-	ActionGroupMessage: "ActionGroupMessage",
-	ActionChatMessage:  "ActionChatMessage",
-
-	ActionHeartbeat:        "ActionHeartbeat",
-	ActionFailed:           "ActionFailed",
-	ActionSuccess:          "ActionSuccess",
-	ActionUserUnauthorized: "ActionUserUnauthorized",
-	ActionNotify:           "ActionNotify",
-	ActionEcho:             "ActionEcho",
-}
 
 var actionRequestMap map[Action]func() interface{}
 

@@ -21,7 +21,7 @@ func newApiFatalError(msg string) *ApiFatalError {
 
 type userApi struct{}
 
-func (a *userApi) Auth(msg *ApiMessage, request *entity.AuthRequest) error {
+func (a *userApi) Auth(msg *RequestInfo, request *entity.AuthRequest) error {
 
 	var resp = entity.NewMessage(msg.seq, entity.ActionSuccess, "success")
 	uid := dao.UserDao.GetUid(request.Token)
@@ -34,7 +34,7 @@ func (a *userApi) Auth(msg *ApiMessage, request *entity.AuthRequest) error {
 	}
 }
 
-func (a *userApi) Login(msg *ApiMessage, request *entity.LoginRequest) error {
+func (a *userApi) Login(msg *RequestInfo, request *entity.LoginRequest) error {
 
 	if len(request.Account) == 0 || len(request.Password) == 0 {
 		return errors.New("account or password empty")
@@ -55,7 +55,7 @@ func (a *userApi) Login(msg *ApiMessage, request *entity.LoginRequest) error {
 }
 
 //goland:noinspection GoPreferNilSlice
-func (a *userApi) GetAndInitRelationList(msg *ApiMessage) error {
+func (a *userApi) GetAndInitRelationList(msg *RequestInfo) error {
 
 	allContacts, err := dao.UserDao.GetAllContacts(msg.uid)
 	if err != nil {
@@ -110,7 +110,7 @@ func (a *userApi) GetAndInitRelationList(msg *ApiMessage) error {
 	return nil
 }
 
-func (a *userApi) AddFriend(msg *ApiMessage, request *entity.AddContacts) error {
+func (a *userApi) AddFriend(msg *RequestInfo, request *entity.AddContacts) error {
 
 	hasUser, err := dao.UserDao.HasUser(request.Uid)
 	if err != nil {
@@ -181,7 +181,7 @@ func (a *userApi) AddFriend(msg *ApiMessage, request *entity.AddContacts) error 
 	return nil
 }
 
-func (a *userApi) GetUserInfo(msg *ApiMessage, request *entity.UserInfoRequest) error {
+func (a *userApi) GetUserInfo(msg *RequestInfo, request *entity.UserInfoRequest) error {
 
 	users, err := dao.UserDao.GetUser(request.Uid...)
 	if err != nil {
@@ -212,7 +212,7 @@ func (a *userApi) GetUserInfo(msg *ApiMessage, request *entity.UserInfoRequest) 
 	return nil
 }
 
-func (a *userApi) GetChatInfo(msg *ApiMessage, request *entity.ChatInfoRequest) error {
+func (a *userApi) GetChatInfo(msg *RequestInfo, request *entity.ChatInfoRequest) error {
 
 	uc, err := dao.ChatDao.GetUserChatFromChat(request.Cid, msg.uid)
 	if err != nil {
@@ -223,7 +223,7 @@ func (a *userApi) GetChatInfo(msg *ApiMessage, request *entity.ChatInfoRequest) 
 	return nil
 }
 
-func (a *userApi) GetChatHistory(msg *ApiMessage, request *entity.ChatHistoryRequest) error {
+func (a *userApi) GetChatHistory(msg *RequestInfo, request *entity.ChatHistoryRequest) error {
 
 	chatMessages, err := dao.ChatDao.GetChatHistory(request.Cid, 20)
 	if err != nil {
@@ -236,7 +236,7 @@ func (a *userApi) GetChatHistory(msg *ApiMessage, request *entity.ChatHistoryReq
 	return nil
 }
 
-func (a *userApi) GetOnlineUser(msg *ApiMessage) error {
+func (a *userApi) GetOnlineUser(msg *RequestInfo) error {
 
 	type u struct {
 		Uid      int64
@@ -263,7 +263,7 @@ func (a *userApi) GetOnlineUser(msg *ApiMessage) error {
 	return nil
 }
 
-func (a *userApi) NewChat(msg *ApiMessage, request *entity.UserNewChatRequest) error {
+func (a *userApi) NewChat(msg *RequestInfo, request *entity.UserNewChatRequest) error {
 
 	uid := msg.uid
 	target := request.Id
@@ -302,7 +302,7 @@ func (a *userApi) NewChat(msg *ApiMessage, request *entity.UserNewChatRequest) e
 	return nil
 }
 
-func (a *userApi) GetUserChatList(msg *ApiMessage) error {
+func (a *userApi) GetUserChatList(msg *RequestInfo) error {
 
 	list, err := dao.ChatDao.GetUserChatList(msg.uid)
 	if err != nil {
@@ -313,12 +313,12 @@ func (a *userApi) GetUserChatList(msg *ApiMessage) error {
 	return nil
 }
 
-func (a *userApi) UserInfo(msg *ApiMessage) error {
+func (a *userApi) UserInfo(msg *RequestInfo) error {
 
 	return nil
 }
 
-func (a *userApi) Register(msg *ApiMessage, registerEntity *entity.RegisterRequest) error {
+func (a *userApi) Register(msg *RequestInfo, registerEntity *entity.RegisterRequest) error {
 
 	resp := entity.NewMessage(msg.seq, entity.ActionSuccess, "success")
 	err := dao.UserDao.AddUser(registerEntity.Account, registerEntity.Password)

@@ -11,6 +11,7 @@ require (
 	github.com/ianlancetaylor/demangle v0.0.0-20210724235854-665d3a6fe486 // indirect
 	github.com/jinzhu/gorm v1.9.16
 	github.com/onsi/gomega v1.14.0 // indirect
+	github.com/panjf2000/ants/v2 v2.4.6 // indirect
 	github.com/stretchr/testify v1.5.1
 	golang.org/x/sys v0.0.0-20210818153620-00dd8d7831e7 // indirect
 	golang.org/x/tools v0.0.0-20201224043029-2b0845dc783e

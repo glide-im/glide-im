@@ -8,7 +8,7 @@ import (
 
 var (
 	ErrUnknownAction = errors.New("ErrUnknownAction")
-	Api              = newApi()
+	ApiService       = newRootApiHandler()
 )
 
 var ActionDoNotNeedToken = map[entity.Action]int8{
@@ -17,24 +17,29 @@ var ActionDoNotNeedToken = map[entity.Action]int8{
 	entity.ActionUserRegister: 0,
 }
 
-type ApiMessage struct {
+type RequestInfo struct {
 	uid int64
 	seq int64
 }
 
-type api struct {
+type RootApiHandler struct {
 	*userApi
 	*groupApi
+	rt map[entity.Action]interface{}
 }
 
-func newApi() *api {
-	ret := new(api)
-	ret.userApi = new(userApi)
-	ret.groupApi = new(groupApi)
+func newRootApiHandler() *RootApiHandler {
+	ret := new(RootApiHandler)
+	ret.rt = make(map[entity.Action]interface{})
 	return ret
 }
 
-func (a *api) Handle(uid int64, message *entity.Message) {
+func (a *RootApiHandler) AddHandler(action entity.Action, handlerFunc interface{}) {
+	a.rt[action] = handlerFunc
+}
+
+func (a *RootApiHandler) Handle(uid int64, message *entity.Message) {
+
 	// TODO async
 	err := a.handle(uid, message)
 	if err != nil {
@@ -42,7 +47,7 @@ func (a *api) Handle(uid int64, message *entity.Message) {
 	}
 }
 
-func (a *api) handle(uid int64, message *entity.Message) error {
+func (a *RootApiHandler) handle(uid int64, message *entity.Message) error {
 
 	if err := a.intercept(uid, message); err != nil {
 		return err
@@ -57,7 +62,7 @@ func (a *api) handle(uid int64, message *entity.Message) error {
 		}
 	}
 
-	msg := &ApiMessage{
+	msg := &RequestInfo{
 		uid: uid,
 		seq: message.Seq,
 	}
@@ -71,7 +76,7 @@ func (a *api) handle(uid int64, message *entity.Message) error {
 		return a.Register(msg, en.(*entity.RegisterRequest))
 	case entity.ActionUserChatList:
 		return a.GetUserChatList(msg)
-	case entity.ActionUserRelation:
+	case entity.ActionUserContacts:
 		return a.GetAndInitRelationList(msg)
 	case entity.ActionOnlineUser:
 		return a.GetOnlineUser(msg)
@@ -108,7 +113,7 @@ func (a *api) handle(uid int64, message *entity.Message) error {
 	return ErrUnknownAction
 }
 
-func (a *api) intercept(uid int64, message *entity.Message) error {
+func (a *RootApiHandler) intercept(uid int64, message *entity.Message) error {
 
 	_, ok := ActionDoNotNeedToken[message.Action]
 	if uid <= 0 && !ok {
@@ -121,8 +126,8 @@ func (a *api) intercept(uid int64, message *entity.Message) error {
 	return nil
 }
 
-func (a *api) onError(uid int64, message *entity.Message, err error) {
-	comm.Slog.D("Api.onError: uid=%d, Action=%s, err=%s", uid, message.Action.String(), err.Error())
+func (a *RootApiHandler) onError(uid int64, message *entity.Message, err error) {
+	comm.Slog.D("ApiService.onError: uid=%d, Action=%s, err=%s", uid, message.Action, err.Error())
 
 	msg := entity.NewMessage(message.Seq, entity.ActionNotify, err.Error())
 	ClientManager.EnqueueMessage(uid, msg)

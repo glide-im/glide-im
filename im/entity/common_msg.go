@@ -3,24 +3,19 @@ package entity
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
-type Action int32
+const (
+	ActionMessage   Action = "message"
+	ActionApi       Action = "api"
+	ActionHeartbeat Action = "heartbeat"
+)
 
-func (a Action) IsApi() bool {
-	return a&MaskActionApi != 0
-}
+type Action string
 
-func (a Action) IsMessage() bool {
-	return a&MaskActionMessage != 0
-}
-
-func (a Action) IsHeartbeat() bool {
-	return a == ActionHeartbeat
-}
-
-func (a Action) String() string {
-	return actionNameMap[a]
+func (a *Action) Contains(action Action) bool {
+	return strings.HasPrefix(string(*a), string(action))
 }
 
 type Message struct {
@@ -60,8 +55,7 @@ func (m *Message) DeserializeData(v interface{}) error {
 }
 
 func (m *Message) String() string {
-	n := actionNameMap[m.Action]
-	return fmt.Sprintf("Message{Seq=%d, Action=%s, Data=%s}", m.Seq, n, m.Data)
+	return fmt.Sprintf("Message{Seq=%d, Action=%s, Data=%s}", m.Seq, m.Action, m.Data)
 }
 
 func NewMessage(seq int64, action Action, data interface{}) *Message {
