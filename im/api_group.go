@@ -2,15 +2,16 @@ package im
 
 import (
 	"errors"
+	"go_im/im/api"
 	"go_im/im/dao"
 	"go_im/im/entity"
 )
 
 type groupApi struct{}
 
-func (m *groupApi) CreateGroup(msg *RequestInfo, request *entity.CreateGroupRequest) error {
+func (m *groupApi) CreateGroup(msg *api.RequestInfo, request *entity.CreateGroupRequest) error {
 
-	group, err := m.createGroup(request.Name, msg.uid)
+	group, err := m.createGroup(request.Name, msg.Uid)
 	if err != nil {
 		return err
 	}
@@ -22,20 +23,20 @@ func (m *groupApi) CreateGroup(msg *RequestInfo, request *entity.CreateGroupRequ
 			Members: members,
 		}},
 	}
-	ClientManager.EnqueueMessage(msg.uid, entity.NewMessage(-1, entity.ActionUserAddFriend, c))
+	ClientManager.EnqueueMessage(msg.Uid, entity.NewMessage(-1, entity.ActionUserAddFriend, c))
 
 	// create user chat by default
-	uc, err := dao.ChatDao.NewUserChat(group.Cid, msg.uid, group.Gid, dao.ChatTypeGroup)
+	uc, err := dao.ChatDao.NewUserChat(group.Cid, msg.Uid, group.Gid, dao.ChatTypeGroup)
 	if err != nil {
 		return err
 	}
-	ClientManager.EnqueueMessage(msg.uid, entity.NewMessage(-1, entity.ActionUserNewChat, uc))
+	ClientManager.EnqueueMessage(msg.Uid, entity.NewMessage(-1, entity.ActionUserNewChat, uc))
 
 	// add invited member to group
 	if len(request.Member) > 0 {
-		nMsg := &RequestInfo{
-			uid: msg.uid,
-			seq: -1,
+		nMsg := &api.RequestInfo{
+			Uid: msg.Uid,
+			Seq: -1,
 		}
 		nReq := &entity.AddMemberRequest{
 			Gid: group.Gid,
@@ -44,15 +45,15 @@ func (m *groupApi) CreateGroup(msg *RequestInfo, request *entity.CreateGroupRequ
 		err = m.AddGroupMember(nMsg, nReq)
 		if err != nil {
 			resp := entity.NewMessage(-1, entity.ActionFailed, "add member failed, "+err.Error())
-			ClientManager.EnqueueMessage(msg.uid, resp)
+			ClientManager.EnqueueMessage(msg.Uid, resp)
 		}
 	}
 
-	ClientManager.EnqueueMessage(msg.uid, entity.NewMessage(msg.seq, entity.ActionSuccess, "create group success"))
+	ClientManager.EnqueueMessage(msg.Uid, entity.NewMessage(msg.Seq, entity.ActionSuccess, "create group success"))
 	return nil
 }
 
-func (m *groupApi) GetGroupMember(msg *RequestInfo, request *entity.GetGroupMemberRequest) error {
+func (m *groupApi) GetGroupMember(msg *api.RequestInfo, request *entity.GetGroupMemberRequest) error {
 
 	members, err := GroupManager.GetMembers(request.Gid)
 	if err != nil {
@@ -70,11 +71,11 @@ func (m *groupApi) GetGroupMember(msg *RequestInfo, request *entity.GetGroupMemb
 		})
 	}
 
-	ClientManager.EnqueueMessage(msg.uid, entity.NewMessage(msg.seq, entity.ActionSuccess, ms))
+	ClientManager.EnqueueMessage(msg.Uid, entity.NewMessage(msg.Seq, entity.ActionSuccess, ms))
 	return nil
 }
 
-func (m *groupApi) GetGroupInfo(msg *RequestInfo, request *entity.GroupInfoRequest) error {
+func (m *groupApi) GetGroupInfo(msg *api.RequestInfo, request *entity.GroupInfoRequest) error {
 
 	var groups []*entity.GroupResponse
 
@@ -91,12 +92,12 @@ func (m *groupApi) GetGroupInfo(msg *RequestInfo, request *entity.GroupInfoReque
 		groups = append(groups, &gr)
 	}
 
-	resp := entity.NewMessage(msg.seq, entity.ActionSuccess, groups)
-	ClientManager.EnqueueMessage(msg.uid, resp)
+	resp := entity.NewMessage(msg.Seq, entity.ActionSuccess, groups)
+	ClientManager.EnqueueMessage(msg.Uid, resp)
 	return nil
 }
 
-func (m *groupApi) RemoveMember(msg *RequestInfo, request *entity.RemoveMemberRequest) error {
+func (m *groupApi) RemoveMember(msg *api.RequestInfo, request *entity.RemoveMemberRequest) error {
 
 	for _, uid := range request.Uid {
 		err := dao.GroupDao.RemoveMember(request.Gid, uid)
@@ -108,13 +109,13 @@ func (m *groupApi) RemoveMember(msg *RequestInfo, request *entity.RemoveMemberRe
 		ClientManager.EnqueueMessage(uid, notifyResp)
 	}
 
-	resp := entity.NewMessage(msg.seq, entity.ActionSuccess, "remove member success")
+	resp := entity.NewMessage(msg.Seq, entity.ActionSuccess, "remove member success")
 
-	ClientManager.EnqueueMessage(msg.uid, resp)
+	ClientManager.EnqueueMessage(msg.Uid, resp)
 	return nil
 }
 
-func (m *groupApi) AddGroupMember(msg *RequestInfo, request *entity.AddMemberRequest) error {
+func (m *groupApi) AddGroupMember(msg *api.RequestInfo, request *entity.AddMemberRequest) error {
 
 	g := GroupManager.GetGroup(request.Gid)
 
@@ -128,7 +129,7 @@ func (m *groupApi) AddGroupMember(msg *RequestInfo, request *entity.AddMemberReq
 		Gid:     g.Gid,
 		Members: members,
 	}
-	GroupManager.DispatchNotifyMessage(msg.uid, g.Gid, entity.NewMessage(-1, entity.ActionGroupAddMember, groupNotify))
+	GroupManager.DispatchNotifyMessage(msg.Uid, g.Gid, entity.NewMessage(-1, entity.ActionGroupAddMember, groupNotify))
 
 	for _, member := range members {
 
@@ -167,23 +168,23 @@ func (m *groupApi) AddGroupMember(msg *RequestInfo, request *entity.AddMemberReq
 	return nil
 }
 
-func (m *groupApi) ExitGroup(msg *RequestInfo, request *entity.ExitGroupRequest) error {
+func (m *groupApi) ExitGroup(msg *api.RequestInfo, request *entity.ExitGroupRequest) error {
 
-	err := GroupManager.RemoveMember(request.Gid, msg.uid)
+	err := GroupManager.RemoveMember(request.Gid, msg.Uid)
 	if err != nil {
 		return err
 	}
 
-	err = dao.GroupDao.RemoveMember(request.Gid, msg.uid)
+	err = dao.GroupDao.RemoveMember(request.Gid, msg.Uid)
 	if err != nil {
 		return err
 	}
-	resp := entity.NewMessage(msg.seq, entity.ActionSuccess, "exit group success")
-	ClientManager.EnqueueMessage(msg.uid, resp)
+	resp := entity.NewMessage(msg.Seq, entity.ActionSuccess, "exit group success")
+	ClientManager.EnqueueMessage(msg.Uid, resp)
 	return err
 }
 
-func (m *groupApi) JoinGroup(msg *RequestInfo, request *entity.JoinGroupRequest) error {
+func (m *groupApi) JoinGroup(msg *api.RequestInfo, request *entity.JoinGroupRequest) error {
 
 	g := GroupManager.GetGroup(request.Gid)
 
@@ -191,12 +192,12 @@ func (m *groupApi) JoinGroup(msg *RequestInfo, request *entity.JoinGroupRequest)
 		return errors.New("group does not exist")
 	}
 
-	ms, err := m.addGroupMember(request.Gid, msg.uid)
+	ms, err := m.addGroupMember(request.Gid, msg.Uid)
 	if err != nil {
 		return err
 	}
 
-	_, err = dao.UserDao.AddContacts(msg.uid, g.Gid, dao.ContactsTypeGroup, "")
+	_, err = dao.UserDao.AddContacts(msg.Uid, g.Gid, dao.ContactsTypeGroup, "")
 
 	members, err := GroupManager.GetMembers(request.Gid)
 	if err != nil {
@@ -210,16 +211,16 @@ func (m *groupApi) JoinGroup(msg *RequestInfo, request *entity.JoinGroupRequest)
 			Members: members,
 		}},
 	}
-	ClientManager.EnqueueMessage(msg.uid, entity.NewMessage(-1, entity.ActionUserAddFriend, c))
+	ClientManager.EnqueueMessage(msg.Uid, entity.NewMessage(-1, entity.ActionUserAddFriend, c))
 
-	chat, err := dao.ChatDao.NewUserChat(g.Cid, msg.uid, g.Gid, dao.ChatTypeGroup)
+	chat, err := dao.ChatDao.NewUserChat(g.Cid, msg.Uid, g.Gid, dao.ChatTypeGroup)
 	if err != nil {
-		_ = dao.GroupDao.RemoveMember(request.Gid, msg.uid)
+		_ = dao.GroupDao.RemoveMember(request.Gid, msg.Uid)
 		return err
 	}
 	GroupManager.PutMember(g.Gid, ms[0])
-	ClientManager.EnqueueMessage(msg.uid, entity.NewMessage(-1, entity.ActionUserNewChat, chat))
-	ClientManager.EnqueueMessage(msg.uid, entity.NewMessage(msg.seq, entity.ActionSuccess, "join group success"))
+	ClientManager.EnqueueMessage(msg.Uid, entity.NewMessage(-1, entity.ActionUserNewChat, chat))
+	ClientManager.EnqueueMessage(msg.Uid, entity.NewMessage(msg.Seq, entity.ActionSuccess, "join group success"))
 	return nil
 }
 
