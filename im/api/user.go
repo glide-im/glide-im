@@ -17,7 +17,7 @@ func (a *UserApi) Auth(msg *RequestInfo, request *AuthRequest) error {
 	uid := dao.UserDao.GetUid(request.Token)
 	if uid > 0 {
 		client.Manager.ClientSignIn(msg.Uid, uid, request.DeviceId)
-		client.Manager.EnqueueMessage(uid, resp)
+		respondMessage(uid, resp)
 		return nil
 	} else {
 		return errors.New("login failed")
@@ -40,7 +40,7 @@ func (a *UserApi) Login(msg *RequestInfo, request *LoginRequest) error {
 		return err
 	}
 	client.Manager.ClientSignIn(msg.Uid, uid, request.Device)
-	client.Manager.EnqueueMessage(uid, m)
+	respondMessage(uid, m)
 	return nil
 }
 
@@ -96,7 +96,7 @@ func (a *UserApi) GetAndInitRelationList(msg *RequestInfo) error {
 	}
 
 	resp := message.NewMessage(msg.Seq, ActionSuccess, body)
-	client.Manager.EnqueueMessage(msg.Uid, resp)
+	respondMessage(msg.Uid, resp)
 	return nil
 }
 
@@ -149,7 +149,7 @@ func (a *UserApi) AddFriend(msg *RequestInfo, request *AddContacts) error {
 		}},
 		Groups: []*GroupResponse{},
 	}
-	client.Manager.EnqueueMessage(msg.Uid, message.NewMessage(msg.Seq, ActionSuccess, ccontactResponse))
+	respondMessage(msg.Uid, message.NewMessage(msg.Seq, ActionSuccess, ccontactResponse))
 
 	// add to friend
 	_, err = dao.UserDao.AddContacts(request.Uid, msg.Uid, dao.ContactsTypeUser, "")
@@ -166,7 +166,7 @@ func (a *UserApi) AddFriend(msg *RequestInfo, request *AddContacts) error {
 		}},
 		Groups: []*GroupResponse{},
 	}
-	client.Manager.EnqueueMessage(request.Uid, message.NewMessage(-1, ActionUserAddFriend, contactRespFriend))
+	respondMessage(request.Uid, message.NewMessage(-1, ActionUserAddFriend, contactRespFriend))
 
 	return nil
 }
@@ -198,7 +198,7 @@ func (a *UserApi) GetUserInfo(msg *RequestInfo, request *UserInfoRequest) error 
 		return err
 	}
 
-	client.Manager.EnqueueMessage(msg.Uid, resp)
+	respondMessage(msg.Uid, resp)
 	return nil
 }
 
@@ -209,7 +209,7 @@ func (a *UserApi) GetChatInfo(msg *RequestInfo, request *ChatInfoRequest) error 
 		return err
 	}
 	resp := message.NewMessage(msg.Seq, ActionUserChatInfo, uc)
-	client.Manager.EnqueueMessage(msg.Uid, resp)
+	respondMessage(msg.Uid, resp)
 	return nil
 }
 
@@ -222,7 +222,7 @@ func (a *UserApi) GetChatHistory(msg *RequestInfo, request *ChatHistoryRequest) 
 
 	resp := message.NewMessage(msg.Seq, ActionUserChatHistory, chatMessages)
 
-	client.Manager.EnqueueMessage(msg.Uid, resp)
+	respondMessage(msg.Uid, resp)
 	return nil
 }
 
@@ -249,7 +249,7 @@ func (a *UserApi) GetOnlineUser(msg *RequestInfo) error {
 	}
 
 	m := message.NewMessage(msg.Seq, ActionOnlineUser, users)
-	client.Manager.EnqueueMessage(msg.Uid, m)
+	respondMessage(msg.Uid, m)
 	return nil
 }
 
@@ -278,14 +278,14 @@ func (a *UserApi) NewChat(msg *RequestInfo, request *UserNewChatRequest) error {
 			return err
 		}
 		resp := message.NewMessage(msg.Seq, ActionSuccess, m2)
-		client.Manager.EnqueueMessage(msg.Uid, resp)
+		respondMessage(msg.Uid, resp)
 	} else if request.Type == dao.ChatTypeGroup {
 		m, e := dao.ChatDao.NewUserChat(chat.Cid, uid, target, dao.ChatTypeGroup)
 		if e != nil {
 			return e
 		}
 		resp := message.NewMessage(msg.Seq, ActionUserChatInfo, m)
-		client.Manager.EnqueueMessage(msg.Uid, resp)
+		respondMessage(msg.Uid, resp)
 	} else {
 		return errors.New("unknown chat type")
 	}
@@ -299,7 +299,7 @@ func (a *UserApi) GetUserChatList(msg *RequestInfo) error {
 		return err
 	}
 	resp := message.NewMessage(msg.Seq, ActionSuccess, list)
-	client.Manager.EnqueueMessage(msg.Uid, resp)
+	respondMessage(msg.Uid, resp)
 	return nil
 }
 
@@ -316,6 +316,6 @@ func (a *UserApi) Register(msg *RequestInfo, registerEntity *RegisterRequest) er
 	if err != nil {
 		resp = message.NewMessage(msg.Seq, ActionFailed, err)
 	}
-	client.Manager.EnqueueMessage(msg.Uid, resp)
+	respondMessage(msg.Uid, resp)
 	return err
 }

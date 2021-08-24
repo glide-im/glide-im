@@ -26,3 +26,7 @@ type IClientManager interface {
 
 	Update()
 }
+
+func EnqueueMessage(uid int64, message *message.Message) {
+	Manager.EnqueueMessage(uid, message)
+}

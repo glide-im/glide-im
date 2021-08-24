@@ -69,7 +69,7 @@ func (g *Group) SendMessage(uid int64, message *message.Message) {
 	comm.Slog.D("Group.SendMessage: %s", message)
 
 	for id := range g.members.members {
-		client.Manager.EnqueueMessage(id, message)
+		client.EnqueueMessage(id, message)
 	}
 }
 

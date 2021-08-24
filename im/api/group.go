@@ -24,14 +24,14 @@ func (m *GroupApi) CreateGroup(msg *RequestInfo, request *CreateGroupRequest) er
 			Members: members,
 		}},
 	}
-	client.Manager.EnqueueMessage(msg.Uid, message.NewMessage(-1, ActionUserAddFriend, c))
+	respond(msg.Uid, -1, ActionUserAddFriend, c)
 
 	// create user chat by default
 	uc, err := dao.ChatDao.NewUserChat(g.Cid, msg.Uid, g.Gid, dao.ChatTypeGroup)
 	if err != nil {
 		return err
 	}
-	client.Manager.EnqueueMessage(msg.Uid, message.NewMessage(-1, ActionUserNewChat, uc))
+	respond(msg.Uid, -1, ActionUserNewChat, uc)
 
 	// add invited member to group
 	if len(request.Member) > 0 {
@@ -45,12 +45,10 @@ func (m *GroupApi) CreateGroup(msg *RequestInfo, request *CreateGroupRequest) er
 		}
 		err = m.AddGroupMember(nMsg, nReq)
 		if err != nil {
-			resp := message.NewMessage(-1, ActionFailed, "add member failed, "+err.Error())
-			client.Manager.EnqueueMessage(msg.Uid, resp)
+			respond(msg.Uid, -1, ActionFailed, "add member failed, "+err.Error())
 		}
 	}
-
-	client.Manager.EnqueueMessage(msg.Uid, message.NewMessage(msg.Seq, ActionSuccess, "create group success"))
+	respond(msg.Uid, msg.Seq, ActionSuccess, "create group success")
 	return nil
 }
 
@@ -72,7 +70,7 @@ func (m *GroupApi) GetGroupMember(msg *RequestInfo, request *GetGroupMemberReque
 		})
 	}
 
-	client.Manager.EnqueueMessage(msg.Uid, message.NewMessage(msg.Seq, ActionSuccess, ms))
+	respond(msg.Uid, msg.Seq, ActionSuccess, ms)
 	return nil
 }
 
@@ -92,9 +90,7 @@ func (m *GroupApi) GetGroupInfo(msg *RequestInfo, request *GroupInfoRequest) err
 		}
 		groups = append(groups, &gr)
 	}
-
-	resp := message.NewMessage(msg.Seq, ActionSuccess, groups)
-	client.Manager.EnqueueMessage(msg.Uid, resp)
+	respond(msg.Uid, msg.Seq, ActionSuccess, groups)
 	return nil
 }
 
@@ -107,12 +103,12 @@ func (m *GroupApi) RemoveMember(msg *RequestInfo, request *RemoveMemberRequest) 
 		}
 		_ = group.Manager.RemoveMember(request.Gid, uid)
 		notifyResp := message.NewMessage(-1, ActionGroupRemoveMember, "you have been removed from the group xxx by xxx")
-		client.Manager.EnqueueMessage(uid, notifyResp)
+		respondMessage(uid, notifyResp)
 	}
 
 	resp := message.NewMessage(msg.Seq, ActionSuccess, "remove member success")
 
-	client.Manager.EnqueueMessage(msg.Uid, resp)
+	respondMessage(msg.Uid, resp)
 	return nil
 }
 
@@ -152,7 +148,7 @@ func (m *GroupApi) AddGroupMember(msg *RequestInfo, request *AddMemberRequest) e
 				Members: ms,
 			}},
 		}
-		client.Manager.EnqueueMessage(member.Uid, message.NewMessage(-1, ActionUserAddFriend, c))
+		respond(member.Uid, -1, ActionUserAddFriend, c)
 
 		// default add user chat
 		chat, er := dao.ChatDao.NewUserChat(g.Cid, member.Uid, g.Gid, dao.ChatTypeGroup)
@@ -163,9 +159,8 @@ func (m *GroupApi) AddGroupMember(msg *RequestInfo, request *AddMemberRequest) e
 		group.Manager.PutMember(g.Gid, member)
 
 		// notify update chat list
-		client.Manager.EnqueueMessage(member.Uid, message.NewMessage(-1, ActionUserNewChat, chat))
+		respond(member.Uid, -1, ActionUserNewChat, chat)
 	}
-
 	return nil
 }
 
@@ -181,7 +176,7 @@ func (m *GroupApi) ExitGroup(msg *RequestInfo, request *ExitGroupRequest) error 
 		return err
 	}
 	resp := message.NewMessage(msg.Seq, ActionSuccess, "exit group success")
-	client.Manager.EnqueueMessage(msg.Uid, resp)
+	respondMessage(msg.Uid, resp)
 	return err
 }
 
@@ -212,7 +207,7 @@ func (m *GroupApi) JoinGroup(msg *RequestInfo, request *JoinGroupRequest) error 
 			Members: members,
 		}},
 	}
-	client.Manager.EnqueueMessage(msg.Uid, message.NewMessage(-1, ActionUserAddFriend, c))
+	respond(msg.Uid, -1, ActionUserAddFriend, c)
 
 	chat, err := dao.ChatDao.NewUserChat(g.Cid, msg.Uid, g.Gid, dao.ChatTypeGroup)
 	if err != nil {
@@ -220,8 +215,8 @@ func (m *GroupApi) JoinGroup(msg *RequestInfo, request *JoinGroupRequest) error 
 		return err
 	}
 	group.Manager.PutMember(g.Gid, ms[0])
-	client.Manager.EnqueueMessage(msg.Uid, message.NewMessage(-1, ActionUserNewChat, chat))
-	client.Manager.EnqueueMessage(msg.Uid, message.NewMessage(msg.Seq, ActionSuccess, "join group success"))
+	respond(msg.Uid, -1, ActionUserNewChat, chat)
+	respond(msg.Uid, msg.Seq, ActionSuccess, "join group success")
 	return nil
 }
 

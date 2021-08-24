@@ -101,5 +101,5 @@ func (a *ApiRouter) onError(uid int64, msg *message.Message, err error) {
 	comm.Slog.D("a.onError: uid=%d, Action=%s, err=%s", uid, msg.Action, err.Error())
 
 	errMsg := message.NewMessage(msg.Seq, message.ActionNotify, err.Error())
-	client.Manager.EnqueueMessage(uid, errMsg)
+	client.EnqueueMessage(uid, errMsg)
 }
