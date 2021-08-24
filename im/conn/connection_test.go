@@ -1,15 +1,15 @@
 package conn
 
 import (
-	"go_im/im/entity"
+	"go_im/im/message"
 	"testing"
 	"time"
 )
 
 type MockIdleConn struct{}
 
-func (m MockIdleConn) Write(message *entity.Message) error { return nil }
-func (m MockIdleConn) Read() (*entity.Message, error) {
+func (m MockIdleConn) Write(message *message.Message) error { return nil }
+func (m MockIdleConn) Read() (*message.Message, error) {
 	time.Sleep(time.Hour)
 	return nil, nil
 }

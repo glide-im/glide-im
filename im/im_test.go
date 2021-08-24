@@ -2,10 +2,11 @@ package im
 
 import (
 	"fmt"
+	"go_im/im/client"
 	"go_im/im/comm"
 	"go_im/im/conn"
 	"go_im/im/dao"
-	"go_im/im/entity"
+	"go_im/im/message"
 	"math/rand"
 	"sync"
 	"testing"
@@ -19,19 +20,19 @@ var mockUid int64 = 1
 type MockUserConn struct {
 	maxWriteTimeCost int64
 	uid              int64
-	ms               chan entity.SenderChatMessage
+	ms               chan client.SenderChatMessage
 }
 
 func NewMockUserConn() *MockUserConn {
 	return &MockUserConn{
 		maxWriteTimeCost: 10,
-		ms:               make(chan entity.SenderChatMessage, 100),
+		ms:               make(chan client.SenderChatMessage, 100),
 	}
 }
 
 func (m *MockUserConn) Send(target int64, msg string) {
 	messageCount.Set(messageCount.Get() + 1)
-	m.ms <- entity.SenderChatMessage{
+	m.ms <- client.SenderChatMessage{
 		Cid:         1,
 		UcId:        1,
 		TargetId:    target,
@@ -49,7 +50,7 @@ func (m *MockUserConn) Write(s conn.Serializable) error {
 
 func (m *MockUserConn) Read(s conn.Serializable) error {
 	msg := <-m.ms
-	s = entity.NewMessage(1, entity.ActionChatMessage, msg)
+	s = message.NewMessage(1, message.ActionChatMessage, msg)
 	return nil
 }
 
@@ -102,9 +103,9 @@ func userOnline(count int) {
 	fmt.Println("load user, count: ", count)
 	for i := 0; i < count; i++ {
 		con := NewMockUserConn()
-		con.uid = ClientManager.ClientConnected(con)
+		con.uid = client.Manager.ClientConnected(con)
 		// user sign in
-		ClientManager.ClientSignIn(con.uid, mockUid, -1)
+		client.Manager.ClientSignIn(con.uid, mockUid, -1)
 		con.uid = mockUid
 		//user[mockUid] = con
 		users[i] = con

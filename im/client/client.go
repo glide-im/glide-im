@@ -1,9 +1,9 @@
-package im
+package client
 
 import (
 	"go_im/im/comm"
 	"go_im/im/conn"
-	"go_im/im/entity"
+	"go_im/im/message"
 	"time"
 )
 
@@ -19,7 +19,7 @@ type Client struct {
 	closed   *comm.AtomicBool
 
 	// buffered channel 40
-	messages chan *entity.Message
+	messages chan *message.Message
 
 	seq *comm.AtomicInt64
 
@@ -30,7 +30,7 @@ func NewClient(conn conn.Connection, connUid int64) *Client {
 	client := new(Client)
 	client.conn = conn
 	client.closed = comm.NewAtomicBool(false)
-	client.messages = make(chan *entity.Message, 40)
+	client.messages = make(chan *message.Message, 40)
 	client.time = time.Now()
 	client.uid = connUid
 	client.seq = new(comm.AtomicInt64)
@@ -40,7 +40,20 @@ func NewClient(conn conn.Connection, connUid int64) *Client {
 	return client
 }
 
-func (c *Client) EnqueueMessage(message *entity.Message) {
+func (c *Client) SignIn(uid int64, device int64) {
+	c.uid = uid
+	c.deviceId = device
+}
+
+func (c *Client) Id() int64 {
+	return c.uid
+}
+
+func (c *Client) Closed() bool {
+	return c.closed.Get()
+}
+
+func (c *Client) EnqueueMessage(message *message.Message) {
 	comm.Slog.I("EnqueueMessage(uid=%d, %s): %v", c.uid, message.Action, message)
 	if c.closed.Get() {
 		comm.Slog.W("connection closed, cannot enqueue message")
@@ -67,25 +80,25 @@ func (c *Client) readMessage() {
 
 	comm.Slog.I("start read message")
 	for {
-		message := &entity.Message{}
-		err := c.conn.Read(message)
+		msg := &message.Message{}
+		err := c.conn.Read(msg)
 		if err != nil {
 			if !c.handleError(-1, err) {
 				continue
 			}
 			break
 		}
-		if message.Action.Contains(entity.ActionApi) {
-			ApiManager.Handle(c.uid, message)
-		} else if message.Action.Contains(entity.ActionMessage) {
-			err = c.dispatch(message)
-		} else if message.Action == entity.ActionHeartbeat {
+		if msg.Action.Contains(message.ActionApi) {
+			Manager.Api(c.uid, msg)
+		} else if msg.Action.Contains(message.ActionMessage) {
+			err = Manager.DispatchMessage(c.uid, msg)
+		} else if msg.Action == message.ActionHeartbeat {
 			c.heartbeat.Reset(HeartbeatDuration)
 		} else {
 			// unknown action
 		}
 		if err != nil {
-			if !c.handleError(message.Seq, err) {
+			if !c.handleError(msg.Seq, err) {
 				continue
 			}
 			break
@@ -116,27 +129,15 @@ func (c *Client) handleError(seq int64, err error) bool {
 	}
 	_, ok := fatalErr[err]
 	if ok {
-		ClientManager.UserLogout(c.uid)
+		Manager.UserLogout(c.uid)
 		return true
 	}
-	c.messages <- entity.NewMessage(seq, entity.ActionNotify, err.Error())
+	c.messages <- message.NewMessage(seq, "notify", err.Error())
 	return false
 }
 
 func (c *Client) onDeath() {
 	// TODO
-}
-
-func (c *Client) dispatch(message *entity.Message) error {
-	switch message.Action {
-	case entity.ActionChatMessage:
-		return ClientManager.DispatchMessage(c.uid, message)
-	case entity.ActionGroupMessage:
-		return GroupManager.DispatchMessage(c.uid, message)
-	default:
-		// unknown message type
-	}
-	return nil
 }
 
 func (c *Client) Exit() {

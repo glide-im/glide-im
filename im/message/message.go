@@ -1,4 +1,4 @@
-package entity
+package message
 
 import (
 	"encoding/json"
@@ -7,9 +7,12 @@ import (
 )
 
 const (
-	ActionMessage   Action = "message"
-	ActionApi       Action = "api"
-	ActionHeartbeat Action = "heartbeat"
+	ActionMessage      Action = "message"
+	ActionGroupMessage Action = "message.group"
+	ActionChatMessage  Action = "message.chat"
+	ActionApi          Action = "api"
+	ActionHeartbeat    Action = "heartbeat"
+	ActionNotify       Action = "notify"
 )
 
 type Action string

@@ -2,7 +2,7 @@ package api
 
 import (
 	"encoding/json"
-	"go_im/im/entity"
+	"go_im/im/message"
 	"testing"
 )
 
@@ -31,7 +31,7 @@ func TestGroup(t *testing.T) {
 		),
 	)
 
-	msg := entity.NewMessage(-1, "api.user.login", &TestData{Name: "1234"})
+	msg := message.NewMessage(-1, "api.user.login", &TestData{Name: "1234"})
 	err := router.Handle(1, msg)
 	t.Log(err, router)
 }

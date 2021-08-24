@@ -1,4 +1,4 @@
-package entity
+package client
 
 import (
 	"go_im/im/dao"

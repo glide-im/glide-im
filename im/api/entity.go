@@ -1,4 +1,4 @@
-package entity
+package api
 
 import "go_im/im/dao"
 

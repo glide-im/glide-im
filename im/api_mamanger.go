@@ -3,76 +3,64 @@ package im
 import (
 	"errors"
 	"go_im/im/api"
+	"go_im/im/client"
 	"go_im/im/comm"
-	"go_im/im/entity"
+	"go_im/im/message"
 )
-
-var (
-	ApiManager = newApiRouter()
-)
-
-var ActionDoNotNeedToken = map[entity.Action]int8{
-	entity.ActionUserAuth:     0,
-	entity.ActionUserLogin:    0,
-	entity.ActionUserRegister: 0,
-}
-
-func init() {
-	rt := api.NewRouter()
-	rt.Add(
-		api.Group("api",
-			api.Group("user",
-				api.Route("login", ApiManager.Login),
-				api.Route("auth", ApiManager.Auth),
-				api.Route("register", ApiManager.Register),
-				api.Route("online", ApiManager.GetOnlineUser),
-				api.Group("info",
-					api.Route("get", ApiManager.GetUserInfo),
-					api.Route("me", ApiManager.UserInfo),
-				),
-			),
-			api.Group("contacts",
-				api.Route("get", ApiManager.GetAndInitRelationList),
-				api.Route("add", ApiManager.AddFriend),
-			),
-			api.Group("chat",
-				api.Route("list", ApiManager.GetUserChatList),
-				api.Route("new", ApiManager.NewChat),
-				api.Route("info", ApiManager.GetChatInfo),
-				api.Route("history", ApiManager.GetChatHistory),
-			),
-			api.Group("group",
-				api.Route("create", ApiManager.CreateGroup),
-				api.Route("info", ApiManager.GetGroupInfo),
-				api.Route("join", ApiManager.JoinGroup),
-				api.Route("exit", ApiManager.ExitGroup),
-				api.Group("member",
-					api.Route("get", ApiManager.GetGroupMember),
-					api.Route("add", ApiManager.AddGroupMember),
-					api.Route("remove", ApiManager.RemoveMember),
-				),
-			),
-		),
-	)
-	SetRouter(rt)
-}
 
 type ApiRouter struct {
-	*userApi
-	*groupApi
+	*api.UserApi
+	*api.GroupApi
 	router *api.Router
 }
 
 func newApiRouter() *ApiRouter {
 	ret := new(ApiRouter)
+	ret.init()
 	return ret
 }
 
-func SetRouter(router *api.Router) {
-	ApiManager.router = router
+func (a *ApiRouter) init() {
+	rt := api.NewRouter()
+	rt.Add(
+		api.Group("api",
+			api.Group("user",
+				api.Route("login", a.Login),
+				api.Route("auth", a.Auth),
+				api.Route("register", a.Register),
+				api.Route("online", a.GetOnlineUser),
+				api.Group("info",
+					api.Route("get", a.GetUserInfo),
+					api.Route("me", a.UserInfo),
+				),
+			),
+			api.Group("contacts",
+				api.Route("get", a.GetAndInitRelationList),
+				api.Route("add", a.AddFriend),
+			),
+			api.Group("chat",
+				api.Route("list", a.GetUserChatList),
+				api.Route("new", a.NewChat),
+				api.Route("info", a.GetChatInfo),
+				api.Route("history", a.GetChatHistory),
+			),
+			api.Group("group",
+				api.Route("create", a.CreateGroup),
+				api.Route("info", a.GetGroupInfo),
+				api.Route("join", a.JoinGroup),
+				api.Route("exit", a.ExitGroup),
+				api.Group("member",
+					api.Route("get", a.GetGroupMember),
+					api.Route("add", a.AddGroupMember),
+					api.Route("remove", a.RemoveMember),
+				),
+			),
+		),
+	)
+	a.router = rt
 }
 
-func (a *ApiRouter) Handle(uid int64, message *entity.Message) {
+func (a *ApiRouter) Handle(uid int64, message *message.Message) {
 
 	// TODO async
 	err := a.handle(uid, message)
@@ -81,7 +69,7 @@ func (a *ApiRouter) Handle(uid int64, message *entity.Message) {
 	}
 }
 
-func (a *ApiRouter) handle(uid int64, message *entity.Message) error {
+func (a *ApiRouter) handle(uid int64, message *message.Message) error {
 
 	if err := a.intercept(uid, message); err != nil {
 		return err
@@ -90,10 +78,16 @@ func (a *ApiRouter) handle(uid int64, message *entity.Message) error {
 	return a.router.Handle(uid, message)
 }
 
-func (a *ApiRouter) intercept(uid int64, message *entity.Message) error {
+const (
+	actionLogin    message.Action = "api.user.login"
+	actionRegister                = "api.user.register"
+	actionAuth                    = "api.user.auth"
+)
 
-	_, ok := ActionDoNotNeedToken[message.Action]
-	if uid <= 0 && !ok {
+func (a *ApiRouter) intercept(uid int64, message *message.Message) error {
+
+	doNotNeedAuth := message.Action == actionLogin || message.Action == actionRegister || message.Action == actionAuth
+	if uid <= 0 && !doNotNeedAuth {
 		return errors.New("unauthorized")
 	}
 
@@ -103,9 +97,9 @@ func (a *ApiRouter) intercept(uid int64, message *entity.Message) error {
 	return nil
 }
 
-func (a *ApiRouter) onError(uid int64, message *entity.Message, err error) {
-	comm.Slog.D("ApiManager.onError: uid=%d, Action=%s, err=%s", uid, message.Action, err.Error())
+func (a *ApiRouter) onError(uid int64, msg *message.Message, err error) {
+	comm.Slog.D("a.onError: uid=%d, Action=%s, err=%s", uid, msg.Action, err.Error())
 
-	msg := entity.NewMessage(message.Seq, entity.ActionNotify, err.Error())
-	ClientManager.EnqueueMessage(uid, msg)
+	errMsg := message.NewMessage(msg.Seq, message.ActionNotify, err.Error())
+	client.Manager.EnqueueMessage(uid, errMsg)
 }

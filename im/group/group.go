@@ -1,9 +1,10 @@
-package im
+package group
 
 import (
+	"go_im/im/client"
 	"go_im/im/comm"
 	"go_im/im/dao"
-	"go_im/im/entity"
+	"go_im/im/message"
 )
 
 type Group struct {
@@ -11,7 +12,7 @@ type Group struct {
 
 	Gid   int64
 	Cid   int64
-	group *dao.Group
+	Group *dao.Group
 
 	members *groupMemberMap
 }
@@ -22,7 +23,7 @@ func NewGroup(gid int64, group *dao.Group, cid int64, member []*dao.GroupMember)
 	ret.members = newGroupMemberMap()
 	ret.Gid = gid
 	ret.Cid = cid
-	ret.group = group
+	ret.Group = group
 	for _, m := range member {
 		ret.members.Put(m.Uid, m)
 	}
@@ -48,7 +49,7 @@ func (g *Group) IsMemberOnline(uid int64) bool {
 func (g *Group) GetOnlineMember() []*dao.GroupMember {
 	var online []*dao.GroupMember
 	for id, member := range g.members.members {
-		if ClientManager.IsOnline(id) {
+		if client.Manager.IsOnline(id) {
 			online = append(online, member)
 		}
 	}
@@ -64,11 +65,11 @@ func (g *Group) GetMembers() []*dao.GroupMember {
 	return members
 }
 
-func (g *Group) SendMessage(uid int64, message *entity.Message) {
+func (g *Group) SendMessage(uid int64, message *message.Message) {
 	comm.Slog.D("Group.SendMessage: %s", message)
 
 	for id := range g.members.members {
-		ClientManager.EnqueueMessage(id, message)
+		client.Manager.EnqueueMessage(id, message)
 	}
 }
 

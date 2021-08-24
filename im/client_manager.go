@@ -2,62 +2,78 @@ package im
 
 import (
 	"errors"
+	"go_im/im/api"
+	"go_im/im/client"
 	"go_im/im/comm"
 	"go_im/im/conn"
 	"go_im/im/dao"
-	"go_im/im/entity"
+	"go_im/im/group"
+	"go_im/im/message"
 )
 
-var ClientManager = newClientManager()
-
-type clientManager struct {
+type ClientManagerImpl struct {
 	clients     *clientMap
 	nextConnUid *comm.AtomicInt64
 }
 
-func newClientManager() *clientManager {
-	ret := new(clientManager)
+func newClientManager() *ClientManagerImpl {
+	ret := new(ClientManagerImpl)
 	ret.clients = newClientMap()
 	ret.nextConnUid = new(comm.AtomicInt64)
 	ret.nextConnUid.Set(-1)
 	return ret
 }
 
-func (c *clientManager) ClientConnected(conn conn.Connection) int64 {
-	client := NewClient(conn, c.nextConnUid.Get())
-	c.nextConnUid.Set(client.uid - 1)
-	c.clients.Put(client.uid, client)
-	client.Run()
-	return client.uid
+func (c *ClientManagerImpl) ClientConnected(conn conn.Connection) int64 {
+	connUid := c.nextConnUid.Get()
+	ret := client.NewClient(conn, connUid)
+	c.nextConnUid.Set(connUid - 1)
+	c.clients.Put(connUid, ret)
+	ret.Run()
+	return connUid
 }
 
-func (c *clientManager) ClientSignIn(oldUid, uid int64, device int64) {
+func (c *ClientManagerImpl) ClientSignIn(oldUid, uid int64, device int64) {
 	comm.Slog.I("ClientManager.ClientSignIn: connUid=%d, uid=%d", oldUid, uid)
 
-	client := c.clients.Get(oldUid)
-	if client == nil {
+	cl := c.clients.Get(oldUid)
+	if cl == nil {
 		return
 	}
-	client.uid = uid
-	client.deviceId = device
+	cl.SignIn(uid, device)
 	c.clients.Delete(oldUid)
-	c.clients.Put(uid, client)
+	c.clients.Put(uid, cl)
 }
 
-func (c *clientManager) UserLogout(uid int64) {
+func (c *ClientManagerImpl) UserLogout(uid int64) {
 	comm.Slog.I("ClientManager.UserLogout: uid=%d", uid)
-	client := c.clients.Get(uid)
-	if client == nil {
+	cl := c.clients.Get(uid)
+	if cl == nil {
 		return
 	}
-	client.Exit()
+	cl.Exit()
 	c.clients.Delete(uid)
 }
 
-func (c *clientManager) DispatchMessage(from int64, message *entity.Message) error {
+func (c *ClientManagerImpl) Api(from int64, message *message.Message) {
+	api.Handle(from, message)
+}
 
-	senderMsg := new(entity.SenderChatMessage)
-	err := message.DeserializeData(senderMsg)
+func (c *ClientManagerImpl) DispatchMessage(from int64, msg *message.Message) error {
+	switch msg.Action {
+	case message.ActionChatMessage:
+		return c.dispatchChatMessage(from, msg)
+	case message.ActionGroupMessage:
+		return group.Manager.DispatchMessage(from, msg)
+	default:
+		// unknown message type
+	}
+	return nil
+}
+
+func (c ClientManagerImpl) dispatchChatMessage(from int64, msg *message.Message) error {
+	senderMsg := new(client.SenderChatMessage)
+	err := msg.DeserializeData(senderMsg)
 	if err != nil {
 		comm.Slog.E("sender chat senderMsg ", err)
 		return err
@@ -76,14 +92,14 @@ func (c *clientManager) DispatchMessage(from int64, message *entity.Message) err
 	if err != nil {
 		return err
 	}
-	affirm := entity.NewMessage(message.Seq, message.Action, chatMsg)
+	affirm := message.NewMessage(msg.Seq, msg.Action, chatMsg)
 	// send success, return chat message
 	c.EnqueueMessage(from, affirm)
 
 	return c.dispatch(from, chatMsg, senderMsg)
 }
 
-func (c *clientManager) dispatch(from int64, chatMsg *dao.ChatMessage, senderMsg *entity.SenderChatMessage) error {
+func (c *ClientManagerImpl) dispatch(from int64, chatMsg *dao.ChatMessage, senderMsg *client.SenderChatMessage) error {
 
 	// update receiver's list chat
 	uChat, err := dao.ChatDao.UpdateUserChatMsgTime(senderMsg.Cid, senderMsg.TargetId)
@@ -91,7 +107,7 @@ func (c *clientManager) dispatch(from int64, chatMsg *dao.ChatMessage, senderMsg
 		return err
 	}
 
-	receiverMsg := entity.ReceiverChatMessage{
+	receiverMsg := client.ReceiverChatMessage{
 		Mid:         chatMsg.Mid,
 		Cid:         senderMsg.Cid,
 		UcId:        uChat.UcId,
@@ -101,35 +117,35 @@ func (c *clientManager) dispatch(from int64, chatMsg *dao.ChatMessage, senderMsg
 		SendAt:      chatMsg.SendAt,
 	}
 
-	dispatchMsg := entity.NewMessage(-1, entity.ActionChatMessage, receiverMsg)
+	dispatchMsg := message.NewMessage(-1, message.ActionChatMessage, receiverMsg)
 	c.EnqueueMessage(senderMsg.TargetId, dispatchMsg)
 
 	return nil
 }
 
-func (c *clientManager) EnqueueMessage(uid int64, msg *entity.Message) {
-	client := c.clients.Get(uid)
+func (c *ClientManagerImpl) EnqueueMessage(uid int64, msg *message.Message) {
+	cl := c.clients.Get(uid)
 	if c.IsOnline(uid) {
-		client.EnqueueMessage(msg)
+		cl.EnqueueMessage(msg)
 	} else {
 		// TODO user offline
 	}
 }
 
-func (c *clientManager) IsOnline(uid int64) bool {
-	client := c.clients.Get(uid)
-	return client != nil && !client.closed.Get()
+func (c *ClientManagerImpl) IsOnline(uid int64) bool {
+	cl := c.clients.Get(uid)
+	return cl != nil && !cl.Closed()
 }
 
-func (c *clientManager) Update() {
-	for _, client := range c.clients.clients {
-		if client.closed.Get() {
-			c.UserLogout(client.uid)
+func (c *ClientManagerImpl) Update() {
+	for _, cl := range c.clients.clients {
+		if cl.Closed() {
+			c.UserLogout(cl.Id())
 		}
 	}
 }
 
-func (c *clientManager) AllClient() []int64 {
+func (c *ClientManagerImpl) AllClient() []int64 {
 	var ret []int64
 	for k := range c.clients.clients {
 		if k > 0 {
@@ -143,13 +159,13 @@ func (c *clientManager) AllClient() []int64 {
 
 type clientMap struct {
 	*comm.Mutex
-	clients map[int64]*Client
+	clients map[int64]*client.Client
 }
 
 func newClientMap() *clientMap {
 	ret := new(clientMap)
 	ret.Mutex = new(comm.Mutex)
-	ret.clients = make(map[int64]*Client)
+	ret.clients = make(map[int64]*client.Client)
 	return ret
 }
 
@@ -157,16 +173,16 @@ func (g *clientMap) Size() int {
 	return len(g.clients)
 }
 
-func (g *clientMap) Get(uid int64) *Client {
+func (g *clientMap) Get(uid int64) *client.Client {
 	defer g.LockUtilReturn()()
-	client, ok := g.clients[uid]
+	cl, ok := g.clients[uid]
 	if ok {
-		return client
+		return cl
 	}
 	return nil
 }
 
-func (g *clientMap) Put(uid int64, client *Client) {
+func (g *clientMap) Put(uid int64, client *client.Client) {
 	defer g.LockUtilReturn()()
 	g.clients[uid] = client
 }

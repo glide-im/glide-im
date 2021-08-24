@@ -3,7 +3,7 @@ package api
 import (
 	"errors"
 	"fmt"
-	"go_im/im/entity"
+	"go_im/im/message"
 	"reflect"
 	"strings"
 )
@@ -25,7 +25,7 @@ type path struct {
 	index int
 }
 
-func newPath(action entity.Action) path {
+func newPath(action message.Action) path {
 	split := strings.Split(string(action), ".")
 	return path{
 		split: split,
@@ -45,7 +45,7 @@ func (p *path) next() (string, bool) {
 type RequestInfo struct {
 	Uid    int64
 	Seq    int64
-	Action entity.Action
+	Action message.Action
 }
 
 type IRoute interface {
@@ -208,7 +208,7 @@ func (r *Router) Add(rts ...IRoute) {
 	}
 }
 
-func (r *Router) Handle(uid int64, msg *entity.Message) error {
+func (r *Router) Handle(uid int64, msg *message.Message) error {
 	ri := &RequestInfo{
 		Uid:    uid,
 		Seq:    msg.Seq,
