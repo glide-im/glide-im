@@ -63,6 +63,9 @@ var wg = new(sync.WaitGroup)
 
 //go test -v -run=TestIm -memprofile=mem.out
 func TestIm(t *testing.T) {
+
+	client.Manager = NewClientManager()
+
 	userOnline(10_0000)
 	sendMessage(5_0000, 100, 100)
 

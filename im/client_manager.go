@@ -16,7 +16,7 @@ type ClientManagerImpl struct {
 	nextConnUid *comm.AtomicInt64
 }
 
-func newClientManager() *ClientManagerImpl {
+func NewClientManager() *ClientManagerImpl {
 	ret := new(ClientManagerImpl)
 	ret.clients = newClientMap()
 	ret.nextConnUid = new(comm.AtomicInt64)

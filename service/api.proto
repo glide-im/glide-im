@@ -1,0 +1,23 @@
+syntax = "proto3";
+package service;
+
+option go_package = "/pb";
+
+message Message {
+  int64 Seq = 1;
+  string Action = 2;
+  string Data = 3;
+}
+
+message Request {
+  int64 uid = 1;
+  Message message = 2;
+}
+
+message Response {
+  bool ok = 1;
+}
+
+service ApiService {
+  rpc Handle (Request) returns (Response) {}
+}

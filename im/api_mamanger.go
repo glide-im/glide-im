@@ -14,7 +14,7 @@ type ApiRouter struct {
 	router *api.Router
 }
 
-func newApiRouter() *ApiRouter {
+func NewApiRouter() *ApiRouter {
 	ret := new(ApiRouter)
 	ret.init()
 	return ret

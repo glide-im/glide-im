@@ -63,11 +63,17 @@ func (c *WsConnection) wrapError(err error) error {
 	if err == nil {
 		return nil
 	}
+	if websocket.IsUnexpectedCloseError(err) {
+		return ErrClosed
+	}
+	if websocket.IsCloseError(err) {
+		return ErrClosed
+	}
 	if strings.Contains(err.Error(), "An existing connection was forcibly closed by the remote host") {
 		_ = c.conn.Close()
 		return ErrForciblyClosed
 	}
-	if strings.HasSuffix(err.Error(), "use of closed network conn") {
+	if strings.Contains(err.Error(), "use of closed network conn") {
 		_ = c.conn.Close()
 		return ErrConnectionClosed
 	}

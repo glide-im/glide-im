@@ -72,16 +72,15 @@ func (c *Client) EnqueueMessage(message *message.Message) {
 
 func (c *Client) readMessage() {
 	defer func() {
-		err := recover()
-		if err != nil {
-			comm.Slog.D("Recover: conn read message error: %v", err)
-		}
+		//err := recover()
+		//if err != nil {
+		//	comm.Slog.D("Recover: conn read message error: %v", err)
+		//}
 	}()
 
 	comm.Slog.I("start read message")
 	for {
-		msg := &message.Message{}
-		err := c.conn.Read(msg)
+		msg, err := messageReader.Read(c.conn)
 		if err != nil {
 			if !c.handleError(-1, err) {
 				continue
@@ -109,8 +108,8 @@ func (c *Client) readMessage() {
 func (c *Client) writeMessage() {
 	comm.Slog.I("start write message")
 
-	for message := range c.messages {
-		err := c.conn.Write(message)
+	for msg := range c.messages {
+		err := c.conn.Write(msg)
 		if err != nil {
 			if c.handleError(-1, err) {
 				break
@@ -132,7 +131,8 @@ func (c *Client) handleError(seq int64, err error) bool {
 		Manager.UserLogout(c.uid)
 		return true
 	}
-	c.messages <- message.NewMessage(seq, "notify", err.Error())
+	comm.Slog.E("err", err.Error())
+	c.EnqueueMessage(message.NewMessage(seq, "notify", err.Error()))
 	return false
 }
 
@@ -141,6 +141,9 @@ func (c *Client) onDeath() {
 }
 
 func (c *Client) Exit() {
+	if c.closed.Get() {
+		return
+	}
 	c.closed.Set(true)
 	close(c.messages)
 	_ = c.conn.Close()

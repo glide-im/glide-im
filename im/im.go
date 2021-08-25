@@ -10,9 +10,9 @@ import (
 
 func Run() {
 
-	api.SetImpl(newApiRouter())
+	api.SetImpl(NewApiRouter())
 	group.Manager = NewGroupManager()
-	client.Manager = newClientManager()
+	client.Manager = NewClientManager()
 
 	dao.Init()
 	wsServer := conn.NewWsServer(nil)

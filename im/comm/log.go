@@ -19,6 +19,7 @@ func (l *Logger) E(msg string, log ...interface{}) {
 }
 
 func (l *Logger) I(format string, args ...interface{}) {
+	return
 	l.log("I", fmt.Sprintf(format, args...))
 }
 
