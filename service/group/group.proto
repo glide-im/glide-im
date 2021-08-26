@@ -1,0 +1,113 @@
+syntax = "proto3";
+package go_im.service.group;
+
+option go_package = "/pb";
+
+////////////////////////////////  COMMON START  //////////////////////////////////////
+message Message {
+  int64 seq = 1;
+  string action = 2;
+  string data = 3;
+}
+
+message Response {
+  bool ok = 1;
+  string message = 2;
+}
+////////////////////////////////  COMMON END  ////////////////////////////////////////
+
+message GroupMember {
+  int64 id = 1;
+  int64 gid = 2;
+  int64 uid = 3;
+  int64 mute = 4;
+  int32 type = 5;
+  string remark = 6;
+}
+
+message GetMembersResponse {
+  repeated GroupMember members = 1;
+}
+
+message PutMemberRequest {
+  int64 gid = 1;
+  GroupMember member = 2;
+}
+
+//message UnsubscribeGroupRequest{
+//  int64 uid = 1;
+//  int64 gid = 2;
+//}
+
+message GidRequest{
+  int64 gid = 1;
+}
+
+message GetCidResponse{
+  int64 cid = 1;
+}
+
+message Group {
+  int64 gid = 1;
+  string name = 2;
+  string avatar = 3;
+  int64 owner = 4;
+  bool  mute = 5;
+  string notice = 6;
+  int64 createAt = 7;
+  repeated GroupMember members = 8;
+}
+
+message RemoveMemberRequest {
+  int64 gid = 1;
+  repeated int64 uid = 2;
+}
+
+message NotifyRequest{
+  int64 uid = 2;
+  int64 gid = 1;
+  Message message = 3;
+}
+
+message DispatchMessageRequest{
+  int64 uid = 1;
+  Message message = 2;
+}
+
+message AddGroupRequest {
+  Group group = 1;
+  int64 cid = 2;
+  GroupMember owner = 3;
+}
+
+message HasMemberRequest{
+  int64 gid = 1;
+  int64 uid = 2;
+}
+
+message HasMemberResponse{
+  bool has = 1;
+}
+
+service GroupService {
+
+  rpc PutMember (PutMemberRequest) returns (Response) {}
+
+  // rpc UnsubscribeGroup (UnsubscribeGroupRequest) returns (Response) {}
+
+  rpc RemoveMember (RemoveMemberRequest) returns (Response) {}
+
+  rpc GetMembers (GidRequest) returns (GetMembersResponse) {}
+
+  rpc AddGroup (AddGroupRequest) returns (Response) {}
+
+  rpc GetGroup (GidRequest) returns (Group) {}
+
+  rpc GetGroupCid(GidRequest) returns (GetCidResponse){}
+
+  rpc HasMember(HasMemberRequest) returns (HasMemberResponse){}
+
+  rpc DispatchNotifyMessage (NotifyRequest) returns (Response) {}
+
+  rpc DispatchMessage (DispatchMessageRequest) returns (Response) {}
+}

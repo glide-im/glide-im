@@ -22,16 +22,20 @@ func NewGroupManager() *groupManager {
 	return ret
 }
 
-func (m *groupManager) PutMember(gid int64, mb *dao.GroupMember) {
-	m.GetGroup(gid).PutMember(mb)
+func (m *groupManager) GetGroupCid(gid int64) int64 {
+	return m.getGroup(gid).Cid
 }
 
-func (m *groupManager) UnsubscribeGroup(uid int64, gid int64) {
-	m.GetGroup(gid).RemoveMember(uid)
+func (m *groupManager) HasMember(gid int64, uid int64) bool {
+	return m.getGroup(gid).HasMember(uid)
+}
+
+func (m *groupManager) PutMember(gid int64, mb *dao.GroupMember) {
+	m.getGroup(gid).PutMember(mb)
 }
 
 func (m *groupManager) RemoveMember(gid int64, uid ...int64) error {
-	g := m.GetGroup(gid)
+	g := m.getGroup(gid)
 	if g == nil {
 		return errors.New("unknown group")
 	}
@@ -44,22 +48,23 @@ func (m *groupManager) RemoveMember(gid int64, uid ...int64) error {
 }
 
 func (m *groupManager) GetMembers(gid int64) ([]*dao.GroupMember, error) {
-	g := m.GetGroup(gid)
+	g := m.getGroup(gid)
 	if g == nil {
 		return []*dao.GroupMember{}, nil
 	}
 	return g.GetMembers(), nil
 }
 
-func (m *groupManager) AddGroup(group *group.Group) {
-	m.groups.Put(group.Gid, group)
+func (m *groupManager) AddGroup(g *dao.Group, cid int64, owner *dao.GroupMember) {
+	gp := group.NewGroup(g.Gid, g, 1, []*dao.GroupMember{})
+	m.groups.Put(g.Gid, gp)
 }
 
-func (m *groupManager) GetGroup(gid int64) *group.Group {
+func (m *groupManager) GetGroup(gid int64) *dao.Group {
 
 	g := m.groups.Get(gid)
 	if g != nil {
-		return g
+		return g.Group
 	}
 
 	dbGroup, err := dao.GroupDao.GetGroup(gid)
@@ -81,11 +86,11 @@ func (m *groupManager) GetGroup(gid int64) *group.Group {
 	}
 	g = group.NewGroup(gid, dbGroup, chat.Cid, members)
 	m.groups.Put(gid, g)
-	return g
+	return g.Group
 }
 
 func (m *groupManager) DispatchNotifyMessage(uid int64, gid int64, message *message.Message) {
-	g := m.GetGroup(gid)
+	g := m.getGroup(gid)
 	if g != nil {
 		g.SendMessage(uid, message)
 	}
@@ -101,7 +106,7 @@ func (m *groupManager) DispatchMessage(uid int64, msg *message.Message) error {
 		return err
 	}
 
-	g := m.GetGroup(groupMsg.TargetId)
+	g := m.getGroup(groupMsg.TargetId)
 
 	if g == nil {
 		return errors.New("group not exist")
@@ -127,6 +132,10 @@ func (m *groupManager) DispatchMessage(uid int64, msg *message.Message) error {
 
 	g.SendMessage(uid, resp)
 	return nil
+}
+
+func (m *groupManager) getGroup(gid int64) *group.Group {
+	return m.groups.Get(gid)
 }
 
 ////////////////////////////////////////////////////////////////////////////////

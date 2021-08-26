@@ -4,28 +4,28 @@ import (
 	"context"
 	"go_im/im/api"
 	"go_im/im/message"
-	"go_im/service/api/rpc"
-	rpc2 "go_im/service/rpc"
+	"go_im/service/api/pb"
+	"go_im/service/rpc"
 )
 
 type Server struct {
-	*rpc2.BaseServer
+	*rpc.BaseServer
 }
 
-func NewServer(options *rpc2.ServerOptions) *Server {
+func NewServer(options *rpc.ServerOptions) *Server {
 	s := &Server{
-		BaseServer: rpc2.NewBaseServer(options),
+		BaseServer: rpc.NewBaseServer(options),
 	}
-	rpc.RegisterApiServiceServer(s.RpcServer, &Server{})
+	pb.RegisterApiServiceServer(s.RpcServer, s)
 	return s
 }
 
-func (a *Server) Handle(ctx context.Context, request *rpc.Request) (*rpc.Response, error) {
+func (a *Server) Handle(ctx context.Context, request *pb.HandleRequest) (*pb.Response, error) {
 	msg := &message.Message{
 		Seq:    request.Message.Seq,
 		Action: message.Action(request.Message.Action),
 		Data:   request.Message.Data,
 	}
 	api.Handle(request.Uid, msg)
-	return nil, nil
+	return &pb.Response{Ok: true}, nil
 }

@@ -23,13 +23,14 @@ type BaseServer struct {
 }
 
 func NewBaseServer(options *ServerOptions) *BaseServer {
-	ret := &BaseServer{}
-	ret.Init(options)
+	ret := &BaseServer{
+		options: options,
+	}
+	ret.init(options)
 	return ret
 }
 
-func (s *BaseServer) Init(options *ServerOptions) {
-
+func (s *BaseServer) init(options *ServerOptions) {
 	if options == nil {
 		options = &ServerOptions{
 			Network:        "tcp",
@@ -55,7 +56,7 @@ func (s *BaseServer) Init(options *ServerOptions) {
 
 func (s *BaseServer) Run() error {
 	if s.options == nil {
-		s.Init(nil)
+		s.init(nil)
 	}
 	return s.RpcServer.Serve(s.Socket)
 }

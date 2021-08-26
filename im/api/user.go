@@ -68,7 +68,7 @@ func (a *UserApi) GetAndInitRelationList(msg *RequestInfo) error {
 				return err
 			}
 			groups = append(groups, &GroupResponse{
-				Group:   *g.Group,
+				Group:   *g,
 				Members: members,
 			})
 		} else if contacts.Type == dao.ContactsTypeUser {

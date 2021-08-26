@@ -12,7 +12,7 @@ type GroupApi struct{}
 
 func (m *GroupApi) CreateGroup(msg *RequestInfo, request *CreateGroupRequest) error {
 
-	g, err := m.createGroup(request.Name, msg.Uid)
+	g, cid, err := m.createGroup(request.Name, msg.Uid)
 	if err != nil {
 		return err
 	}
@@ -20,14 +20,14 @@ func (m *GroupApi) CreateGroup(msg *RequestInfo, request *CreateGroupRequest) er
 	c := ContactResponse{
 		Friends: []*UserInfoResponse{},
 		Groups: []*GroupResponse{{
-			Group:   *g.Group,
+			Group:   *g,
 			Members: members,
 		}},
 	}
 	respond(msg.Uid, -1, ActionUserAddFriend, c)
 
 	// create user chat by default
-	uc, err := dao.ChatDao.NewUserChat(g.Cid, msg.Uid, g.Gid, dao.ChatTypeGroup)
+	uc, err := dao.ChatDao.NewUserChat(cid, msg.Uid, g.Gid, dao.ChatTypeGroup)
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func (m *GroupApi) GetGroupInfo(msg *RequestInfo, request *GroupInfoRequest) err
 			return err
 		}
 		gr := GroupResponse{
-			Group:   *g.Group,
+			Group:   *g,
 			Members: members,
 		}
 		groups = append(groups, &gr)
@@ -144,14 +144,14 @@ func (m *GroupApi) AddGroupMember(msg *RequestInfo, request *AddMemberRequest) e
 		c := ContactResponse{
 			Friends: []*UserInfoResponse{},
 			Groups: []*GroupResponse{{
-				Group:   *g.Group,
+				Group:   *g,
 				Members: ms,
 			}},
 		}
 		respond(member.Uid, -1, ActionUserAddFriend, c)
 
 		// default add user chat
-		chat, er := dao.ChatDao.NewUserChat(g.Cid, member.Uid, g.Gid, dao.ChatTypeGroup)
+		chat, er := dao.ChatDao.NewUserChat(group.Manager.GetGroupCid(g.Gid), member.Uid, g.Gid, dao.ChatTypeGroup)
 		if er != nil {
 			continue
 		}
@@ -203,13 +203,13 @@ func (m *GroupApi) JoinGroup(msg *RequestInfo, request *JoinGroupRequest) error 
 	c := ContactResponse{
 		Friends: []*UserInfoResponse{},
 		Groups: []*GroupResponse{{
-			Group:   *g.Group,
+			Group:   *g,
 			Members: members,
 		}},
 	}
 	respond(msg.Uid, -1, ActionUserAddFriend, c)
 
-	chat, err := dao.ChatDao.NewUserChat(g.Cid, msg.Uid, g.Gid, dao.ChatTypeGroup)
+	chat, err := dao.ChatDao.NewUserChat(group.Manager.GetGroupCid(g.Gid), msg.Uid, g.Gid, dao.ChatTypeGroup)
 	if err != nil {
 		_ = dao.GroupDao.RemoveMember(request.Gid, msg.Uid)
 		return err
@@ -220,42 +220,41 @@ func (m *GroupApi) JoinGroup(msg *RequestInfo, request *JoinGroupRequest) error 
 	return nil
 }
 
-func (m *GroupApi) createGroup(name string, uid int64) (*group.Group, error) {
+func (m *GroupApi) createGroup(name string, uid int64) (*dao.Group, int64, error) {
 
 	gp, err := dao.GroupDao.CreateGroup(name, uid)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	// create group chat
 	chat, err := dao.ChatDao.CreateChat(dao.ChatTypeGroup, gp.Gid)
 	if err != nil {
 		// TODO undo
-		return nil, err
+		return nil, 0, err
 	}
-	g := group.NewGroup(gp.Gid, gp, chat.Cid, []*dao.GroupMember{})
 
 	owner, err := dao.GroupDao.AddMember(gp.Gid, dao.GroupMemberAdmin, uid)
 	if err != nil {
 		// TODO undo create group
-		return nil, err
+		return nil, 0, err
 	}
 	_, err = dao.UserDao.AddContacts(uid, gp.Gid, dao.ContactsTypeGroup, "")
 	if err != nil {
 		// TODO undo
-		return nil, err
+		return nil, 0, err
 	}
-	group.Manager.AddGroup(g)
-	group.Manager.PutMember(g.Gid, owner[0])
-	return g, nil
+	group.Manager.AddGroup(gp, chat.Cid, owner[0])
+	group.Manager.PutMember(gp.Gid, owner[0])
+	return gp, chat.Cid, nil
 }
 
 func (m *GroupApi) addGroupMember(gid int64, uid ...int64) ([]*dao.GroupMember, error) {
 
-	g := group.Manager.GetGroup(gid)
 	memberUid := make([]int64, 0, len(uid))
+
 	for _, u := range uid {
 		// member exist
-		if !g.HasMember(u) {
+		if !group.Manager.HasMember(gid, u) {
 			memberUid = append(memberUid, u)
 		}
 	}

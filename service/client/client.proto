@@ -1,0 +1,55 @@
+syntax = "proto3";
+package go_im.service.client;
+
+option go_package = "/pb";
+
+import "google/protobuf/empty.proto";
+
+////////////////////////////////  COMMON START  //////////////////////////////////////
+message Message {
+  int64 seq = 1;
+  string action = 2;
+  string data = 3;
+}
+
+message Response {
+  bool ok = 1;
+  string message = 2;
+}
+////////////////////////////////  COMMON END  ////////////////////////////////////////
+
+message SignInRequest{
+  int64  old = 2;
+  int64  uid = 1;
+  int64 device = 3;
+}
+
+message UidRequest{
+  int64  uid = 1;
+}
+
+message UidMessageRequest{
+  int64 from = 1;
+  Message message = 2;
+}
+
+message AllClientResponse {
+  repeated int64 uid = 1;
+}
+
+service ClientService {
+
+  rpc ClientSignIn(SignInRequest) returns (Response){};
+
+  rpc UserLogout(UidRequest) returns (Response){};
+
+  rpc DispatchMessage(UidMessageRequest) returns(Response){};
+
+  rpc Api(UidMessageRequest) returns (Response){};
+
+  rpc EnqueueMessage(UidMessageRequest) returns(Response){};
+
+  rpc IsOnline(UidRequest) returns (Response){};
+
+  rpc Update(google.protobuf.Empty) returns (Response){};
+}

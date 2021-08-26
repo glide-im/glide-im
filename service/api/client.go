@@ -4,19 +4,19 @@ import (
 	"context"
 	"go_im/im/api"
 	"go_im/im/message"
-	"go_im/service/api/rpc"
-	rpc2 "go_im/service/rpc"
+	"go_im/service/api/pb"
+	"go_im/service/rpc"
 	"time"
 )
 
 type Client struct {
-	rpc rpc.ApiServiceClient
-	*rpc2.BaseClient
+	rpc pb.ApiServiceClient
+	*rpc.BaseClient
 }
 
-func NewClient(options *rpc2.ClientOptions) *Client {
+func NewClient(options *rpc.ClientOptions) *Client {
 	ret := &Client{}
-	ret.BaseClient = rpc2.NewBaseClient(options)
+	ret.BaseClient = rpc.NewBaseClient(options)
 	ret.Init(options)
 	api.SetImpl(ret)
 	return ret
@@ -26,25 +26,25 @@ func (c *Client) Handle(uid int64, message *message.Message) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	m := rpc.Message{
+	m := pb.Message{
 		Seq:    message.Seq,
 		Action: string(message.Action),
 		Data:   message.Data,
 	}
-	testFunc, err := c.rpc.Handle(ctx, &rpc.Request{
+	testFunc, err := c.rpc.Handle(ctx, &pb.HandleRequest{
 		Uid:     uid,
 		Message: &m,
 	})
 	if err != nil {
 		panic(err)
 	}
-	if testFunc.Ok {
+	if testFunc.GetOk() {
 
 	}
 }
 
 func (c *Client) Run() error {
 	err := c.Connect()
-	c.rpc = rpc.NewApiServiceClient(c.Conn)
+	c.rpc = pb.NewApiServiceClient(c.Conn)
 	return err
 }
