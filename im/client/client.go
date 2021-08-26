@@ -4,6 +4,7 @@ import (
 	"go_im/im/comm"
 	"go_im/im/conn"
 	"go_im/im/message"
+	"go_im/pkg/logger"
 	"time"
 )
 
@@ -54,9 +55,9 @@ func (c *Client) Closed() bool {
 }
 
 func (c *Client) EnqueueMessage(message *message.Message) {
-	comm.Slog.I("EnqueueMessage(uid=%d, %s): %v", c.uid, message.Action, message)
+	logger.I("EnqueueMessage(uid=%d, %s): %v", c.uid, message.Action, message)
 	if c.closed.Get() {
-		comm.Slog.W("connection closed, cannot enqueue message")
+		logger.W("connection closed, cannot enqueue message")
 		return
 	}
 	if message.Seq <= 0 {
@@ -66,7 +67,7 @@ func (c *Client) EnqueueMessage(message *message.Message) {
 	case c.messages <- message:
 		break
 	default:
-		comm.Slog.E("Client.EnqueueMessage", "message chan is full")
+		logger.E("Client.EnqueueMessage", "message chan is full")
 	}
 }
 
@@ -74,11 +75,11 @@ func (c *Client) readMessage() {
 	defer func() {
 		//err := recover()
 		//if err != nil {
-		//	comm.Slog.D("Recover: conn read message error: %v", err)
+		//	comm.D("Recover: conn read message error: %v", err)
 		//}
 	}()
 
-	comm.Slog.I("start read message")
+	logger.I("start read message")
 	for {
 		msg, err := messageReader.Read(c.conn)
 		if err != nil {
@@ -106,7 +107,7 @@ func (c *Client) readMessage() {
 }
 
 func (c *Client) writeMessage() {
-	comm.Slog.I("start write message")
+	logger.I("start write message")
 
 	for msg := range c.messages {
 		err := c.conn.Write(msg)
@@ -131,7 +132,7 @@ func (c *Client) handleError(seq int64, err error) bool {
 		Manager.UserLogout(c.uid)
 		return true
 	}
-	comm.Slog.E("err", err.Error())
+	logger.E("err", err.Error())
 	c.EnqueueMessage(message.NewMessage(seq, "notify", err.Error()))
 	return false
 }
@@ -156,7 +157,7 @@ func (c *Client) getNextSeq() int64 {
 }
 
 func (c *Client) Run() {
-	comm.Slog.I("///////////////////////// connection running /////////////////////////////")
+	logger.I("///////////////////////// connection running /////////////////////////////")
 	go c.readMessage()
 	go c.writeMessage()
 	c.heartbeat.Reset(HeartbeatDuration)

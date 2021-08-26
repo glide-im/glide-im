@@ -9,6 +9,7 @@ import (
 	"go_im/im/dao"
 	"go_im/im/group"
 	"go_im/im/message"
+	"go_im/pkg/logger"
 )
 
 type ClientManagerImpl struct {
@@ -34,7 +35,7 @@ func (c *ClientManagerImpl) ClientConnected(conn conn.Connection) int64 {
 }
 
 func (c *ClientManagerImpl) ClientSignIn(oldUid, uid int64, device int64) {
-	comm.Slog.I("ClientManager.ClientSignIn: connUid=%d, uid=%d", oldUid, uid)
+	logger.I("ClientManager.ClientSignIn: connUid=%d, uid=%d", oldUid, uid)
 
 	cl := c.clients.Get(oldUid)
 	if cl == nil {
@@ -46,7 +47,7 @@ func (c *ClientManagerImpl) ClientSignIn(oldUid, uid int64, device int64) {
 }
 
 func (c *ClientManagerImpl) UserLogout(uid int64) {
-	comm.Slog.I("ClientManager.UserLogout: uid=%d", uid)
+	logger.I("ClientManager.UserLogout: uid=%d", uid)
 	cl := c.clients.Get(uid)
 	if cl == nil {
 		return
@@ -75,10 +76,10 @@ func (c ClientManagerImpl) dispatchChatMessage(from int64, msg *message.Message)
 	senderMsg := new(client.SenderChatMessage)
 	err := msg.DeserializeData(senderMsg)
 	if err != nil {
-		comm.Slog.E("sender chat senderMsg ", err)
+		logger.E("sender chat senderMsg ", err)
 		return err
 	}
-	comm.Slog.D("DispatchMessage(from=%d): cid=%d, senderMsg=%s", from, senderMsg.Cid, senderMsg.Message)
+	logger.D("DispatchMessage(from=%d): cid=%d, senderMsg=%s", from, senderMsg.Cid, senderMsg.Message)
 
 	if senderMsg.Cid <= 0 {
 		return errors.New("chat not create")

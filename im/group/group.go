@@ -5,6 +5,7 @@ import (
 	"go_im/im/comm"
 	"go_im/im/dao"
 	"go_im/im/message"
+	"go_im/pkg/logger"
 )
 
 type Group struct {
@@ -66,7 +67,7 @@ func (g *Group) GetMembers() []*dao.GroupMember {
 }
 
 func (g *Group) SendMessage(uid int64, message *message.Message) {
-	comm.Slog.D("Group.SendMessage: %s", message)
+	logger.D("Group.SendMessage: %s", message)
 
 	for id := range g.members.members {
 		client.EnqueueMessage(id, message)

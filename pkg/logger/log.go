@@ -1,38 +1,31 @@
-package comm
+package logger
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"runtime"
 	"strings"
 )
 
-var Slog = Logger{}
-
-type Logger struct {
+func E(msg string, logs ...interface{}) {
+	f := strings.Repeat("%v, ", len(logs))
+	log("E", msg+":"+fmt.Sprintf(f, logs))
 }
 
-func (l *Logger) E(msg string, log ...interface{}) {
-	f := strings.Repeat("%v, ", len(log))
-	l.log("E", msg+":"+fmt.Sprintf(f, log))
+func I(format string, args ...interface{}) {
+	log("I", fmt.Sprintf(format, args...))
 }
 
-func (l *Logger) I(format string, args ...interface{}) {
-	return
-	l.log("I", fmt.Sprintf(format, args...))
-}
-
-func (l *Logger) D(format string, args ...interface{}) {
+func D(format string, args ...interface{}) {
 	lg := fmt.Sprintf(format, args...)
-	l.log("D", lg)
+	log("D", lg)
 }
 
-func (l *Logger) W(msg string) {
-	l.log("W", msg)
+func W(msg string) {
+	log("W", msg)
 }
 
-func (l *Logger) log(level string, log string) {
+func log(level string, log string) {
 	fmt.Printf("%s: %s\n", level, trace(log))
 }
 
@@ -60,7 +53,7 @@ func callerInfo() (string, string) {
 func projectRootPath() string {
 	dir, err := os.Getwd()
 	if err != nil {
-		log.Fatal(err)
+
 	}
 	return strings.Replace(dir+"/", "\\", "/", -1)
 }

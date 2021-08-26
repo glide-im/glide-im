@@ -4,8 +4,8 @@ import (
 	"errors"
 	"go_im/im/api"
 	"go_im/im/client"
-	"go_im/im/comm"
 	"go_im/im/message"
+	"go_im/pkg/logger"
 )
 
 type ApiRouter struct {
@@ -98,7 +98,7 @@ func (a *ApiRouter) intercept(uid int64, message *message.Message) error {
 }
 
 func (a *ApiRouter) onError(uid int64, msg *message.Message, err error) {
-	comm.Slog.D("a.onError: uid=%d, Action=%s, err=%s", uid, msg.Action, err.Error())
+	logger.D("a.onError: uid=%d, Action=%s, err=%s", uid, msg.Action, err.Error())
 
 	errMsg := message.NewMessage(msg.Seq, message.ActionNotify, err.Error())
 	client.EnqueueMessage(uid, errMsg)

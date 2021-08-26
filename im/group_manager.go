@@ -7,6 +7,7 @@ import (
 	"go_im/im/dao"
 	"go_im/im/group"
 	"go_im/im/message"
+	"go_im/pkg/logger"
 )
 
 type groupManager struct {
@@ -63,19 +64,19 @@ func (m *groupManager) GetGroup(gid int64) *group.Group {
 
 	dbGroup, err := dao.GroupDao.GetGroup(gid)
 	if err != nil {
-		comm.Slog.E("GroupManager.GetGroup", "load group", gid, err)
+		logger.E("GroupManager.GetGroup", "load group", gid, err)
 		return nil
 	}
 
 	members, err := dao.GroupDao.GetMembers(gid)
 	if err != nil {
-		comm.Slog.E("GroupManager.GetGroup", "load members", gid, err)
+		logger.E("GroupManager.GetGroup", "load members", gid, err)
 		return nil
 	}
 
 	chat, err := dao.ChatDao.GetChat(gid, 2)
 	if err != nil {
-		comm.Slog.E("GroupManager.GetGroup", "load chat", gid, err)
+		logger.E("GroupManager.GetGroup", "load chat", gid, err)
 		return nil
 	}
 	g = group.NewGroup(gid, dbGroup, chat.Cid, members)
@@ -91,12 +92,12 @@ func (m *groupManager) DispatchNotifyMessage(uid int64, gid int64, message *mess
 }
 
 func (m *groupManager) DispatchMessage(uid int64, msg *message.Message) error {
-	comm.Slog.D("GroupManager.DispatchMessage: %s", msg)
+	logger.D("GroupManager.DispatchMessage: %s", msg)
 
 	groupMsg := new(client.GroupMessage)
 	err := msg.DeserializeData(groupMsg)
 	if err != nil {
-		comm.Slog.E("dispatch group message error", err)
+		logger.E("dispatch group message error", err)
 		return err
 	}
 

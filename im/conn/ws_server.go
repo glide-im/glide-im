@@ -2,7 +2,7 @@ package conn
 
 import (
 	"fmt"
-	"go_im/im/comm"
+	"go_im/pkg/logger"
 	"net/http"
 	"time"
 
@@ -49,7 +49,7 @@ func (ws *WsServer) handleWebSocketRequest(writer http.ResponseWriter, request *
 
 	conn, err := ws.upgrader.Upgrade(writer, request, nil)
 	if err != nil {
-		comm.Slog.E("upgrade http to ws error", err)
+		logger.E("upgrade http to ws error", err)
 		return
 	}
 

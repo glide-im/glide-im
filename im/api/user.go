@@ -3,10 +3,10 @@ package api
 import (
 	"errors"
 	"go_im/im/client"
-	"go_im/im/comm"
 	"go_im/im/dao"
 	"go_im/im/group"
 	"go_im/im/message"
+	"go_im/pkg/logger"
 )
 
 type UserApi struct{}
@@ -241,7 +241,7 @@ func (a *UserApi) GetOnlineUser(msg *RequestInfo) error {
 	for _, k := range allClient {
 		us, err := dao.UserDao.GetUser(k)
 		if err != nil || len(us) == 0 {
-			comm.Slog.D("get online uid=%d error, error=%v", k, err)
+			logger.D("get online uid=%d error, error=%v", k, err)
 			continue
 		}
 		user := us[0]
