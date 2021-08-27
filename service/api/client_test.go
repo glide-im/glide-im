@@ -11,7 +11,7 @@ import (
 func TestNewClient(t *testing.T) {
 	client := NewClient(&rpc.ClientOptions{
 		Addr: "localhost",
-		Port: 5555,
+		Port: 5556,
 	})
 	err := client.Run()
 	if err != nil {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"go_im/im/api"
 	"go_im/im/message"
+	"go_im/pkg/logger"
 	"go_im/service/api/pb"
 	"go_im/service/rpc"
 	"time"
@@ -44,7 +45,9 @@ func (c *Client) Handle(uid int64, message *message.Message) {
 }
 
 func (c *Client) Run() error {
-	err := c.Connect()
+	logger.D("gRPC Api client run")
+	err := c.BaseClient.Run()
+	logger.D("gRPC Api client connect to %s complete, state=%s", c.Conn.Target(), c.Conn.GetState())
 	c.rpc = pb.NewApiServiceClient(c.Conn)
 	return err
 }

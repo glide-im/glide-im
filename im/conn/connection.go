@@ -4,8 +4,6 @@ import (
 	"errors"
 )
 
-type ConnectionHandler func(conn Connection)
-
 var (
 	ErrForciblyClosed   = errors.New("connection was forcibly closed")
 	ErrClosed           = errors.New("closed")

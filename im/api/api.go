@@ -5,13 +5,13 @@ import (
 	"go_im/im/message"
 )
 
-var impl Api
+var impl IApiHandler
 
-type Api interface {
+type IApiHandler interface {
 	Handle(uid int64, message *message.Message)
 }
 
-func SetImpl(api Api) {
+func SetImpl(api IApiHandler) {
 	impl = api
 }
 

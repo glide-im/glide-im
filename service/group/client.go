@@ -4,6 +4,7 @@ import (
 	"context"
 	"go_im/im/dao"
 	"go_im/im/message"
+	"go_im/pkg/logger"
 	"go_im/service/group/pb"
 	"go_im/service/rpc"
 )
@@ -124,7 +125,9 @@ func wrapMessage(msg *message.Message) *pb.Message {
 }
 
 func (c *Client) Run() error {
-	err := c.Connect()
+	logger.D("gRPC Group client run")
+	logger.D("gRPC Group client connect to %s complete, state=%s", c.Conn.Target(), c.Conn.GetState())
+	err := c.BaseClient.Run()
 	c.rpc = pb.NewGroupServiceClient(c.Conn)
 	return err
 }

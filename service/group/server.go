@@ -5,6 +5,7 @@ import (
 	"go_im/im/dao"
 	"go_im/im/group"
 	"go_im/im/message"
+	"go_im/pkg/logger"
 	"go_im/service/group/pb"
 	"go_im/service/rpc"
 )
@@ -79,6 +80,11 @@ func (s *Server) DispatchMessage(ctx context.Context, request *pb.DispatchMessag
 
 	}
 	return newResponse(true, ""), nil
+}
+
+func (s *Server) Run() error {
+	logger.D("gRPC Group server run, %s@%s:%d", s.Options.Network, s.Options.Addr, s.Options.Port)
+	return s.BaseServer.Run()
 }
 
 func daoGroup2pbGroup(g *dao.Group) *pb.Group {

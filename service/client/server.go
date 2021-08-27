@@ -2,8 +2,10 @@ package client
 
 import (
 	"context"
+	"go_im/im"
 	"go_im/im/client"
 	"go_im/im/message"
+	"go_im/pkg/logger"
 	pb2 "go_im/service/api/pb"
 	"go_im/service/client/pb"
 	"go_im/service/rpc"
@@ -12,6 +14,7 @@ import (
 
 type Server struct {
 	*rpc.BaseServer
+	im im.Server
 }
 
 var apiServiceClient pb2.ApiServiceClient
@@ -68,6 +71,11 @@ func (s *Server) IsOnline(ctx context.Context, request *pb.UidRequest) (*pb.Resp
 func (s *Server) Update(ctx context.Context, empty *emptypb.Empty) (*pb.Response, error) {
 	client.Manager.Update()
 	return newResponse(true, "ok"), nil
+}
+
+func (s *Server) Run() error {
+	logger.D("gRPC Client server run, %s@%s:%d", s.Options.Network, s.Options.Addr, s.Options.Port)
+	return s.BaseServer.Run()
 }
 
 func unwrapMessage(pbMsg *pb.Message) *message.Message {

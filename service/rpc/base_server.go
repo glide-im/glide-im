@@ -1,11 +1,17 @@
 package rpc
 
 import (
+	"context"
 	"fmt"
+	"go_im/pkg/logger"
 	"google.golang.org/grpc"
 	"math"
 	"net"
 )
+
+type Runnable interface {
+	Run() error
+}
 
 type ServerOptions struct {
 	Network        string
@@ -19,12 +25,13 @@ type BaseServer struct {
 	RpcServer *grpc.Server
 	Socket    net.Listener
 
-	options *ServerOptions
+	AppId   int64
+	Options *ServerOptions
 }
 
 func NewBaseServer(options *ServerOptions) *BaseServer {
 	ret := &BaseServer{
-		options: options,
+		Options: options,
 	}
 	ret.init(options)
 	return ret
@@ -48,14 +55,20 @@ func (s *BaseServer) init(options *ServerOptions) {
 		panic(err)
 	}
 	op := []grpc.ServerOption{
+		grpc.UnaryInterceptor(s.unaryLogInterceptor),
 		grpc.MaxRecvMsgSize(options.MaxRecvMsgSize),
 		grpc.MaxSendMsgSize(options.MaxSendMsgSize),
 	}
 	s.RpcServer = grpc.NewServer(op...)
 }
 
+func (s *BaseServer) unaryLogInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+	logger.I("grpc server method called: %s", info.FullMethod)
+	return handler(ctx, req)
+}
+
 func (s *BaseServer) Run() error {
-	if s.options == nil {
+	if s.Options == nil {
 		s.init(nil)
 	}
 	return s.RpcServer.Serve(s.Socket)

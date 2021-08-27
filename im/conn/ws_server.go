@@ -10,8 +10,6 @@ import (
 )
 
 type WsServerOptions struct {
-	Host         string
-	Port         int
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
 }
@@ -23,12 +21,10 @@ type WsServer struct {
 }
 
 // NewWsServer options can be nil, use default value when nil.
-func NewWsServer(options *WsServerOptions) *WsServer {
+func NewWsServer(options *WsServerOptions) Server {
 
 	if options == nil {
 		options = &WsServerOptions{
-			Host:         "0.0.0.0",
-			Port:         8080,
 			ReadTimeout:  10 * time.Second,
 			WriteTimeout: 10 * time.Second,
 		}
@@ -59,18 +55,18 @@ func (ws *WsServer) handleWebSocketRequest(writer http.ResponseWriter, request *
 	ws.handler(proxy)
 }
 
-func (ws *WsServer) Handler(handler ConnectionHandler) {
+func (ws *WsServer) SetConnHandler(handler ConnectionHandler) {
 	ws.handler = handler
 }
 
-func (ws *WsServer) Run() {
+func (ws *WsServer) Run(host string, port int) error {
 
 	http.HandleFunc("/ws", ws.handleWebSocketRequest)
 
-	addr := fmt.Sprintf("%s:%d", ws.options.Host, ws.options.Port)
-	fmt.Printf("websocket run on %s\n", addr)
+	addr := fmt.Sprintf("%s:%d", host, port)
+	logger.D("websocket server run on %s", addr)
 	if err := http.ListenAndServe(addr, nil); err != nil {
-		panic(err)
+		return err
 	}
-
+	return nil
 }

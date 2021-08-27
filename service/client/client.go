@@ -5,6 +5,7 @@ import (
 	"go_im/im/client"
 	"go_im/im/conn"
 	"go_im/im/message"
+	"go_im/pkg/logger"
 	"go_im/service/client/pb"
 	"go_im/service/rpc"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -24,16 +25,29 @@ func NewClient(options *rpc.ClientOptions) *Client {
 	return ret
 }
 
+// idle function
 func (c *Client) ClientConnected(conn conn.Connection) int64 {
-	return -1
+	panic("do not call IClientManager.ClientConnected by grpc")
 }
 
 func (c *Client) ClientSignIn(oldUid int64, uid int64, device int64) {
-	// TODO
+	ctx := context.TODO()
+	_, err := c.rpc.ClientSignIn(ctx, &pb.SignInRequest{
+		Old:    oldUid,
+		Uid:    uid,
+		Device: device,
+	})
+	if err != nil {
+
+	}
 }
 
 func (c *Client) UserLogout(uid int64) {
-	// TODO
+	ctx := context.TODO()
+	_, err := c.rpc.UserLogout(ctx, &pb.UidRequest{Uid: uid})
+	if err != nil {
+
+	}
 }
 
 func (c *Client) DispatchMessage(from int64, message *message.Message) error {
@@ -83,14 +97,14 @@ func (c *Client) IsOnline(uid int64) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	_, err := c.rpc.IsOnline(ctx, &pb.UidRequest{
+	r, err := c.rpc.IsOnline(ctx, &pb.UidRequest{
 		Uid: uid,
 	})
 
 	if err != nil {
-
+		return false
 	}
-	return false
+	return r.Ok
 }
 
 func (c *Client) AllClient() []int64 {
@@ -109,7 +123,9 @@ func (c *Client) Update() {
 }
 
 func (c *Client) Run() error {
-	err := c.Connect()
+	logger.D("gRPC Client client run")
+	err := c.BaseClient.Run()
+	logger.D("gRPC Client client connect to %s complete, state=%s", c.Conn.Target(), c.Conn.GetState())
 	c.rpc = pb.NewClientServiceClient(c.Conn)
 	return err
 }
