@@ -126,6 +126,7 @@ func (c *Client) handleError(seq int64, err error) bool {
 		conn.ErrForciblyClosed:   0,
 		conn.ErrClosed:           0,
 		conn.ErrConnectionClosed: 0,
+		conn.ErrReadTimeout:      0,
 	}
 	_, ok := fatalErr[err]
 	if ok {

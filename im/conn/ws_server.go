@@ -25,8 +25,8 @@ func NewWsServer(options *WsServerOptions) Server {
 
 	if options == nil {
 		options = &WsServerOptions{
-			ReadTimeout:  10 * time.Second,
-			WriteTimeout: 10 * time.Second,
+			ReadTimeout:  60 * time.Second,
+			WriteTimeout: 60 * time.Second,
 		}
 	}
 	ws := new(WsServer)

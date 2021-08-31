@@ -77,5 +77,8 @@ func (c *WsConnection) wrapError(err error) error {
 		_ = c.conn.Close()
 		return ErrConnectionClosed
 	}
+	if strings.Contains(err.Error(), "i/o timeout") {
+		return ErrReadTimeout
+	}
 	return err
 }
