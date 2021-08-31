@@ -11,6 +11,7 @@ import (
 type ApiRouter struct {
 	*api.UserApi
 	*api.GroupApi
+	*api.AppApi
 	router *api.Router
 }
 
@@ -24,6 +25,9 @@ func (a *ApiRouter) init() {
 	rt := api.NewRouter()
 	rt.Add(
 		api.Group("api",
+			api.Group("app",
+				api.Route("echo", a.Echo),
+			),
 			api.Group("user",
 				api.Route("login", a.Login),
 				api.Route("auth", a.Auth),
@@ -82,6 +86,7 @@ const (
 	actionLogin    message.Action = "api.user.login"
 	actionRegister                = "api.user.register"
 	actionAuth                    = "api.user.auth"
+	actionEcho                    = "api.app.echo"
 )
 
 func (a *ApiRouter) intercept(uid int64, message *message.Message) error {
