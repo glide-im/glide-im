@@ -19,9 +19,10 @@ type ServerOptions struct {
 	Port           int
 	MaxRecvMsgSize int
 	MaxSendMsgSize int
+	EtcdServers    []string
 }
 
-type BaseServer struct {
+type BaseGRpcServer struct {
 	RpcServer *grpc.Server
 	Socket    net.Listener
 
@@ -29,15 +30,15 @@ type BaseServer struct {
 	Options *ServerOptions
 }
 
-func NewBaseServer(options *ServerOptions) *BaseServer {
-	ret := &BaseServer{
+func NewBaseGRpcServer(options *ServerOptions) *BaseGRpcServer {
+	ret := &BaseGRpcServer{
 		Options: options,
 	}
 	ret.init(options)
 	return ret
 }
 
-func (s *BaseServer) init(options *ServerOptions) {
+func (s *BaseGRpcServer) init(options *ServerOptions) {
 	if options == nil {
 		options = &ServerOptions{
 			Network:        "tcp",
@@ -62,12 +63,12 @@ func (s *BaseServer) init(options *ServerOptions) {
 	s.RpcServer = grpc.NewServer(op...)
 }
 
-func (s *BaseServer) unaryLogInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+func (s *BaseGRpcServer) unaryLogInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
 	logger.I("grpc server method called: %s", info.FullMethod)
 	return handler(ctx, req)
 }
 
-func (s *BaseServer) Run() error {
+func (s *BaseGRpcServer) Run() error {
 	if s.Options == nil {
 		s.init(nil)
 	}
