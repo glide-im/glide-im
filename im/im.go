@@ -48,12 +48,9 @@ func NewServer(options Options) *Server {
 	}
 	switch options.SvrType {
 	case TCP:
-		break
 	case WebSocket:
 		ret.server = conn.NewWsServer(op)
-		break
 	case UDP:
-		break
 	}
 	return ret
 }

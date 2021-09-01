@@ -65,7 +65,6 @@ func (c *Client) EnqueueMessage(message *message.Message) {
 	}
 	select {
 	case c.messages <- message:
-		break
 	default:
 		logger.E("Client.EnqueueMessage", "message chan is full")
 	}
@@ -148,6 +147,7 @@ func (c *Client) Exit() {
 	}
 	c.closed.Set(true)
 	close(c.messages)
+	c.heartbeat.Stop()
 	_ = c.conn.Close()
 }
 

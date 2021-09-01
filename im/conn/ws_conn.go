@@ -45,7 +45,6 @@ func (c *WsConnection) Read(message Serializable) error {
 
 	switch msgType {
 	case websocket.TextMessage:
-		break
 	case websocket.PingMessage:
 	case websocket.BinaryMessage:
 	default:
