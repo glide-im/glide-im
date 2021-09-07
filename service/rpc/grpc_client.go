@@ -10,13 +10,6 @@ import (
 	"google.golang.org/grpc/stats"
 )
 
-type ClientOptions struct {
-	Addr        string
-	Port        int
-	Name        string
-	EtcdServers []string
-}
-
 type BaseGRpcClient struct {
 	Conn *grpc.ClientConn
 

@@ -12,12 +12,22 @@ const (
 	BaseServicePath = "/im_service"
 )
 
+type ServerOptions struct {
+	Name           string
+	Network        string
+	Addr           string
+	Port           int
+	MaxRecvMsgSize int
+	MaxSendMsgSize int
+	EtcdServers    []string
+}
+
 type BaseServer struct {
 	Srv *server.Server
 
-	serviceName  string
 	options      *ServerOptions
 	etcdRegister *serverplugin.EtcdV3RegisterPlugin
+	reg          []func(srv *BaseServer) error
 }
 
 func NewBaseServer(options *ServerOptions) *BaseServer {
@@ -34,8 +44,10 @@ func NewBaseServer(options *ServerOptions) *BaseServer {
 	return ret
 }
 
-func (s *BaseServer) Register(sv interface{}) error {
-	return s.Srv.RegisterName(s.serviceName, sv, "")
+func (s *BaseServer) Register(name string, sv interface{}) {
+	s.reg = append(s.reg, func(srv *BaseServer) error {
+		return srv.Srv.RegisterName(name, sv, "")
+	})
 }
 
 func (s *BaseServer) Run() error {
@@ -48,5 +60,12 @@ func (s *BaseServer) Run() error {
 		return err
 	}
 	s.Srv.Plugins.Add(s.etcdRegister)
+
+	for _, f := range s.reg {
+		if er := f(s); er != nil {
+			return er
+		}
+	}
+
 	return s.Srv.Serve(s.options.Network, addr)
 }

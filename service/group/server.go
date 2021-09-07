@@ -5,7 +5,6 @@ import (
 	"go_im/im/dao"
 	"go_im/im/group"
 	"go_im/im/message"
-	"go_im/pkg/logger"
 	"go_im/service/group/pb"
 	"go_im/service/rpc"
 )
@@ -18,73 +17,71 @@ func NewServer(options *rpc.ServerOptions) *Server {
 	s := &Server{
 		BaseServer: rpc.NewBaseServer(options),
 	}
-	pb.RegisterGroupServiceServer(s.RpcServer, s)
+	s.Register(options.Name, s)
 	return s
 }
 
-func (s *Server) PutMember(ctx context.Context, request *pb.PutMemberRequest) (*pb.Response, error) {
+func (s *Server) PutMember(ctx context.Context, request *pb.PutMemberRequest, reply *pb.Response) error {
 	gm := pbMember2daoMember(request.GetMember())[0]
 	group.Manager.PutMember(request.GetGid(), gm)
-	return newResponse(true, "ok"), nil
+	return nil
 }
 
-func (s *Server) RemoveMember(ctx context.Context, request *pb.RemoveMemberRequest) (*pb.Response, error) {
+func (s *Server) RemoveMember(ctx context.Context, request *pb.RemoveMemberRequest, reply *pb.Response) error {
 	err := group.Manager.RemoveMember(request.Gid, request.Uid...)
 	if err != nil {
 
 	}
-	return newResponse(true, ""), nil
+	return nil
 }
 
-func (s *Server) GetMembers(ctx context.Context, request *pb.GidRequest) (*pb.GetMembersResponse, error) {
+func (s *Server) GetMembers(ctx context.Context, request *pb.GidRequest, reply *pb.GetMembersResponse) error {
 
 	members, err := group.Manager.GetMembers(request.GetGid())
 	if err != nil {
 
 	}
-	ret := pb.GetMembersResponse{Members: daoMember2pbMember(members...)}
-
-	return &ret, nil
+	reply.Members = daoMember2pbMember(members...)
+	return nil
 }
 
-func (s *Server) AddGroup(ctx context.Context, request *pb.AddGroupRequest) (*pb.Response, error) {
+func (s *Server) AddGroup(ctx context.Context, request *pb.AddGroupRequest, reply *pb.Response) error {
 
 	g := pbGroup2daoGroup(request.GetGroup())
 	owner := pbMember2daoMember(request.GetOwner())[0]
 	group.Manager.AddGroup(g, request.GetCid(), owner)
-	return newResponse(true, ""), nil
+	return nil
 }
 
-func (s *Server) GetGroup(ctx context.Context, request *pb.GidRequest) (*pb.Group, error) {
+func (s *Server) GetGroup(ctx context.Context, request *pb.GidRequest, reply *pb.Group) error {
 	g := group.Manager.GetGroup(request.GetGid())
-	return daoGroup2pbGroup(g), nil
+	reply = daoGroup2pbGroup(g)
+	return nil
 }
 
-func (s *Server) GetGroupCid(ctx context.Context, request *pb.GidRequest) (*pb.GetCidResponse, error) {
+func (s *Server) GetGroupCid(ctx context.Context, request *pb.GidRequest, reply *pb.GetCidResponse) error {
 	cid := group.Manager.GetGroupCid(request.GetGid())
-	return &pb.GetCidResponse{Cid: cid}, nil
+	reply.Cid = cid
+	return nil
 }
 
-func (s *Server) HasMember(ctx context.Context, request *pb.HasMemberRequest) (*pb.HasMemberResponse, error) {
-	return &pb.HasMemberResponse{Has: group.Manager.HasMember(request.GetGid(), request.GetUid())}, nil
+func (s *Server) HasMember(ctx context.Context, request *pb.HasMemberRequest, reply *pb.HasMemberResponse) error {
+	r := group.Manager.HasMember(request.GetGid(), request.GetUid())
+	reply.Has = r
+	return nil
 }
 
-func (s *Server) DispatchNotifyMessage(ctx context.Context, request *pb.NotifyRequest) (*pb.Response, error) {
+func (s *Server) DispatchNotifyMessage(ctx context.Context, request *pb.NotifyRequest, reply *pb.Response) error {
 	group.Manager.DispatchNotifyMessage(request.Uid, request.GetGid(), unwrapMessage(request.GetMessage()))
-	return newResponse(true, ""), nil
+	return nil
 }
 
-func (s *Server) DispatchMessage(ctx context.Context, request *pb.DispatchMessageRequest) (*pb.Response, error) {
+func (s *Server) DispatchMessage(ctx context.Context, request *pb.DispatchMessageRequest, reply *pb.Response) error {
 	err := group.Manager.DispatchMessage(request.Uid, unwrapMessage(request.GetMessage()))
 	if err != nil {
 
 	}
-	return newResponse(true, ""), nil
-}
-
-func (s *Server) Run() error {
-	logger.D("gRPC Group server run, %s@%s:%d", s.Options.Network, s.Options.Addr, s.Options.Port)
-	return s.BaseServer.Run()
+	return nil
 }
 
 func daoGroup2pbGroup(g *dao.Group) *pb.Group {

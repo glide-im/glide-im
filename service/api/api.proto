@@ -20,7 +20,3 @@ message HandleRequest {
   int64 uid = 1;
   Message message = 2;
 }
-
-service ApiService {
-  rpc Handle (HandleRequest) returns (Response) {}
-}

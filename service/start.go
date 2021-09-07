@@ -49,14 +49,16 @@ func main() {
 
 	t, _ := strconv.Atoi(os.Args[1])
 	var sType = ServerType(t)
+	wait.Add(1)
 	go runApiService(sType)
+	wait.Add(1)
 	go runClientService(sType)
+	wait.Add(1)
 	go runGroupService(sType)
 	wait.Wait()
 }
 
 func run(srv rpc.Runnable) {
-	wait.Add(1)
 	err := srv.Run()
 	if err != nil {
 		logger.E("grpc run err", err)

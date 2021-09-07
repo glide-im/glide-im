@@ -13,15 +13,6 @@ type Runnable interface {
 	Run() error
 }
 
-type ServerOptions struct {
-	Network        string
-	Addr           string
-	Port           int
-	MaxRecvMsgSize int
-	MaxSendMsgSize int
-	EtcdServers    []string
-}
-
 type BaseGRpcServer struct {
 	RpcServer *grpc.Server
 	Socket    net.Listener

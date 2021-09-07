@@ -91,7 +91,7 @@ const (
 
 func (a *ApiRouter) intercept(uid int64, message *message.Message) error {
 
-	doNotNeedAuth := message.Action == actionLogin || message.Action == actionRegister || message.Action == actionAuth
+	doNotNeedAuth := message.Action == actionLogin || message.Action == actionRegister || message.Action == actionAuth || message.Action == actionEcho
 	if uid <= 0 && !doNotNeedAuth {
 		return errors.New("unauthorized")
 	}

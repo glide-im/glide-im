@@ -5,6 +5,7 @@ import (
 	"go_im/im/message"
 	"go_im/service/api/pb"
 	"go_im/service/rpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type Client struct {
@@ -28,7 +29,8 @@ func (c *Client) Handle(uid int64, message *message.Message) {
 		Uid:     uid,
 		Message: &m,
 	}
-	err := c.Call("Handle", arg, &struct{}{})
+
+	err := c.Call("Handle", arg, &emptypb.Empty{})
 	if err != nil {
 		panic(err)
 	}

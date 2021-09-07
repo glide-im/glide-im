@@ -10,7 +10,9 @@ var Manager IGroupManager
 type IGroupManager interface {
 	PutMember(gid int64, mb *dao.GroupMember)
 
-	//UnsubscribeGroup(uid, gid int64)
+	UserOnline(uid, gid int64)
+
+	UserOffline(uid, gid int64)
 
 	RemoveMember(gid int64, uid ...int64) error
 

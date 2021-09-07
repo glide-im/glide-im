@@ -47,6 +47,14 @@ func (m *groupManager) RemoveMember(gid int64, uid ...int64) error {
 	return nil
 }
 
+func (m *groupManager) UserOnline(uid, gid int64) {
+
+}
+
+func (m *groupManager) UserOffline(uid, gid int64) {
+
+}
+
 func (m *groupManager) GetMembers(gid int64) ([]*dao.GroupMember, error) {
 	g := m.getGroup(gid)
 	if g == nil {
