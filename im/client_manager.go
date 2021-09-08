@@ -72,7 +72,7 @@ func (c *ClientManagerImpl) DispatchMessage(from int64, msg *message.Message) er
 	return nil
 }
 
-func (c ClientManagerImpl) dispatchChatMessage(from int64, msg *message.Message) error {
+func (c *ClientManagerImpl) dispatchChatMessage(from int64, msg *message.Message) error {
 	senderMsg := new(client.SenderChatMessage)
 	err := msg.DeserializeData(senderMsg)
 	if err != nil {
@@ -119,7 +119,7 @@ func (c *ClientManagerImpl) dispatch(from int64, chatMsg *dao.ChatMessage, sende
 	}
 
 	dispatchMsg := message.NewMessage(-1, message.ActionChatMessage, receiverMsg)
-	c.EnqueueMessage(senderMsg.TargetId, dispatchMsg)
+	client.Manager.EnqueueMessage(senderMsg.TargetId, dispatchMsg)
 
 	return nil
 }
