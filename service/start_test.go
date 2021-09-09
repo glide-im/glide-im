@@ -60,9 +60,6 @@ func TestClientClient(t *testing.T) {
 
 	go runClientService(TypeApiService)
 	time.Sleep(time.Second * 2)
-
-	online := client.Manager.IsOnline(1)
-	t.Log("online:", online)
 }
 
 func TestClientOnline(t *testing.T) {

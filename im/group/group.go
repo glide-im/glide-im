@@ -49,10 +49,9 @@ func (g *Group) IsMemberOnline(uid int64) bool {
 
 func (g *Group) GetOnlineMember() []*dao.GroupMember {
 	var online []*dao.GroupMember
-	for id, member := range g.members.members {
-		if client.Manager.IsOnline(id) {
-			online = append(online, member)
-		}
+	for _, member := range g.members.members {
+		// TODO 2021-9-9 17:12:58
+		online = append(online, member)
 	}
 	return online
 }

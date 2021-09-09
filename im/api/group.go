@@ -2,7 +2,6 @@ package api
 
 import (
 	"errors"
-	"go_im/im/client"
 	"go_im/im/dao"
 	"go_im/im/group"
 	"go_im/im/message"
@@ -66,7 +65,7 @@ func (m *GroupApi) GetGroupMember(msg *RequestInfo, request *GetGroupMemberReque
 			Nickname:   "",
 			RemarkName: member.Remark,
 			Type:       member.Type,
-			Online:     client.Manager.IsOnline(member.Uid),
+			Online:     true,
 		})
 	}
 

@@ -37,19 +37,19 @@ message AllClientResponse {
   repeated int64 uid = 1;
 }
 
-service ClientService {
-
-  rpc ClientSignIn(SignInRequest) returns (Response){};
-
-  rpc UserLogout(UidRequest) returns (Response){};
-
-  rpc DispatchMessage(UidMessageRequest) returns(Response){};
-
-  rpc Api(UidMessageRequest) returns (Response){};
-
-  rpc EnqueueMessage(UidMessageRequest) returns(Response){};
-
-  rpc IsOnline(UidRequest) returns (Response){};
-
-  rpc Update(google.protobuf.Empty) returns (Response){};
-}
+//service ClientService {
+//
+//  rpc ClientSignIn(SignInRequest) returns (Response){};
+//
+//  rpc UserLogout(UidRequest) returns (Response){};
+//
+//  rpc DispatchMessage(UidMessageRequest) returns(Response){};
+//
+//  rpc Api(UidMessageRequest) returns (Response){};
+//
+//  rpc EnqueueMessage(UidMessageRequest) returns(Response){};
+//
+//  rpc IsOnline(UidRequest) returns (Response){};
+//
+//  rpc Update(google.protobuf.Empty) returns (Response){};
+//}

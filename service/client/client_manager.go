@@ -31,26 +31,14 @@ func (m *Manager) UserLogout(uid int64) {
 	m.m.UserLogout(uid)
 }
 
-func (m *Manager) DispatchMessage(from int64, message *message.Message) error {
-	return m.m.DispatchMessage(from, message)
-}
-
-func (m *Manager) Api(from int64, message *message.Message) {
-	m.m.Api(from, message)
+func (m *Manager) HandleMessage(from int64, message *message.Message) error {
+	return m.m.HandleMessage(from, message)
 }
 
 func (m *Manager) EnqueueMessage(uid int64, message *message.Message) {
 	m.m.EnqueueMessage(uid, message)
 }
 
-func (m *Manager) IsOnline(uid int64) bool {
-	return m.m.IsOnline(uid)
-}
-
 func (m *Manager) AllClient() []int64 {
 	return m.m.AllClient()
-}
-
-func (m *Manager) Update() {
-	m.m.Update()
 }

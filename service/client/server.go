@@ -6,7 +6,6 @@ import (
 	"go_im/im/message"
 	"go_im/service/client/pb"
 	"go_im/service/rpc"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type Server struct {
@@ -32,30 +31,15 @@ func (s *Server) UserLogout(ctx context.Context, request *pb.UidRequest, reply *
 }
 
 func (s *Server) DispatchMessage(ctx context.Context, request *pb.UidMessageRequest, reply *pb.Response) error {
-	err := client.Manager.DispatchMessage(request.GetFrom(), unwrapMessage(request.GetMessage()))
+	err := client.Manager.HandleMessage(request.GetFrom(), unwrapMessage(request.GetMessage()))
 	if err != nil {
 		// handle err
 	}
 	return nil
 }
 
-func (s *Server) Api(ctx context.Context, request *pb.UidMessageRequest, reply *pb.Response) error {
-	client.Manager.Api(request.GetFrom(), unwrapMessage(request.GetMessage()))
-	return nil
-}
-
 func (s *Server) EnqueueMessage(ctx context.Context, request *pb.UidMessageRequest, reply *pb.Response) error {
 	client.EnqueueMessage(request.GetFrom(), unwrapMessage(request.Message))
-	return nil
-}
-
-func (s *Server) IsOnline(ctx context.Context, request *pb.UidRequest, reply *pb.Response) error {
-	_ = client.Manager.IsOnline(request.GetUid())
-	return nil
-}
-
-func (s *Server) Update(ctx context.Context, empty *emptypb.Empty, reply *pb.Response) error {
-	client.Manager.Update()
 	return nil
 }
 

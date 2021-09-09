@@ -87,14 +87,10 @@ func (c *Client) readMessage() {
 			}
 			break
 		}
-		if msg.Action.Contains(message.ActionApi) {
-			Manager.Api(c.uid, msg)
-		} else if msg.Action.Contains(message.ActionMessage) {
-			err = Manager.DispatchMessage(c.uid, msg)
-		} else if msg.Action == message.ActionHeartbeat {
+		if msg.Action == message.ActionHeartbeat {
 			c.heartbeat.Reset(HeartbeatDuration)
 		} else {
-			// unknown action
+			err = Manager.HandleMessage(c.uid, msg)
 		}
 		if err != nil {
 			if !c.handleError(msg.Seq, err) {
@@ -145,9 +141,9 @@ func (c *Client) Exit() {
 	if c.closed.Get() {
 		return
 	}
+	c.heartbeat.Stop()
 	c.closed.Set(true)
 	close(c.messages)
-	c.heartbeat.Stop()
 	_ = c.conn.Close()
 }
 

@@ -14,17 +14,11 @@ type IClientManager interface {
 
 	UserLogout(uid int64)
 
-	DispatchMessage(from int64, message *message.Message) error
-
-	Api(from int64, message *message.Message)
+	HandleMessage(from int64, message *message.Message) error
 
 	EnqueueMessage(uid int64, message *message.Message)
 
-	IsOnline(uid int64) bool
-
 	AllClient() []int64
-
-	Update()
 }
 
 func EnqueueMessage(uid int64, message *message.Message) {

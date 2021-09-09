@@ -89,25 +89,25 @@ message HasMemberResponse{
   bool has = 1;
 }
 
-service GroupService {
-
-  rpc PutMember (PutMemberRequest) returns (Response) {}
-
-  // rpc UnsubscribeGroup (UnsubscribeGroupRequest) returns (Response) {}
-
-  rpc RemoveMember (RemoveMemberRequest) returns (Response) {}
-
-  rpc GetMembers (GidRequest) returns (GetMembersResponse) {}
-
-  rpc AddGroup (AddGroupRequest) returns (Response) {}
-
-  rpc GetGroup (GidRequest) returns (Group) {}
-
-  rpc GetGroupCid(GidRequest) returns (GetCidResponse){}
-
-  rpc HasMember(HasMemberRequest) returns (HasMemberResponse){}
-
-  rpc DispatchNotifyMessage (NotifyRequest) returns (Response) {}
-
-  rpc DispatchMessage (DispatchMessageRequest) returns (Response) {}
-}
+//service GroupService {
+//
+//  rpc PutMember (PutMemberRequest) returns (Response) {}
+//
+//  // rpc UnsubscribeGroup (UnsubscribeGroupRequest) returns (Response) {}
+//
+//  rpc RemoveMember (RemoveMemberRequest) returns (Response) {}
+//
+//  rpc GetMembers (GidRequest) returns (GetMembersResponse) {}
+//
+//  rpc AddGroup (AddGroupRequest) returns (Response) {}
+//
+//  rpc GetGroup (GidRequest) returns (Group) {}
+//
+//  rpc GetGroupCid(GidRequest) returns (GetCidResponse){}
+//
+//  rpc HasMember(HasMemberRequest) returns (HasMemberResponse){}
+//
+//  rpc DispatchNotifyMessage (NotifyRequest) returns (Response) {}
+//
+//  rpc DispatchMessage (DispatchMessageRequest) returns (Response) {}
+//}

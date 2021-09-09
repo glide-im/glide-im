@@ -105,7 +105,7 @@ func (m *groupManager) DispatchNotifyMessage(uid int64, gid int64, message *mess
 }
 
 func (m *groupManager) DispatchMessage(uid int64, msg *message.Message) error {
-	logger.D("GroupManager.DispatchMessage: %s", msg)
+	logger.D("GroupManager.HandleMessage: %s", msg)
 
 	groupMsg := new(client.GroupMessage)
 	err := msg.DeserializeData(groupMsg)

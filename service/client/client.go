@@ -45,30 +45,18 @@ func (c *Client) UserLogout(uid int64) {
 	}
 }
 
-func (c *Client) DispatchMessage(from int64, message *message.Message) error {
+func (c *Client) HandleMessage(from int64, message *message.Message) error {
 	req := &pb.UidMessageRequest{
 		From:    from,
 		Message: wrapMessage(message),
 	}
 	resp := &pb.Response{}
 
-	err := c.Call("DispatchMessage", req, resp)
+	err := c.Call("HandleMessage", req, resp)
 	if err != nil {
 
 	}
 	return nil
-}
-
-func (c *Client) Api(from int64, message *message.Message) {
-	req := &pb.UidMessageRequest{
-		From:    from,
-		Message: wrapMessage(message),
-	}
-	resp := &pb.Response{}
-	err := c.Call("Api", req, resp)
-	if err != nil {
-
-	}
 }
 
 func (c *Client) EnqueueMessage(uid int64, message *message.Message) {
@@ -84,25 +72,9 @@ func (c *Client) EnqueueMessage(uid int64, message *message.Message) {
 	}
 }
 
-func (c *Client) IsOnline(uid int64) bool {
-	req := &pb.UidRequest{
-		Uid: uid,
-	}
-	resp := &pb.Response{}
-	err := c.Call("IsOnline", req, resp)
-	if err != nil {
-		return false
-	}
-	return false
-}
-
 func (c *Client) AllClient() []int64 {
 	// TODO
 	return nil
-}
-
-func (c *Client) Update() {
-	// TODO
 }
 
 func wrapMessage(msg *message.Message) *pb.Message {

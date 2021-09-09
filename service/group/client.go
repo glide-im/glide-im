@@ -132,7 +132,7 @@ func (c *Client) DispatchMessage(uid int64, message *message.Message) error {
 		Message: wrapMessage(message),
 	}
 	resp := &pb.Response{}
-	err := c.Call("DispatchMessage", req, resp)
+	err := c.Call("HandleMessage", req, resp)
 	if err != nil {
 
 	}

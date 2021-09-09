@@ -36,7 +36,6 @@ func (c *ClientManagerImpl) ClientConnected(conn conn.Connection) int64 {
 
 func (c *ClientManagerImpl) ClientSignIn(oldUid, uid int64, device int64) {
 	logger.I("ClientManager.ClientSignIn: connUid=%d, uid=%d", oldUid, uid)
-
 	cl := c.clients.Get(oldUid)
 	if cl == nil {
 		return
@@ -56,11 +55,11 @@ func (c *ClientManagerImpl) UserLogout(uid int64) {
 	c.clients.Delete(uid)
 }
 
-func (c *ClientManagerImpl) Api(from int64, message *message.Message) {
-	api.Handle(from, message)
-}
-
-func (c *ClientManagerImpl) DispatchMessage(from int64, msg *message.Message) error {
+func (c *ClientManagerImpl) HandleMessage(from int64, msg *message.Message) error {
+	if msg.Action.Contains(message.ActionApi) {
+		api.Handle(from, msg)
+		return nil
+	}
 	switch msg.Action {
 	case message.ActionChatMessage:
 		return c.dispatchChatMessage(from, msg)
@@ -79,7 +78,7 @@ func (c *ClientManagerImpl) dispatchChatMessage(from int64, msg *message.Message
 		logger.E("sender chat senderMsg ", err)
 		return err
 	}
-	logger.D("DispatchMessage(from=%d): cid=%d, senderMsg=%s", from, senderMsg.Cid, senderMsg.Message)
+	logger.D("HandleMessage(from=%d): cid=%d, senderMsg=%s", from, senderMsg.Cid, senderMsg.Message)
 
 	if senderMsg.Cid <= 0 {
 		return errors.New("chat not create")
@@ -119,30 +118,19 @@ func (c *ClientManagerImpl) dispatch(from int64, chatMsg *dao.ChatMessage, sende
 	}
 
 	dispatchMsg := message.NewMessage(-1, message.ActionChatMessage, receiverMsg)
-	client.Manager.EnqueueMessage(senderMsg.TargetId, dispatchMsg)
+	client.EnqueueMessage(senderMsg.TargetId, dispatchMsg)
 
 	return nil
 }
 
 func (c *ClientManagerImpl) EnqueueMessage(uid int64, msg *message.Message) {
 	cl := c.clients.Get(uid)
-	if c.IsOnline(uid) {
+	online := cl != nil && !cl.Closed()
+	if online {
+		//goland:noinspection GoNilness
 		cl.EnqueueMessage(msg)
 	} else {
 		// TODO user offline
-	}
-}
-
-func (c *ClientManagerImpl) IsOnline(uid int64) bool {
-	cl := c.clients.Get(uid)
-	return cl != nil && !cl.Closed()
-}
-
-func (c *ClientManagerImpl) Update() {
-	for _, cl := range c.clients.clients {
-		if cl.Closed() {
-			c.UserLogout(cl.Id())
-		}
 	}
 }
 
