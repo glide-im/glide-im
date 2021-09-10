@@ -1,0 +1,11 @@
+syntax = "proto3";
+package proto;
+
+option go_package = "/pb";
+
+import public 'common.proto';
+
+message RouteReq {
+  string srvId = 1;
+  string fn = 2;
+}

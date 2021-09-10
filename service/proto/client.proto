@@ -1,22 +1,9 @@
 syntax = "proto3";
-package go_im.service.client;
+package proto;
 
 option go_package = "/pb";
 
-import "google/protobuf/empty.proto";
-
-////////////////////////////////  COMMON START  //////////////////////////////////////
-message Message {
-  int64 seq = 1;
-  string action = 2;
-  string data = 3;
-}
-
-message Response {
-  bool ok = 1;
-  string message = 2;
-}
-////////////////////////////////  COMMON END  ////////////////////////////////////////
+import 'common.proto';
 
 message SignInRequest{
   int64  old = 2;

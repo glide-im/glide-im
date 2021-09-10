@@ -3,7 +3,7 @@ package group
 import (
 	"go_im/im/dao"
 	"go_im/im/message"
-	"go_im/service/group/pb"
+	"go_im/service/pb"
 	"go_im/service/rpc"
 )
 

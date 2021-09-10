@@ -1,20 +1,8 @@
 syntax = "proto3";
-package go_im.service.group;
+package proto;
 
 option go_package = "/pb";
-
-////////////////////////////////  COMMON START  //////////////////////////////////////
-message Message {
-  int64 seq = 1;
-  string action = 2;
-  string data = 3;
-}
-
-message Response {
-  bool ok = 1;
-  string message = 2;
-}
-////////////////////////////////  COMMON END  ////////////////////////////////////////
+import public 'common.proto';
 
 message GroupMember {
   int64 id = 1;

@@ -1,0 +1,11 @@
+syntax = "proto3";
+package proto;
+
+option go_package = "/pb";
+
+import public 'common.proto';
+
+message HandleRequest {
+  int64 uid = 1;
+  Message message = 2;
+}

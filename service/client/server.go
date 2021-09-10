@@ -4,7 +4,7 @@ import (
 	"context"
 	"go_im/im/client"
 	"go_im/im/message"
-	"go_im/service/client/pb"
+	"go_im/service/pb"
 	"go_im/service/rpc"
 )
 

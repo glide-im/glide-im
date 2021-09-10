@@ -1,0 +1,1 @@
+protoc --go_out=plugins=grpc:. -I=./proto -I=. common.proto
