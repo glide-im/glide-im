@@ -5,7 +5,7 @@ import (
 	"github.com/smallnest/rpcx/share"
 	"go_im/im/api"
 	"go_im/im/message"
-	"go_im/service/proto/pb"
+	"go_im/service/pb"
 	"go_im/service/rpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 )

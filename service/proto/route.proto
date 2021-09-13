@@ -1,11 +1,37 @@
 syntax = "proto3";
-package proto;
+package com.github.dengzii.im.proto;
 
 option go_package = "/pb";
 
 import public 'common.proto';
+import public 'google/protobuf/any.proto';
 
 message RouteReq {
   string srvId = 1;
   string fn = 2;
+  google.protobuf.Any params = 3;
+  map<string, string> extra = 4;
+}
+
+message RouteReply {
+  bool success = 1;
+  string msg = 2;
+  google.protobuf.Any reply = 3;
+}
+
+message RegisterRtReq{
+  string srvId = 1;
+  string srvName = 5;
+  int32 routePolicy = 2;
+  repeated string discoverySrvUrl = 3;
+  int32 discoveryType = 4;
+}
+
+message SetTagReq {
+  string tag = 1;
+  string srvId = 2;
+}
+
+message ClearTagReq {
+  string tag = 1;
 }

@@ -2,9 +2,9 @@ package route
 
 import (
 	"context"
-	"go_im/im/message"
 	"go_im/service/pb"
 	"go_im/service/rpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type Client struct {
@@ -18,30 +18,9 @@ func NewClient(options *rpc.ClientOptions) *Client {
 }
 
 func (c *Client) Route(ctx context.Context, param *pb.RouteReq, reply *pb.Response) error {
-
-	return nil
+	return c.Call("Route", param, reply)
 }
 
-func (c *Client) RouteUserMessage(uid int64, message *message.Message) {
-
-}
-
-func (c *Client) RouteGroupMessage(gid int64, message *message.Message) {
-
-}
-
-func (c Client) GroupOnline(gid int64, rt string) {
-
-}
-
-func (c *Client) GroupOffline(gid int64) {
-
-}
-
-func (c Client) UserOnline(uid int64, message *message.Message) {
-
-}
-
-func (c *Client) UserOffline(uid int64) {
-
+func (c *Client) Register(param *pb.RegisterRtReq, reply *emptypb.Empty) error {
+	return c.Call2(context.Background(), "Register", param, reply)
 }
