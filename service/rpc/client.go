@@ -6,10 +6,11 @@ import (
 	client3 "github.com/rpcxio/rpcx-etcd/client"
 	client2 "github.com/smallnest/rpcx/client"
 	"github.com/smallnest/rpcx/protocol"
-	"github.com/smallnest/rpcx/share"
 )
 
 type ClientOptions struct {
+	client2.Option
+
 	Addr        string
 	Port        int
 	Name        string
@@ -31,16 +32,17 @@ func NewBaseClient(options *ClientOptions) *BaseClient {
 	if err != nil {
 
 	}
-	cOpts := client2.DefaultOption
-	cOpts.SerializeType = protocol.ProtoBuffer
-	ret.cli = client2.NewXClient(options.Name, client2.Failtry, client2.RoundRobin, etcd, cOpts)
+	if options.SerializeType == protocol.SerializeNone {
+		options.SerializeType = protocol.ProtoBuffer
+	}
+	ret.cli = client2.NewXClient(options.Name, client2.Failtry, client2.RoundRobin, etcd, options.Option)
 	return ret
 }
 
 func (c *BaseClient) Call(fn string, arg interface{}, reply interface{}) error {
-	ctx := context.WithValue(context.Background(), share.ReqMetaDataKey, map[string]string{"call_from_client_server": c.id})
-	ctx = context.WithValue(ctx, share.ResMetaDataKey, make(map[string]string))
-	return c.Call2(ctx, fn, arg, reply)
+	//ctx := context.WithValue(context.Background(), share.ReqMetaDataKey, map[string]string{"call_from_client_server": c.id})
+	//ctx = context.WithValue(ctx, share.ResMetaDataKey, make(map[string]string))
+	return c.Call2(context.Background(), fn, arg, reply)
 }
 
 func (c *BaseClient) Call2(ctx context.Context, fn string, arg interface{}, reply interface{}) error {

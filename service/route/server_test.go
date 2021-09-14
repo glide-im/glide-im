@@ -1,11 +1,11 @@
 package route
 
 import (
-	"context"
 	"go_im/service/pb"
 	"go_im/service/rpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"testing"
+	"time"
 )
 
 var etcdSrv = []string{"127.0.0.1:2379", "127.0.0.1:2381", "127.0.0.1:2383"}
@@ -21,6 +21,10 @@ func TestNewServer(t *testing.T) {
 	}
 
 	routeServer := NewServer(&op)
+	go func() {
+		time.Sleep(time.Second * 1)
+		TestClient_Register(t)
+	}()
 	err := routeServer.Run()
 	t.Error(err)
 }
@@ -28,7 +32,7 @@ func TestNewServer(t *testing.T) {
 func TestClient_Register(t *testing.T) {
 
 	cli := newClient()
-
+	defer cli.Close()
 	err := cli.Register(&pb.RegisterRtReq{
 		SrvId:           "api",
 		SrvName:         "api",
@@ -44,10 +48,11 @@ func TestClient_Register(t *testing.T) {
 
 func TestClient_Route(t *testing.T) {
 	cli := newClient()
-	err := cli.Route(context.Background(), &pb.RouteReq{
-		SrvId: "api",
-		Fn:    "Handle",
-	}, &pb.Response{})
+	defer cli.Close()
+	err := cli.Invoke("api.Handle", &pb.HandleRequest{
+		Uid:     1,
+		Message: nil,
+	}, &emptypb.Empty{})
 	if err != nil {
 		t.Error(err)
 	}

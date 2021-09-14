@@ -340,6 +340,53 @@ func (x *ClearTagReq) GetTag() string {
 	return ""
 }
 
+type RouteReqParam struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Data *anypb.Any `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+}
+
+func (x *RouteReqParam) Reset() {
+	*x = RouteReqParam{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_route_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *RouteReqParam) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RouteReqParam) ProtoMessage() {}
+
+func (x *RouteReqParam) ProtoReflect() protoreflect.Message {
+	mi := &file_route_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RouteReqParam.ProtoReflect.Descriptor instead.
+func (*RouteReqParam) Descriptor() ([]byte, []int) {
+	return file_route_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *RouteReqParam) GetData() *anypb.Any {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
 var File_route_proto protoreflect.FileDescriptor
 
 var file_route_proto_rawDesc = []byte{
@@ -385,8 +432,12 @@ var file_route_proto_rawDesc = []byte{
 	0x14, 0x0a, 0x05, 0x73, 0x72, 0x76, 0x49, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05,
 	0x73, 0x72, 0x76, 0x49, 0x64, 0x22, 0x1f, 0x0a, 0x0b, 0x43, 0x6c, 0x65, 0x61, 0x72, 0x54, 0x61,
 	0x67, 0x52, 0x65, 0x71, 0x12, 0x10, 0x0a, 0x03, 0x74, 0x61, 0x67, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x03, 0x74, 0x61, 0x67, 0x42, 0x05, 0x5a, 0x03, 0x2f, 0x70, 0x62, 0x50, 0x00, 0x50,
-	0x01, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x09, 0x52, 0x03, 0x74, 0x61, 0x67, 0x22, 0x39, 0x0a, 0x0d, 0x52, 0x6f, 0x75, 0x74, 0x65, 0x52,
+	0x65, 0x71, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x12, 0x28, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x04, 0x64, 0x61, 0x74,
+	0x61, 0x42, 0x05, 0x5a, 0x03, 0x2f, 0x70, 0x62, 0x50, 0x00, 0x50, 0x01, 0x62, 0x06, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -401,25 +452,27 @@ func file_route_proto_rawDescGZIP() []byte {
 	return file_route_proto_rawDescData
 }
 
-var file_route_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_route_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_route_proto_goTypes = []interface{}{
 	(*RouteReq)(nil),      // 0: com.github.dengzii.im.proto.RouteReq
 	(*RouteReply)(nil),    // 1: com.github.dengzii.im.proto.RouteReply
 	(*RegisterRtReq)(nil), // 2: com.github.dengzii.im.proto.RegisterRtReq
 	(*SetTagReq)(nil),     // 3: com.github.dengzii.im.proto.SetTagReq
 	(*ClearTagReq)(nil),   // 4: com.github.dengzii.im.proto.ClearTagReq
-	nil,                   // 5: com.github.dengzii.im.proto.RouteReq.ExtraEntry
-	(*anypb.Any)(nil),     // 6: google.protobuf.Any
+	(*RouteReqParam)(nil), // 5: com.github.dengzii.im.proto.RouteReqParam
+	nil,                   // 6: com.github.dengzii.im.proto.RouteReq.ExtraEntry
+	(*anypb.Any)(nil),     // 7: google.protobuf.Any
 }
 var file_route_proto_depIdxs = []int32{
-	6, // 0: com.github.dengzii.im.proto.RouteReq.params:type_name -> google.protobuf.Any
-	5, // 1: com.github.dengzii.im.proto.RouteReq.extra:type_name -> com.github.dengzii.im.proto.RouteReq.ExtraEntry
-	6, // 2: com.github.dengzii.im.proto.RouteReply.reply:type_name -> google.protobuf.Any
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	7, // 0: com.github.dengzii.im.proto.RouteReq.params:type_name -> google.protobuf.Any
+	6, // 1: com.github.dengzii.im.proto.RouteReq.extra:type_name -> com.github.dengzii.im.proto.RouteReq.ExtraEntry
+	7, // 2: com.github.dengzii.im.proto.RouteReply.reply:type_name -> google.protobuf.Any
+	7, // 3: com.github.dengzii.im.proto.RouteReqParam.data:type_name -> google.protobuf.Any
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_route_proto_init() }
@@ -489,6 +542,18 @@ func file_route_proto_init() {
 				return nil
 			}
 		}
+		file_route_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*RouteReqParam); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -496,7 +561,7 @@ func file_route_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_route_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

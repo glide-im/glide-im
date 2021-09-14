@@ -35,3 +35,7 @@ message SetTagReq {
 message ClearTagReq {
   string tag = 1;
 }
+
+message RouteReqParam {
+  google.protobuf.Any data = 1;
+}

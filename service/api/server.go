@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"github.com/smallnest/rpcx/share"
 	"go_im/im/api"
 	"go_im/im/message"
 	"go_im/service/pb"
@@ -14,10 +13,7 @@ type Server struct {
 	*rpc.BaseServer
 }
 
-func (s *Server) Handle(ctx context.Context, r *pb.HandleRequest, _ *emptypb.Empty) error {
-	res := ctx.Value(share.ResMetaDataKey).(map[string]string)
-	res["from_server"] = "value_2"
-	rpc.LogContext(ctx)
+func (s *Server) Handle(ctx context.Context, r *pb.HandleRequest, resp *emptypb.Empty) error {
 
 	api.Handle(r.Uid, &message.Message{
 		Seq:    r.GetMessage().GetSeq(),

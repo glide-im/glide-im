@@ -8,10 +8,13 @@ import (
 )
 
 func TestNewClient(t *testing.T) {
-	client := NewClient(&rpc.ClientOptions{
+	opts := &rpc.ClientOptions{
 		Name:        "api",
 		EtcdServers: []string{"127.0.0.1:2379", "127.0.0.1:2381", "127.0.0.1:2383"},
-	})
+	}
+	opts.SerializeType = rpc.SerialTypeProtoBuffWrapAny
+	//opts.SerializeType = protocol.ProtoBuffer
+	client := NewClient(opts)
 	defer client.Close()
 	err := client.Run()
 	if err != nil {

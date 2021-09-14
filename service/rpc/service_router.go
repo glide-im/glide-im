@@ -15,7 +15,6 @@ func NewHostRouter() *HostRouter {
 
 func (h *HostRouter) Select(ctx context.Context, servicePath, serviceMethod string, args interface{}) string {
 	for k := range h.services {
-		println(k)
 		return k
 	}
 	return ""
