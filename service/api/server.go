@@ -23,6 +23,12 @@ func (s *Server) Handle(ctx context.Context, r *pb.HandleRequest, resp *emptypb.
 	return nil
 }
 
+func (s *Server) Echo(ctx context.Context, r *pb.HandleRequest, resp *pb.Response) error {
+	resp.Ok = true
+	resp.Message = r.Message.Data
+	return nil
+}
+
 func NewServer(options *rpc.ServerOptions) *Server {
 	s := &Server{
 		BaseServer: rpc.NewBaseServer(options),

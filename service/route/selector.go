@@ -33,7 +33,6 @@ func newRoundRobinSelector(servers map[string]string) client.Selector {
 	for k := range servers {
 		ss = append(ss, k)
 	}
-
 	return &roundRobinSelector{servers: ss}
 }
 

@@ -15,6 +15,7 @@ type ClientOptions struct {
 	Port        int
 	Name        string
 	EtcdServers []string
+	Selector    client2.Selector
 }
 
 type BaseClient struct {
@@ -51,7 +52,9 @@ func (c *BaseClient) Call2(ctx context.Context, fn string, arg interface{}, repl
 }
 
 func (c *BaseClient) Run() error {
-	c.cli.SetSelector(NewHostRouter())
+	if c.options.Selector != nil {
+		c.cli.SetSelector(c.options.Selector)
+	}
 	return nil
 }
 

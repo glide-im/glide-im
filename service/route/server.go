@@ -2,7 +2,8 @@ package route
 
 import (
 	"context"
-	"errors"
+	"fmt"
+	"github.com/pkg/errors"
 	"go_im/pkg/logger"
 	"go_im/service/pb"
 	"go_im/service/rpc"
@@ -11,9 +12,10 @@ import (
 )
 
 const (
-	ExtraTag    = "rt_extra_tag"
-	ExtraSrvUrl = "rt_extra_srv_url"
-	ExtraFrom   = "rt_extra_from"
+	ExtraTag        = "rt_extra_tag"
+	ExtraSrvUrl     = "rt_extra_srv_url"
+	ExtraFrom       = "rt_extra_from"
+	ExtraSelectMode = "rt_extra_select_mode"
 )
 
 type Server struct {
@@ -30,26 +32,39 @@ func NewServer(options *rpc.ServerOptions) *Server {
 	return s
 }
 
-func (s *Server) SetTag(ctx context.Context, req *pb.SetTagReq, empty *emptypb.Empty) {
-
+func (s *Server) SetTag(ctx context.Context, req *pb.SetTagReq, _ *emptypb.Empty) error {
+	rt, ok := s.rts[req.SrvId]
+	if !ok {
+		return fmt.Errorf("service not found: srvId=%s", req.SrvId)
+	}
+	rt.addTag(req.GetTag(), req.GetValue())
+	return nil
 }
 
-func (s *Server) ClearTag(ctx context.Context, req *pb.ClearTagReq, empty *emptypb.Empty) {
-
+func (s *Server) ClearTag(ctx context.Context, req *pb.ClearTagReq, _ *emptypb.Empty) error {
+	rt, ok := s.rts[req.SrvId]
+	if !ok {
+		return fmt.Errorf("service not found: srvId=%s", req.SrvId)
+	}
+	rt.removeTag(req.GetTag())
+	return nil
 }
 
 func (s *Server) Route(ctx context.Context, param *pb.RouteReq, reply *pb.RouteReply) error {
 	rt, ok := s.rts[param.SrvId]
 	if !ok {
-		return errors.New("service not found: srvId=" + param.SrvId)
+		return fmt.Errorf("service not found: srvId=%s", param.SrvId)
 	}
-	reply.Reset()
 	reply.Success = true
 	reply.Msg = "success"
 	reply.Reply = &anypb.Any{}
 
-	p := &pb.RouteReqParam{Data: reply.GetReply()}
-	_ = rt.route(ctx, param.Fn, p, reply.GetReply())
+	err := rt.route(ctx, param.Fn, param, reply)
+	if err != nil {
+		reply.Success = false
+		reply.Msg = err.Error()
+		return errors.Wrap(err, "service route error")
+	}
 	return nil
 }
 
@@ -68,7 +83,11 @@ func (s *Server) Register(ctx context.Context, param *pb.RegisterRtReq, _ *empty
 	if err != nil {
 		return err
 	}
+	_, ok := s.rts[param.SrvId]
+	if ok {
+		// override
+	}
 	s.rts[param.SrvId] = sv
-	logger.D("Service register: %s", param.SrvName)
+	logger.D("service registered: %s", param.SrvName)
 	return nil
 }

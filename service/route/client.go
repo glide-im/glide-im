@@ -3,6 +3,7 @@ package route
 import (
 	"context"
 	"errors"
+	"github.com/smallnest/rpcx/share"
 	"go_im/service/pb"
 	"go_im/service/rpc"
 	"google.golang.org/protobuf/proto"
@@ -21,11 +22,11 @@ func NewClient(options *rpc.ClientOptions) *Client {
 	}
 }
 
-func (c *Client) Invoke2(ctx context.Context, param *pb.RouteReq, reply *pb.Response) error {
+func (c *Client) Route(ctx context.Context, param *pb.RouteReq, reply *pb.Response) error {
 	return c.Call("Route", param, reply)
 }
 
-func (c *Client) Invoke(target string, request interface{}, reply interface{}) error {
+func (c *Client) Route2(target string, request interface{}, reply interface{}) error {
 	split := strings.Split(target, ".")
 	if len(split) != 2 {
 		return errors.New("参数 target 格式错误, (srvId.func).() 例子: api.Handle")
@@ -46,7 +47,9 @@ func (c *Client) Invoke(target string, request interface{}, reply interface{}) e
 		Extra:  map[string]string{},
 	}
 	routeReply := &pb.RouteReply{}
-	err = c.Call("Route", routeReq, routeReply)
+	ctx := context.WithValue(context.Background(), share.ReqMetaDataKey, map[string]string{ExtraTag: "this_is_tag"})
+	ctx = context.WithValue(ctx, share.ResMetaDataKey, make(map[string]string))
+	err = c.Call2(ctx, "Route", routeReq, routeReply)
 	if err != nil {
 		return err
 	}

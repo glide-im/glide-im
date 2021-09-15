@@ -30,9 +30,11 @@ message RegisterRtReq{
 message SetTagReq {
   string tag = 1;
   string srvId = 2;
+  string value = 3;
 }
 
 message ClearTagReq {
+  string srvId = 2;
   string tag = 1;
 }
 
