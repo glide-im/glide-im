@@ -3,21 +3,47 @@ package route
 import (
 	"context"
 	"github.com/smallnest/rpcx/client"
+	"github.com/smallnest/rpcx/share"
+	"go_im/pkg/logger"
 )
 
-type router struct {
+type selector struct {
 	services map[string]string
+	round    client.Selector
+	tags     map[string]string
 }
 
-func (r *router) Select(ctx context.Context, servicePath, serviceMethod string, args interface{}) string {
+func newSelector() *selector {
+	s := map[string]string{}
+	return &selector{
+		services: s,
+		round:    newRoundRobinSelector(),
+		tags:     map[string]string{},
+	}
+}
+
+func (r *selector) Select(ctx context.Context, servicePath, serviceMethod string, args interface{}) string {
+
+	m := ctx.Value(share.ReqMetaDataKey).(map[string]string)
+	tag, ok := m[ExtraTag]
+	if ok {
+		v, ok := r.tags[tag]
+		if ok {
+			s, ok := r.services[v]
+			if ok {
+				logger.D("route by tag: %s=%s", tag, v)
+				return s
+			}
+		}
+	}
 	for k := range r.services {
-		println(k)
 		return k
 	}
 	return ""
 }
 
-func (r *router) UpdateServer(servers map[string]string) {
+func (r *selector) UpdateServer(servers map[string]string) {
+	r.round.UpdateServer(servers)
 	for k, v := range servers {
 		r.services[k] = v
 	}
@@ -28,12 +54,8 @@ type roundRobinSelector struct {
 	i       int
 }
 
-func newRoundRobinSelector(servers map[string]string) client.Selector {
-	ss := make([]string, 0, len(servers))
-	for k := range servers {
-		ss = append(ss, k)
-	}
-	return &roundRobinSelector{servers: ss}
+func newRoundRobinSelector() client.Selector {
+	return &roundRobinSelector{servers: []string{}}
 }
 
 func (s *roundRobinSelector) Select(ctx context.Context, servicePath, serviceMethod string, args interface{}) string {

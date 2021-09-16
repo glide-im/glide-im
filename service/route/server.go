@@ -41,7 +41,7 @@ func (s *Server) SetTag(ctx context.Context, req *pb.SetTagReq, _ *emptypb.Empty
 	return nil
 }
 
-func (s *Server) ClearTag(ctx context.Context, req *pb.ClearTagReq, _ *emptypb.Empty) error {
+func (s *Server) RemoveTag(ctx context.Context, req *pb.ClearTagReq, _ *emptypb.Empty) error {
 	rt, ok := s.rts[req.SrvId]
 	if !ok {
 		return fmt.Errorf("service not found: srvId=%s", req.SrvId)

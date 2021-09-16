@@ -10,8 +10,6 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-//var SerialTypeProtoBuffWrapAny = protocol.SerializeType(100)
-
 const (
 	_ = protocol.Thrift + 1
 	SerialTypeProtoBuffWrapAny

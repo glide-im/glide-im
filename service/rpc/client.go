@@ -46,6 +46,10 @@ func (c *BaseClient) Call(fn string, arg interface{}, reply interface{}) error {
 	return c.Call2(context.Background(), fn, arg, reply)
 }
 
+func (c *BaseClient) Broadcast(fn string, request, reply interface{}) error {
+	return c.cli.Broadcast(context.Background(), fn, request, reply)
+}
+
 func (c *BaseClient) Call2(ctx context.Context, fn string, arg interface{}, reply interface{}) error {
 	err := c.cli.Call(ctx, fn, arg, reply)
 	return err

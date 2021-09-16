@@ -22,15 +22,33 @@ func NewClient(options *rpc.ClientOptions) *Client {
 	}
 }
 
-func (c *Client) Route(ctx context.Context, param *pb.RouteReq, reply *pb.Response) error {
-	return c.Call("Route", param, reply)
+func (c *Client) Register(param *pb.RegisterRtReq, reply *emptypb.Empty) error {
+	return c.Call2(context.Background(), "Register", param, reply)
 }
 
-func (c *Client) Route2(target string, request interface{}, reply interface{}) error {
+func (c *Client) SetTag(srvId, tag, value string) error {
+	req := &pb.SetTagReq{
+		Tag:   tag,
+		SrvId: srvId,
+		Value: value,
+	}
+	return c.Call("SetTag", req, &emptypb.Empty{})
+}
+
+func (c *Client) RemoveTag(srvId, tag string) error {
+	return c.Call("RemoveTag", &pb.ClearTagReq{
+		SrvId: srvId,
+		Tag:   tag,
+	}, &emptypb.Empty{})
+}
+
+func (c *Client) Route(ctx context.Context, target string, request, reply interface{}) error {
+
 	split := strings.Split(target, ".")
 	if len(split) != 2 {
 		return errors.New("参数 target 格式错误, (srvId.func).() 例子: api.Handle")
 	}
+
 	var reqParam *anypb.Any
 	var err error
 
@@ -39,7 +57,10 @@ func (c *Client) Route2(target string, request interface{}, reply interface{}) e
 		if err != nil {
 			return err
 		}
+	} else {
+		return errors.New("request must be proto.Message")
 	}
+
 	routeReq := &pb.RouteReq{
 		SrvId:  split[0],
 		Fn:     split[1],
@@ -47,9 +68,8 @@ func (c *Client) Route2(target string, request interface{}, reply interface{}) e
 		Extra:  map[string]string{},
 	}
 	routeReply := &pb.RouteReply{}
-	ctx := context.WithValue(context.Background(), share.ReqMetaDataKey, map[string]string{ExtraTag: "this_is_tag"})
-	ctx = context.WithValue(ctx, share.ResMetaDataKey, make(map[string]string))
 	err = c.Call2(ctx, "Route", routeReq, routeReply)
+
 	if err != nil {
 		return err
 	}
@@ -62,9 +82,14 @@ func (c *Client) Route2(target string, request interface{}, reply interface{}) e
 			return err
 		}
 	}
-	return nil
+	return c.Call("Route", request, reply)
 }
 
-func (c *Client) Register(param *pb.RegisterRtReq, reply *emptypb.Empty) error {
-	return c.Call2(context.Background(), "Register", param, reply)
+func (c *Client) Route2(target string, request interface{}, reply interface{}) error {
+	return c.Route(context.Background(), target, request, reply)
+}
+
+func (c *Client) RouteByTag(target, tag string, request, reply interface{}) error {
+	ctx := context.WithValue(context.Background(), share.ReqMetaDataKey, map[string]string{ExtraTag: tag})
+	return c.Route(ctx, target, request, reply)
 }

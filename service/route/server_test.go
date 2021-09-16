@@ -60,9 +60,23 @@ func TestClient_Route(t *testing.T) {
 		},
 	}
 	resp := &pb.Response{}
-	err := cli.Route2("api.Echo", req, resp)
+	err := cli.RouteByTag("api.Echo", "", req, resp)
 	assert.Nil(t, err)
 	assert.Equal(t, req.Message.Data, resp.Message)
+}
+
+func TestServer_SetTag(t *testing.T) {
+	cli := newClient()
+	defer cli.Close()
+	err := cli.SetTag("api", "uid_001", "tcp@127.0.0.1:8973")
+	assert.Nil(t, err)
+}
+
+func TestClient_RemoveTag(t *testing.T) {
+	cli := newClient()
+	defer cli.Close()
+	err := cli.RemoveTag("api", "uid_001")
+	assert.Nil(t, err)
 }
 
 func newClient() *Client {
