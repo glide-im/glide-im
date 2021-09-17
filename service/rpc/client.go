@@ -8,6 +8,13 @@ import (
 	"github.com/smallnest/rpcx/protocol"
 )
 
+type Cli interface {
+	Call(ctx context.Context, fn string, request, reply interface{}) error
+	Broadcast(fn string, request, reply interface{}) error
+	Run() error
+	Close() error
+}
+
 type ClientOptions struct {
 	client2.Option
 
@@ -40,17 +47,15 @@ func NewBaseClient(options *ClientOptions) *BaseClient {
 	return ret
 }
 
-func (c *BaseClient) Call(fn string, arg interface{}, reply interface{}) error {
-	//ctx := context.WithValue(context.Background(), share.ReqMetaDataKey, map[string]string{"call_from_client_server": c.id})
-	//ctx = context.WithValue(ctx, share.ResMetaDataKey, make(map[string]string))
-	return c.Call2(context.Background(), fn, arg, reply)
+func (c *BaseClient) Call2(fn string, arg interface{}, reply interface{}) error {
+	return c.Call(context.Background(), fn, arg, reply)
 }
 
 func (c *BaseClient) Broadcast(fn string, request, reply interface{}) error {
 	return c.cli.Broadcast(context.Background(), fn, request, reply)
 }
 
-func (c *BaseClient) Call2(ctx context.Context, fn string, arg interface{}, reply interface{}) error {
+func (c *BaseClient) Call(ctx context.Context, fn string, arg interface{}, reply interface{}) error {
 	err := c.cli.Call(ctx, fn, arg, reply)
 	return err
 }

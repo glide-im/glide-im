@@ -27,6 +27,10 @@ message RegisterRtReq{
   int32 discoveryType = 4;
 }
 
+message UnRegisterReq {
+  string srvId = 1;
+}
+
 message SetTagReq {
   string tag = 1;
   string srvId = 2;

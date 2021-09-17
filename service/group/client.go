@@ -1,19 +1,29 @@
 package group
 
 import (
+	"context"
 	"go_im/im/dao"
+	"go_im/im/group"
 	"go_im/im/message"
 	"go_im/service/pb"
+	"go_im/service/route"
 	"go_im/service/rpc"
 )
 
 type Client struct {
-	*rpc.BaseClient
+	rpc.Cli
 }
 
 func NewClient(options *rpc.ClientOptions) *Client {
 	ret := &Client{}
-	ret.BaseClient = rpc.NewBaseClient(options)
+	ret.Cli = rpc.NewBaseClient(options)
+	return ret
+}
+
+func NewClientByRouter(srvId string, rtOpts *rpc.ClientOptions) *Client {
+	ret := &Client{}
+	ret.Cli = route.NewRouter(srvId, rtOpts)
+	group.Manager = ret
 	return ret
 }
 
@@ -23,7 +33,7 @@ func (c *Client) PutMember(gid int64, mb *dao.GroupMember) {
 		Member: daoMember2pbMember(mb)[0],
 	}
 	resp := &pb.Response{}
-	err := c.Call("PutMember", req, resp)
+	err := c.Call(context.Background(), "PutMember", req, resp)
 	if err != nil {
 
 	}
@@ -35,7 +45,7 @@ func (c *Client) RemoveMember(gid int64, uid ...int64) error {
 		Uid: uid,
 	}
 	resp := &pb.Response{}
-	err := c.Call("RemoveMember", req, resp)
+	err := c.Call(context.Background(), "RemoveMember", req, resp)
 	if err != nil {
 
 	}
@@ -45,7 +55,7 @@ func (c *Client) RemoveMember(gid int64, uid ...int64) error {
 func (c *Client) GetMembers(gid int64) ([]*dao.GroupMember, error) {
 	req := &pb.GidRequest{Gid: gid}
 	resp := &pb.GetMembersResponse{}
-	err := c.Call("GetMembers", req, resp)
+	err := c.Call(context.Background(), "GetMembers", req, resp)
 	if err != nil {
 
 	}
@@ -59,7 +69,7 @@ func (c *Client) AddGroup(group *dao.Group, cid int64, owner *dao.GroupMember) {
 		Owner: daoMember2pbMember(owner)[0],
 	}
 	resp := &pb.Response{}
-	err := c.Call("AddGroup", req, resp)
+	err := c.Call(context.Background(), "AddGroup", req, resp)
 	if err != nil {
 
 	}
@@ -68,7 +78,7 @@ func (c *Client) AddGroup(group *dao.Group, cid int64, owner *dao.GroupMember) {
 func (c *Client) GetGroup(gid int64) *dao.Group {
 	req := &pb.GidRequest{Gid: gid}
 	resp := &pb.Group{}
-	err := c.Call("GetGroup", req, resp)
+	err := c.Call(context.Background(), "GetGroup", req, resp)
 	if err != nil {
 
 	}
@@ -77,7 +87,7 @@ func (c *Client) GetGroup(gid int64) *dao.Group {
 
 func (c *Client) UserOnline(uid, gid int64) {
 	//resp := &pb.Response{}
-	//err := c.Call("PutMember", req, resp)
+	//err := c.Call(context.Background(),"PutMember", req, resp)
 	//if err != nil {
 	//
 	//}
@@ -85,7 +95,7 @@ func (c *Client) UserOnline(uid, gid int64) {
 
 func (c *Client) UserOffline(uid, gid int64) {
 	//resp := &pb.Response{}
-	//err := c.Call("PutMember", req, resp)
+	//err := c.Call(context.Background(),"PutMember", req, resp)
 	//if err != nil {
 	//
 	//}
@@ -94,7 +104,7 @@ func (c *Client) UserOffline(uid, gid int64) {
 func (c *Client) GetGroupCid(gid int64) int64 {
 	req := &pb.GidRequest{Gid: gid}
 	resp := &pb.GetCidResponse{}
-	err := c.Call("GetGroupCid", req, resp)
+	err := c.Call(context.Background(), "GetGroupCid", req, resp)
 	if err != nil {
 
 	}
@@ -107,7 +117,7 @@ func (c *Client) HasMember(gid int64, uid int64) bool {
 		Uid: uid,
 	}
 	resp := &pb.HasMemberResponse{}
-	err := c.Call("HasMember", req, resp)
+	err := c.Call(context.Background(), "HasMember", req, resp)
 	if err != nil {
 
 	}
@@ -120,7 +130,7 @@ func (c *Client) DispatchNotifyMessage(uid int64, gid int64, message *message.Me
 		Message: wrapMessage(message),
 	}
 	resp := &pb.Response{}
-	err := c.Call("DispatchNotifyMessage", req, resp)
+	err := c.Call(context.Background(), "DispatchNotifyMessage", req, resp)
 	if err != nil {
 
 	}
@@ -132,7 +142,7 @@ func (c *Client) DispatchMessage(uid int64, message *message.Message) error {
 		Message: wrapMessage(message),
 	}
 	resp := &pb.Response{}
-	err := c.Call("HandleMessage", req, resp)
+	err := c.Call(context.Background(), "HandleMessage", req, resp)
 	if err != nil {
 
 	}

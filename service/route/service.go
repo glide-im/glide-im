@@ -36,7 +36,7 @@ func (r *service) removeTag(tag string) {
 }
 
 func (r *service) route(ctx context.Context, fn string, param *pb.RouteReq, reply *pb.RouteReply) error {
-	_ = r.Call2(ctx, fn, param.GetParams(), reply.GetReply())
+	_ = r.Call(ctx, fn, param.GetParams(), reply.GetReply())
 	logger.D("%s.%s", r.name, fn)
 	return nil
 }

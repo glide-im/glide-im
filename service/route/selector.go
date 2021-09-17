@@ -25,21 +25,16 @@ func newSelector() *selector {
 func (r *selector) Select(ctx context.Context, servicePath, serviceMethod string, args interface{}) string {
 
 	m := ctx.Value(share.ReqMetaDataKey).(map[string]string)
-	tag, ok := m[ExtraTag]
-	if ok {
-		v, ok := r.tags[tag]
-		if ok {
-			s, ok := r.services[v]
-			if ok {
-				logger.D("route by tag: %s=%s", tag, v)
+
+	if tag, ok := m[ExtraTag]; ok {
+		if path, ok := r.tags[tag]; ok {
+			if s, ok := r.services[path]; ok {
+				logger.D("route by tag: %s=%s", tag, path)
 				return s
 			}
 		}
 	}
-	for k := range r.services {
-		return k
-	}
-	return ""
+	return r.round.Select(ctx, servicePath, serviceMethod, args)
 }
 
 func (r *selector) UpdateServer(servers map[string]string) {

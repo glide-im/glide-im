@@ -53,7 +53,7 @@ func (s *Server) RemoveTag(ctx context.Context, req *pb.ClearTagReq, _ *emptypb.
 func (s *Server) Route(ctx context.Context, param *pb.RouteReq, reply *pb.RouteReply) error {
 	rt, ok := s.rts[param.SrvId]
 	if !ok {
-		return fmt.Errorf("service not found: srvId=%s", param.SrvId)
+		return fmt.Errorf("service not register: srvId=%s", param.SrvId)
 	}
 	reply.Success = true
 	reply.Msg = "success"
@@ -68,13 +68,15 @@ func (s *Server) Route(ctx context.Context, param *pb.RouteReq, reply *pb.RouteR
 	return nil
 }
 
+func (s *Server) Unregister(ctx context.Context, param *pb.UnRegisterReq, _ *emptypb.Empty) error {
+	rv, ok := s.rts[param.SrvId]
+	if ok {
+		return rv.Close()
+	}
+	return errors.New("service not register")
+}
+
 func (s *Server) Register(ctx context.Context, param *pb.RegisterRtReq, _ *emptypb.Empty) error {
-	if param.GetRoutePolicy() == 0 {
-
-	}
-	if param.GetDiscoveryType() == 1 {
-
-	}
 	sv := newService(&rpc.ClientOptions{
 		Name:        param.GetSrvName(),
 		EtcdServers: param.GetDiscoverySrvUrl(),

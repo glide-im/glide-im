@@ -1,20 +1,29 @@
 package client
 
 import (
+	"context"
 	"go_im/im/client"
 	"go_im/im/conn"
 	"go_im/im/message"
 	"go_im/service/pb"
+	"go_im/service/route"
 	"go_im/service/rpc"
 )
 
 type Client struct {
-	*rpc.BaseClient
+	rpc.Cli
 }
 
 func NewClient(options *rpc.ClientOptions) *Client {
 	ret := &Client{}
-	ret.BaseClient = rpc.NewBaseClient(options)
+	ret.Cli = rpc.NewBaseClient(options)
+	client.Manager = ret
+	return ret
+}
+
+func NewClientByRouter(srvId string, rtOpts *rpc.ClientOptions) *Client {
+	ret := &Client{}
+	ret.Cli = route.NewRouter(srvId, rtOpts)
 	client.Manager = ret
 	return ret
 }
@@ -31,7 +40,7 @@ func (c *Client) ClientSignIn(oldUid int64, uid int64, device int64) {
 		Device: device,
 	}
 	resp := &pb.Response{}
-	err := c.Call("ClientSignIn", req, resp)
+	err := c.Call(context.Background(), "ClientSignIn", req, resp)
 	if err != nil {
 
 	}
@@ -39,7 +48,7 @@ func (c *Client) ClientSignIn(oldUid int64, uid int64, device int64) {
 
 func (c *Client) UserLogout(uid int64) {
 	resp := &pb.Response{}
-	err := c.Call("UserLogout", &pb.UidRequest{Uid: uid}, resp)
+	err := c.Call(context.Background(), "UserLogout", &pb.UidRequest{Uid: uid}, resp)
 	if err != nil {
 
 	}
@@ -52,7 +61,7 @@ func (c *Client) HandleMessage(from int64, message *message.Message) error {
 	}
 	resp := &pb.Response{}
 
-	err := c.Call("HandleMessage", req, resp)
+	err := c.Call(context.Background(), "HandleMessage", req, resp)
 	if err != nil {
 
 	}
@@ -66,7 +75,7 @@ func (c *Client) EnqueueMessage(uid int64, message *message.Message) {
 		Message: wrapMessage(message),
 	}
 	resp := &pb.Response{}
-	err := c.Call("EnqueueMessage", req, resp)
+	err := c.Call(context.Background(), "EnqueueMessage", req, resp)
 	if err != nil {
 
 	}

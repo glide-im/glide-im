@@ -13,17 +13,21 @@ import (
 )
 
 type Client struct {
-	*rpc.BaseClient
+	rpc.Cli
 }
 
 func NewClient(options *rpc.ClientOptions) *Client {
 	return &Client{
-		BaseClient: rpc.NewBaseClient(options),
+		Cli: rpc.NewBaseClient(options),
 	}
 }
 
+func (c *Client) Unregister(srvId string) error {
+	return c.Call(context.Background(), "Unregister", &pb.UnRegisterReq{SrvId: srvId}, &emptypb.Empty{})
+}
+
 func (c *Client) Register(param *pb.RegisterRtReq, reply *emptypb.Empty) error {
-	return c.Call2(context.Background(), "Register", param, reply)
+	return c.Call(context.Background(), "Register", param, reply)
 }
 
 func (c *Client) SetTag(srvId, tag, value string) error {
@@ -32,11 +36,11 @@ func (c *Client) SetTag(srvId, tag, value string) error {
 		SrvId: srvId,
 		Value: value,
 	}
-	return c.Call("SetTag", req, &emptypb.Empty{})
+	return c.Call(context.Background(), "SetTag", req, &emptypb.Empty{})
 }
 
 func (c *Client) RemoveTag(srvId, tag string) error {
-	return c.Call("RemoveTag", &pb.ClearTagReq{
+	return c.Call(context.Background(), "RemoveTag", &pb.ClearTagReq{
 		SrvId: srvId,
 		Tag:   tag,
 	}, &emptypb.Empty{})
@@ -68,7 +72,7 @@ func (c *Client) Route(ctx context.Context, target string, request, reply interf
 		Extra:  map[string]string{},
 	}
 	routeReply := &pb.RouteReply{}
-	err = c.Call2(ctx, "Route", routeReq, routeReply)
+	err = c.Call(ctx, "Route", routeReq, routeReply)
 
 	if err != nil {
 		return err
@@ -82,7 +86,7 @@ func (c *Client) Route(ctx context.Context, target string, request, reply interf
 			return err
 		}
 	}
-	return c.Call("Route", request, reply)
+	return c.Call(ctx, "Route", request, reply)
 }
 
 func (c *Client) Route2(target string, request interface{}, reply interface{}) error {

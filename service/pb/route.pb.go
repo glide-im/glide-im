@@ -238,6 +238,53 @@ func (x *RegisterRtReq) GetDiscoveryType() int32 {
 	return 0
 }
 
+type UnRegisterReq struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	SrvId string `protobuf:"bytes,1,opt,name=srvId,proto3" json:"srvId,omitempty"`
+}
+
+func (x *UnRegisterReq) Reset() {
+	*x = UnRegisterReq{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_route_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *UnRegisterReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnRegisterReq) ProtoMessage() {}
+
+func (x *UnRegisterReq) ProtoReflect() protoreflect.Message {
+	mi := &file_route_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnRegisterReq.ProtoReflect.Descriptor instead.
+func (*UnRegisterReq) Descriptor() ([]byte, []int) {
+	return file_route_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *UnRegisterReq) GetSrvId() string {
+	if x != nil {
+		return x.SrvId
+	}
+	return ""
+}
+
 type SetTagReq struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -251,7 +298,7 @@ type SetTagReq struct {
 func (x *SetTagReq) Reset() {
 	*x = SetTagReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_route_proto_msgTypes[3]
+		mi := &file_route_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -264,7 +311,7 @@ func (x *SetTagReq) String() string {
 func (*SetTagReq) ProtoMessage() {}
 
 func (x *SetTagReq) ProtoReflect() protoreflect.Message {
-	mi := &file_route_proto_msgTypes[3]
+	mi := &file_route_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -277,7 +324,7 @@ func (x *SetTagReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetTagReq.ProtoReflect.Descriptor instead.
 func (*SetTagReq) Descriptor() ([]byte, []int) {
-	return file_route_proto_rawDescGZIP(), []int{3}
+	return file_route_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *SetTagReq) GetTag() string {
@@ -313,7 +360,7 @@ type ClearTagReq struct {
 func (x *ClearTagReq) Reset() {
 	*x = ClearTagReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_route_proto_msgTypes[4]
+		mi := &file_route_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -326,7 +373,7 @@ func (x *ClearTagReq) String() string {
 func (*ClearTagReq) ProtoMessage() {}
 
 func (x *ClearTagReq) ProtoReflect() protoreflect.Message {
-	mi := &file_route_proto_msgTypes[4]
+	mi := &file_route_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -339,7 +386,7 @@ func (x *ClearTagReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClearTagReq.ProtoReflect.Descriptor instead.
 func (*ClearTagReq) Descriptor() ([]byte, []int) {
-	return file_route_proto_rawDescGZIP(), []int{4}
+	return file_route_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ClearTagReq) GetSrvId() string {
@@ -367,7 +414,7 @@ type RouteReqParam struct {
 func (x *RouteReqParam) Reset() {
 	*x = RouteReqParam{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_route_proto_msgTypes[5]
+		mi := &file_route_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -380,7 +427,7 @@ func (x *RouteReqParam) String() string {
 func (*RouteReqParam) ProtoMessage() {}
 
 func (x *RouteReqParam) ProtoReflect() protoreflect.Message {
-	mi := &file_route_proto_msgTypes[5]
+	mi := &file_route_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -393,7 +440,7 @@ func (x *RouteReqParam) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RouteReqParam.ProtoReflect.Descriptor instead.
 func (*RouteReqParam) Descriptor() ([]byte, []int) {
-	return file_route_proto_rawDescGZIP(), []int{5}
+	return file_route_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *RouteReqParam) GetData() *anypb.Any {
@@ -443,19 +490,22 @@ var file_route_proto_rawDesc = []byte{
 	0x76, 0x65, 0x72, 0x79, 0x53, 0x72, 0x76, 0x55, 0x72, 0x6c, 0x12, 0x24, 0x0a, 0x0d, 0x64, 0x69,
 	0x73, 0x63, 0x6f, 0x76, 0x65, 0x72, 0x79, 0x54, 0x79, 0x70, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28,
 	0x05, 0x52, 0x0d, 0x64, 0x69, 0x73, 0x63, 0x6f, 0x76, 0x65, 0x72, 0x79, 0x54, 0x79, 0x70, 0x65,
-	0x22, 0x49, 0x0a, 0x09, 0x53, 0x65, 0x74, 0x54, 0x61, 0x67, 0x52, 0x65, 0x71, 0x12, 0x10, 0x0a,
-	0x03, 0x74, 0x61, 0x67, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x74, 0x61, 0x67, 0x12,
-	0x14, 0x0a, 0x05, 0x73, 0x72, 0x76, 0x49, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05,
-	0x73, 0x72, 0x76, 0x49, 0x64, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x03,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x35, 0x0a, 0x0b, 0x43,
-	0x6c, 0x65, 0x61, 0x72, 0x54, 0x61, 0x67, 0x52, 0x65, 0x71, 0x12, 0x14, 0x0a, 0x05, 0x73, 0x72,
-	0x76, 0x49, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x73, 0x72, 0x76, 0x49, 0x64,
-	0x12, 0x10, 0x0a, 0x03, 0x74, 0x61, 0x67, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x74,
-	0x61, 0x67, 0x22, 0x39, 0x0a, 0x0d, 0x52, 0x6f, 0x75, 0x74, 0x65, 0x52, 0x65, 0x71, 0x50, 0x61,
-	0x72, 0x61, 0x6d, 0x12, 0x28, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x42, 0x05, 0x5a,
-	0x03, 0x2f, 0x70, 0x62, 0x50, 0x00, 0x50, 0x01, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x22, 0x25, 0x0a, 0x0d, 0x55, 0x6e, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65,
+	0x71, 0x12, 0x14, 0x0a, 0x05, 0x73, 0x72, 0x76, 0x49, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x05, 0x73, 0x72, 0x76, 0x49, 0x64, 0x22, 0x49, 0x0a, 0x09, 0x53, 0x65, 0x74, 0x54, 0x61,
+	0x67, 0x52, 0x65, 0x71, 0x12, 0x10, 0x0a, 0x03, 0x74, 0x61, 0x67, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x03, 0x74, 0x61, 0x67, 0x12, 0x14, 0x0a, 0x05, 0x73, 0x72, 0x76, 0x49, 0x64, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x73, 0x72, 0x76, 0x49, 0x64, 0x12, 0x14, 0x0a, 0x05,
+	0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c,
+	0x75, 0x65, 0x22, 0x35, 0x0a, 0x0b, 0x43, 0x6c, 0x65, 0x61, 0x72, 0x54, 0x61, 0x67, 0x52, 0x65,
+	0x71, 0x12, 0x14, 0x0a, 0x05, 0x73, 0x72, 0x76, 0x49, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x05, 0x73, 0x72, 0x76, 0x49, 0x64, 0x12, 0x10, 0x0a, 0x03, 0x74, 0x61, 0x67, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x74, 0x61, 0x67, 0x22, 0x39, 0x0a, 0x0d, 0x52, 0x6f, 0x75,
+	0x74, 0x65, 0x52, 0x65, 0x71, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x12, 0x28, 0x0a, 0x04, 0x64, 0x61,
+	0x74, 0x61, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
+	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x04,
+	0x64, 0x61, 0x74, 0x61, 0x42, 0x05, 0x5a, 0x03, 0x2f, 0x70, 0x62, 0x50, 0x00, 0x50, 0x01, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -470,22 +520,23 @@ func file_route_proto_rawDescGZIP() []byte {
 	return file_route_proto_rawDescData
 }
 
-var file_route_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_route_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_route_proto_goTypes = []interface{}{
 	(*RouteReq)(nil),      // 0: com.github.dengzii.im.proto.RouteReq
 	(*RouteReply)(nil),    // 1: com.github.dengzii.im.proto.RouteReply
 	(*RegisterRtReq)(nil), // 2: com.github.dengzii.im.proto.RegisterRtReq
-	(*SetTagReq)(nil),     // 3: com.github.dengzii.im.proto.SetTagReq
-	(*ClearTagReq)(nil),   // 4: com.github.dengzii.im.proto.ClearTagReq
-	(*RouteReqParam)(nil), // 5: com.github.dengzii.im.proto.RouteReqParam
-	nil,                   // 6: com.github.dengzii.im.proto.RouteReq.ExtraEntry
-	(*anypb.Any)(nil),     // 7: google.protobuf.Any
+	(*UnRegisterReq)(nil), // 3: com.github.dengzii.im.proto.UnRegisterReq
+	(*SetTagReq)(nil),     // 4: com.github.dengzii.im.proto.SetTagReq
+	(*ClearTagReq)(nil),   // 5: com.github.dengzii.im.proto.ClearTagReq
+	(*RouteReqParam)(nil), // 6: com.github.dengzii.im.proto.RouteReqParam
+	nil,                   // 7: com.github.dengzii.im.proto.RouteReq.ExtraEntry
+	(*anypb.Any)(nil),     // 8: google.protobuf.Any
 }
 var file_route_proto_depIdxs = []int32{
-	7, // 0: com.github.dengzii.im.proto.RouteReq.params:type_name -> google.protobuf.Any
-	6, // 1: com.github.dengzii.im.proto.RouteReq.extra:type_name -> com.github.dengzii.im.proto.RouteReq.ExtraEntry
-	7, // 2: com.github.dengzii.im.proto.RouteReply.reply:type_name -> google.protobuf.Any
-	7, // 3: com.github.dengzii.im.proto.RouteReqParam.data:type_name -> google.protobuf.Any
+	8, // 0: com.github.dengzii.im.proto.RouteReq.params:type_name -> google.protobuf.Any
+	7, // 1: com.github.dengzii.im.proto.RouteReq.extra:type_name -> com.github.dengzii.im.proto.RouteReq.ExtraEntry
+	8, // 2: com.github.dengzii.im.proto.RouteReply.reply:type_name -> google.protobuf.Any
+	8, // 3: com.github.dengzii.im.proto.RouteReqParam.data:type_name -> google.protobuf.Any
 	4, // [4:4] is the sub-list for method output_type
 	4, // [4:4] is the sub-list for method input_type
 	4, // [4:4] is the sub-list for extension type_name
@@ -537,7 +588,7 @@ func file_route_proto_init() {
 			}
 		}
 		file_route_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SetTagReq); i {
+			switch v := v.(*UnRegisterReq); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -549,7 +600,7 @@ func file_route_proto_init() {
 			}
 		}
 		file_route_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ClearTagReq); i {
+			switch v := v.(*SetTagReq); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -561,6 +612,18 @@ func file_route_proto_init() {
 			}
 		}
 		file_route_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ClearTagReq); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_route_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*RouteReqParam); i {
 			case 0:
 				return &v.state
@@ -579,7 +642,7 @@ func file_route_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_route_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
