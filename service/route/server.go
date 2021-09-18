@@ -51,9 +51,9 @@ func (s *Server) RemoveTag(ctx context.Context, req *pb.ClearTagReq, _ *emptypb.
 }
 
 func (s *Server) Route(ctx context.Context, param *pb.RouteReq, reply *pb.RouteReply) error {
-	rt, ok := s.rts[param.SrvId]
+	rt, ok := s.rts[param.GetSrvId()]
 	if !ok {
-		return fmt.Errorf("service not register: srvId=%s", param.SrvId)
+		return fmt.Errorf("service not register: srvId=%s", param.GetSrvId())
 	}
 	reply.Success = true
 	reply.Msg = "success"
@@ -78,18 +78,19 @@ func (s *Server) Unregister(ctx context.Context, param *pb.UnRegisterReq, _ *emp
 
 func (s *Server) Register(ctx context.Context, param *pb.RegisterRtReq, _ *emptypb.Empty) error {
 	sv := newService(&rpc.ClientOptions{
-		Name:        param.GetSrvName(),
+		Name:        param.GetSrvId(),
 		EtcdServers: param.GetDiscoverySrvUrl(),
 	})
 	err := sv.BaseClient.Run()
 	if err != nil {
 		return err
 	}
-	_, ok := s.rts[param.SrvId]
+	old, ok := s.rts[param.GetSrvId()]
 	if ok {
-		// override
+		err := old.Close()
+		logger.E("route register error", err)
 	}
-	s.rts[param.SrvId] = sv
-	logger.D("service registered: %s", param.SrvName)
+	s.rts[param.GetSrvId()] = sv
+	logger.D("service registered: %s", param.GetSrvId())
 	return nil
 }

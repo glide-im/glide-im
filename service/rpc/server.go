@@ -25,7 +25,7 @@ type ServerOptions struct {
 type BaseServer struct {
 	Srv *server.Server
 
-	options      *ServerOptions
+	Options      *ServerOptions
 	etcdRegister *serverplugin.EtcdV3RegisterPlugin
 	reg          []func(srv *BaseServer) error
 }
@@ -34,7 +34,7 @@ func NewBaseServer(options *ServerOptions) *BaseServer {
 	ret := &BaseServer{
 		Srv: server.NewServer(),
 	}
-	ret.options = options
+	ret.Options = options
 	ret.etcdRegister = &serverplugin.EtcdV3RegisterPlugin{
 		EtcdServers:    options.EtcdServers,
 		BasePath:       BaseServicePath,
@@ -52,8 +52,8 @@ func (s *BaseServer) Register(name string, sv interface{}) {
 
 func (s *BaseServer) Run() error {
 
-	addr := fmt.Sprintf("%s:%d", s.options.Addr, s.options.Port)
-	s.etcdRegister.ServiceAddress = s.options.Network + "@" + addr
+	addr := fmt.Sprintf("%s:%d", s.Options.Addr, s.Options.Port)
+	s.etcdRegister.ServiceAddress = s.Options.Network + "@" + addr
 
 	err := s.etcdRegister.Start()
 	if err != nil {
@@ -67,5 +67,5 @@ func (s *BaseServer) Run() error {
 		}
 	}
 
-	return s.Srv.Serve(s.options.Network, addr)
+	return s.Srv.Serve(s.Options.Network, addr)
 }

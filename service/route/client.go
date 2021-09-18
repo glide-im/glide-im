@@ -23,11 +23,11 @@ func NewClient(options *rpc.ClientOptions) *Client {
 }
 
 func (c *Client) Unregister(srvId string) error {
-	return c.Call(context.Background(), "Unregister", &pb.UnRegisterReq{SrvId: srvId}, &emptypb.Empty{})
+	return c.Broadcast("Unregister", &pb.UnRegisterReq{SrvId: srvId}, &emptypb.Empty{})
 }
 
 func (c *Client) Register(param *pb.RegisterRtReq, reply *emptypb.Empty) error {
-	return c.Call(context.Background(), "Register", param, reply)
+	return c.Broadcast("Register", param, reply)
 }
 
 func (c *Client) SetTag(srvId, tag, value string) error {
@@ -36,11 +36,11 @@ func (c *Client) SetTag(srvId, tag, value string) error {
 		SrvId: srvId,
 		Value: value,
 	}
-	return c.Call(context.Background(), "SetTag", req, &emptypb.Empty{})
+	return c.Broadcast("SetTag", req, &emptypb.Empty{})
 }
 
 func (c *Client) RemoveTag(srvId, tag string) error {
-	return c.Call(context.Background(), "RemoveTag", &pb.ClearTagReq{
+	return c.Broadcast("RemoveTag", &pb.ClearTagReq{
 		SrvId: srvId,
 		Tag:   tag,
 	}, &emptypb.Empty{})
@@ -96,4 +96,20 @@ func (c *Client) Route2(target string, request interface{}, reply interface{}) e
 func (c *Client) RouteByTag(target, tag string, request, reply interface{}) error {
 	ctx := context.WithValue(context.Background(), share.ReqMetaDataKey, map[string]string{ExtraTag: tag})
 	return c.Route(ctx, target, request, reply)
+}
+
+func RegisterService(srvId string, etcd []string) error {
+	cli := NewClient(&rpc.ClientOptions{
+		Name:        "route",
+		EtcdServers: etcd,
+	})
+	defer func() {
+		_ = cli.Close()
+	}()
+
+	req := &pb.RegisterRtReq{
+		SrvId:           srvId,
+		DiscoverySrvUrl: etcd,
+	}
+	return cli.Register(req, &emptypb.Empty{})
 }

@@ -6,7 +6,6 @@ import (
 	"go_im/service/rpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"testing"
-	"time"
 )
 
 var etcdSrv = []string{"127.0.0.1:2379", "127.0.0.1:2381", "127.0.0.1:2383"}
@@ -17,15 +16,26 @@ func TestNewServer(t *testing.T) {
 		Name:        "route",
 		Network:     "tcp",
 		Addr:        "127.0.0.1",
-		Port:        8975,
+		Port:        8977,
 		EtcdServers: etcdSrv,
 	}
 
 	routeServer := NewServer(&op)
-	go func() {
-		time.Sleep(time.Second * 1)
-		TestClient_Register(t)
-	}()
+	err := routeServer.Run()
+	t.Error(err)
+}
+
+func TestNewServer2(t *testing.T) {
+
+	op := rpc.ServerOptions{
+		Name:        "route",
+		Network:     "tcp",
+		Addr:        "127.0.0.1",
+		Port:        8976,
+		EtcdServers: etcdSrv,
+	}
+
+	routeServer := NewServer(&op)
 	err := routeServer.Run()
 	t.Error(err)
 }
