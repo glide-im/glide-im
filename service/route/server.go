@@ -88,7 +88,9 @@ func (s *Server) Register(ctx context.Context, param *pb.RegisterRtReq, _ *empty
 	old, ok := s.rts[param.GetSrvId()]
 	if ok {
 		err := old.Close()
-		logger.E("route register error", err)
+		if err != nil {
+			logger.E("route register error", err)
+		}
 	}
 	s.rts[param.GetSrvId()] = sv
 	logger.D("service registered: %s", param.GetSrvId())

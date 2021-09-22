@@ -86,7 +86,7 @@ func (c *Client) Route(ctx context.Context, target string, request, reply interf
 			return err
 		}
 	}
-	return c.Call(ctx, "Route", request, reply)
+	return nil
 }
 
 func (c *Client) Route2(target string, request interface{}, reply interface{}) error {
@@ -103,9 +103,9 @@ func RegisterService(srvId string, etcd []string) error {
 		Name:        "route",
 		EtcdServers: etcd,
 	})
-	defer func() {
-		_ = cli.Close()
-	}()
+	//defer func() {
+	//	_ = cli.Close()
+	//}()
 
 	req := &pb.RegisterRtReq{
 		SrvId:           srvId,

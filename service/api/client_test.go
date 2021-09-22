@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/stretchr/testify/assert"
 	"go_im/im/message"
+	"go_im/pkg/logger"
 	"go_im/service/route"
 	"go_im/service/rpc"
 	"testing"
@@ -39,6 +40,7 @@ func TestNewClientByRouter(t *testing.T) {
 	})
 	defer cli.Close()
 
+	logger.D("=%s", "1")
 	for i := 0; i < 3; i++ {
 		cli.Handle(1, &message.Message{
 			Seq:    1,
