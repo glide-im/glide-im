@@ -2,43 +2,55 @@ package client
 
 import (
 	"go_im/im"
-	"go_im/im/client"
 	"go_im/im/conn"
 	"go_im/im/message"
+	"go_im/service/route"
+	"go_im/service/rpc"
 )
 
-type Manager struct {
-	appId int64
-	m     client.IClientManager
+type manager struct {
+	appId  int64
+	m      *im.ClientManagerImpl
+	router *route.Client
 }
 
-func NewManager() *Manager {
-	ret := &Manager{}
+func newManager(etcd []string) (*manager, error) {
+	ret := &manager{}
 	ret.m = im.NewClientManager()
-	return ret
+	options := &rpc.ClientOptions{
+		Name:        route.ServiceName,
+		EtcdServers: etcd,
+	}
+	var err error
+	ret.router, err = route.NewClient(options)
+	if err != nil {
+		return nil, err
+	}
+	return ret, nil
 }
 
-func (m *Manager) ClientConnected(conn conn.Connection) int64 {
-	connId := m.m.ClientConnected(conn)
-	return connId
+func (m *manager) ClientConnected(conn conn.Connection) int64 {
+	c := m.m.ClientConnected(conn)
+	m.m.AllClient()
+	return c
 }
 
-func (m *Manager) ClientSignIn(oldUid int64, uid int64, device int64) {
+func (m *manager) ClientSignIn(oldUid int64, uid int64, device int64) {
 	m.m.ClientSignIn(oldUid, uid, device)
 }
 
-func (m *Manager) UserLogout(uid int64) {
+func (m *manager) UserLogout(uid int64) {
 	m.m.UserLogout(uid)
 }
 
-func (m *Manager) HandleMessage(from int64, message *message.Message) error {
+func (m *manager) HandleMessage(from int64, message *message.Message) error {
 	return m.m.HandleMessage(from, message)
 }
 
-func (m *Manager) EnqueueMessage(uid int64, message *message.Message) {
+func (m *manager) EnqueueMessage(uid int64, message *message.Message) {
 	m.m.EnqueueMessage(uid, message)
 }
 
-func (m *Manager) AllClient() []int64 {
+func (m *manager) AllClient() []int64 {
 	return m.m.AllClient()
 }

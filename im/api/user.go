@@ -237,7 +237,6 @@ func (a *UserApi) GetOnlineUser(msg *RequestInfo) error {
 	allClient := client.Manager.AllClient()
 	users := make([]u, len(allClient))
 
-	client.Manager.Update()
 	for _, k := range allClient {
 		us, err := dao.UserDao.GetUser(k)
 		if err != nil || len(us) == 0 {

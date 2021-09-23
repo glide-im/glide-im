@@ -5,6 +5,7 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"time"
 )
 
 func E(msg string, logs ...interface{}) {
@@ -26,7 +27,9 @@ func W(msg string) {
 }
 
 func log(level string, log string) {
-	fmt.Printf("%s: %s\n", level, trace(log))
+	t := time.Now().Format("2006/01/02 15:04:05")
+	line, _ := callerInfo()
+	fmt.Printf("%s %s %s: %s\n", level, t, line, log)
 }
 
 func trace(log string) string {
@@ -40,7 +43,7 @@ func trace(log string) string {
 
 func callerInfo() (string, string) {
 	rpc := make([]uintptr, 1)
-	n := runtime.Callers(5, rpc[:])
+	n := runtime.Callers(4, rpc[:])
 	if n < 1 {
 		return "-", "-"
 	}

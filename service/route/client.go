@@ -105,7 +105,7 @@ func (c *Client) RouteByTag(target, tag string, request, reply interface{}) erro
 
 func RegisterService(srvId string, etcd []string) error {
 	cli, err := NewClient(&rpc.ClientOptions{
-		Name:        "route",
+		Name:        ServiceName,
 		EtcdServers: etcd,
 	})
 	defer func() {

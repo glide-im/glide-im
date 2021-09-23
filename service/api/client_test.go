@@ -29,7 +29,7 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestRegisterToRoute(t *testing.T) {
-	assert.Nil(t, route.RegisterService("api", etcd))
+	assert.Nil(t, route.RegisterService("client", etcd))
 }
 
 func TestNewClientByRouter(t *testing.T) {

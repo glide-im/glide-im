@@ -13,7 +13,7 @@ var etcdSrv = []string{"127.0.0.1:2379", "127.0.0.1:2381", "127.0.0.1:2383"}
 func TestNewServer(t *testing.T) {
 
 	op := rpc.ServerOptions{
-		Name:        "route",
+		Name:        ServiceName,
 		Network:     "tcp",
 		Addr:        "127.0.0.1",
 		Port:        8977,
@@ -28,7 +28,7 @@ func TestNewServer(t *testing.T) {
 func TestNewServer2(t *testing.T) {
 
 	op := rpc.ServerOptions{
-		Name:        "route",
+		Name:        ServiceName,
 		Network:     "tcp",
 		Addr:        "127.0.0.1",
 		Port:        8976,
@@ -90,8 +90,8 @@ func TestClient_RemoveTag(t *testing.T) {
 }
 
 func newClient() *Client {
-	client := NewClient(&rpc.ClientOptions{
-		Name:        "route",
+	client, _ := NewClient(&rpc.ClientOptions{
+		Name:        ServiceName,
 		EtcdServers: etcdSrv,
 	})
 	err := client.Run()

@@ -16,6 +16,11 @@ func NewServer(options *rpc.ServerOptions) *Server {
 	s := &Server{
 		BaseServer: rpc.NewBaseServer(options),
 	}
+	var err error
+	client.Manager, err = newManager(options.EtcdServers)
+	if err != nil {
+
+	}
 	s.Register(options.Name, s)
 	return s
 }

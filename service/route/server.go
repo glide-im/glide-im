@@ -12,6 +12,10 @@ import (
 )
 
 const (
+	ServiceName = "route"
+)
+
+const (
 	ExtraTag        = "rt_extra_tag"
 	ExtraSrvUrl     = "rt_extra_srv_url"
 	ExtraFrom       = "rt_extra_from"

@@ -13,22 +13,20 @@ import (
 )
 
 type ClientManagerImpl struct {
-	clients     *clientMap
-	nextConnUid *comm.AtomicInt64
+	clients *clientMap
+	idGen   *dao.TempIdGen
 }
 
 func NewClientManager() *ClientManagerImpl {
 	ret := new(ClientManagerImpl)
 	ret.clients = newClientMap()
-	ret.nextConnUid = new(comm.AtomicInt64)
-	ret.nextConnUid.Set(-1)
+	ret.idGen = &dao.TempIdGen{}
 	return ret
 }
 
 func (c *ClientManagerImpl) ClientConnected(conn conn.Connection) int64 {
-	connUid := c.nextConnUid.Get()
+	connUid := c.idGen.Obtain()
 	ret := client.NewClient(conn, connUid)
-	c.nextConnUid.Set(connUid - 1)
 	c.clients.Put(connUid, ret)
 	ret.Run()
 	return connUid
@@ -41,6 +39,7 @@ func (c *ClientManagerImpl) ClientSignIn(oldUid, uid int64, device int64) {
 		return
 	}
 	cl.SignIn(uid, device)
+	c.idGen.Recycle(oldUid)
 	c.clients.Delete(oldUid)
 	c.clients.Put(uid, cl)
 }
