@@ -14,18 +14,26 @@ type Client struct {
 	rpc.Cli
 }
 
-func NewClient(options *rpc.ClientOptions) *Client {
+func NewClient(options *rpc.ClientOptions) (*Client, error) {
 	ret := &Client{}
-	ret.Cli = rpc.NewBaseClient(options)
+	var err error
+	ret.Cli, err = rpc.NewBaseClient(options)
+	if err != nil {
+		return nil, err
+	}
 	client.Manager = ret
-	return ret
+	return ret, nil
 }
 
-func NewClientByRouter(srvId string, rtOpts *rpc.ClientOptions) *Client {
+func NewClientByRouter(srvId string, rtOpts *rpc.ClientOptions) (*Client, error) {
 	ret := &Client{}
-	ret.Cli = route.NewRouter(srvId, rtOpts)
+	var err error
+	ret.Cli, err = route.NewRouter(srvId, rtOpts)
+	if err != nil {
+		return nil, err
+	}
 	client.Manager = ret
-	return ret
+	return ret, nil
 }
 
 // idle function

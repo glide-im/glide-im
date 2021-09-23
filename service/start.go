@@ -76,7 +76,7 @@ func runApiService(t ServerType) {
 	} else {
 		clientOpts := defaultCliOpts
 		clientOpts.Port = PortApiSrv
-		c := api.NewClient(&clientOpts)
+		c, _ := api.NewClient(&clientOpts)
 		api2.SetImpl(c)
 		run(c)
 	}
@@ -103,7 +103,7 @@ func runClientService(t ServerType) {
 	} else {
 		clientOpts := defaultCliOpts
 		clientOpts.Port = PortClientSrv
-		c := client.NewClient(&clientOpts)
+		c, _ := client.NewClient(&clientOpts)
 		client2.Manager = c
 		run(c)
 	}
@@ -119,7 +119,7 @@ func runGroupService(t ServerType) {
 	} else {
 		clientOpts := defaultCliOpts
 		clientOpts.Port = PortGroupSrv
-		c := group.NewClient(&clientOpts)
+		c, _ := group.NewClient(&clientOpts)
 		group2.Manager = c
 		run(c)
 	}

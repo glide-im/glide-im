@@ -77,11 +77,14 @@ func (s *Server) Unregister(ctx context.Context, param *pb.UnRegisterReq, _ *emp
 }
 
 func (s *Server) Register(ctx context.Context, param *pb.RegisterRtReq, _ *emptypb.Empty) error {
-	sv := newService(&rpc.ClientOptions{
+	sv, err := newService(&rpc.ClientOptions{
 		Name:        param.GetSrvId(),
 		EtcdServers: param.GetDiscoverySrvUrl(),
 	})
-	err := sv.BaseClient.Run()
+	if err != nil {
+		return err
+	}
+	err = sv.BaseClient.Run()
 	if err != nil {
 		return err
 	}

@@ -3,7 +3,6 @@ package api
 import (
 	"github.com/stretchr/testify/assert"
 	"go_im/im/message"
-	"go_im/pkg/logger"
 	"go_im/service/route"
 	"go_im/service/rpc"
 	"testing"
@@ -19,7 +18,7 @@ func TestNewClient(t *testing.T) {
 	}
 	opts.SerializeType = rpc.SerialTypeProtoBuffWrapAny
 	//opts.SerializeType = protocol.ProtoBuffer
-	client := NewClient(opts)
+	client, _ := NewClient(opts)
 	defer client.Close()
 	err := client.Run()
 	if err != nil {
@@ -34,18 +33,18 @@ func TestRegisterToRoute(t *testing.T) {
 }
 
 func TestNewClientByRouter(t *testing.T) {
-	cli := NewClientByRouter("api", &rpc.ClientOptions{
+	cli, _ := NewClientByRouter("api", &rpc.ClientOptions{
 		Name:        "route",
 		EtcdServers: etcd,
 	})
 	defer cli.Close()
 
-	logger.D("=%s", "1")
-	for i := 0; i < 3; i++ {
-		cli.Handle(1, &message.Message{
+	for i := 0; i < 5; i++ {
+		r := cli.Echo(1, &message.Message{
 			Seq:    1,
 			Action: "api.app.echo",
 			Data:   "this is data",
 		})
+		t.Log(r.Ok, r.Message)
 	}
 }

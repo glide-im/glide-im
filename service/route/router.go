@@ -11,11 +11,15 @@ type RouterCli struct {
 	srvId string
 }
 
-func NewRouter(srvId string, routeOpts *rpc.ClientOptions) *RouterCli {
-	return &RouterCli{
-		rt:    NewClient(routeOpts),
-		srvId: srvId,
+func NewRouter(srvId string, routeOpts *rpc.ClientOptions) (*RouterCli, error) {
+	c, err := NewClient(routeOpts)
+	if err != nil {
+		return nil, err
 	}
+	return &RouterCli{
+		rt:    c,
+		srvId: srvId,
+	}, nil
 }
 
 func (r *RouterCli) Call(ctx context.Context, fn string, request, reply interface{}) error {

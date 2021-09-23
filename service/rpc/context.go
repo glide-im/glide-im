@@ -9,10 +9,12 @@ type Ctx struct {
 	context.Context
 }
 
+func NewCtxFrom(c context.Context) *Ctx {
+	return &Ctx{c}
+}
+
 func NewCtx() *Ctx {
-	return &Ctx{
-		context.Background(),
-	}
+	return NewCtxFrom(context.Background())
 }
 
 func (c *Ctx) PutReqExtra(k string, v string) *Ctx {
@@ -35,4 +37,24 @@ func (c *Ctx) PutResExtra(k string, v string) *Ctx {
 	m := c.Context.Value(share.ResMetaDataKey).(map[string]string)
 	m[k] = v
 	return c
+}
+
+func (c *Ctx) GetReqExtra(k string) (string, bool) {
+	mate := c.Context.Value(share.ReqMetaDataKey)
+	if mate == nil {
+		return "", false
+	}
+	m := c.Context.Value(share.ReqMetaDataKey).(map[string]string)
+	v, ok := m[k]
+	return v, ok
+}
+
+func (c *Ctx) GetResExtra(k string) (string, bool) {
+	mate := c.Context.Value(share.ResMetaDataKey)
+	if mate == nil {
+		return "", false
+	}
+	m := c.Context.Value(share.ResMetaDataKey).(map[string]string)
+	v, ok := m[k]
+	return v, ok
 }

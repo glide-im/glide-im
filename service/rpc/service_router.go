@@ -2,22 +2,40 @@ package rpc
 
 import (
 	"context"
+	"github.com/smallnest/rpcx/client"
 	"github.com/smallnest/rpcx/share"
 )
 
-type HostRouter struct {
-	services map[string]string
+type roundRobinSelector struct {
+	servers []string
+	i       int
 }
 
-func NewHostRouter() *HostRouter {
-	return &HostRouter{services: make(map[string]string)}
+func NewServerSelector() client.Selector {
+	return &roundRobinSelector{servers: []string{}}
 }
 
-func (h *HostRouter) Select(ctx context.Context, servicePath, serviceMethod string, args interface{}) string {
-	for k := range h.services {
-		return k
+func (s *roundRobinSelector) Select(ctx context.Context, servicePath, serviceMethod string, args interface{}) string {
+
+	c := NewCtxFrom(ctx)
+	c.PutReqExtra("", "")
+
+	ss := s.servers
+	if len(ss) == 0 {
+		return ""
 	}
-	return ""
+	i := s.i
+	i = i % len(ss)
+	s.i = i + 1
+	return ss[i]
+}
+
+func (s *roundRobinSelector) UpdateServer(servers map[string]string) {
+	ss := make([]string, 0, len(servers))
+	for k := range servers {
+		ss = append(ss, k)
+	}
+	s.servers = ss
 }
 
 func LogContext(ctx context.Context) {
@@ -31,11 +49,5 @@ func LogContext(ctx context.Context) {
 	}
 	for k, v := range m2 {
 		print("res_mate_data: ", k, ":", v, "\n")
-	}
-}
-
-func (h *HostRouter) UpdateServer(servers map[string]string) {
-	for k, v := range servers {
-		h.services[k] = v
 	}
 }

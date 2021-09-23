@@ -14,18 +14,48 @@ type Client struct {
 	rpc.Cli
 }
 
-func NewClient(options *rpc.ClientOptions) *Client {
+func NewClient(options *rpc.ClientOptions) (*Client, error) {
 	ret := &Client{}
-	ret.Cli = rpc.NewBaseClient(options)
+	var err error
+	ret.Cli, err = rpc.NewBaseClient(options)
+	if err != nil {
+		return nil, err
+	}
 	api.SetImpl(ret)
-	return ret
+	return ret, nil
 }
 
-func NewClientByRouter(srvId string, rtOpts *rpc.ClientOptions) *Client {
+func NewClientByRouter(srvId string, rtOpts *rpc.ClientOptions) (*Client, error) {
 	ret := &Client{}
-	ret.Cli = route.NewRouter(srvId, rtOpts)
+	var err error
+	ret.Cli, err = route.NewRouter(srvId, rtOpts)
+	if err != nil {
+		return nil, err
+	}
 	api.SetImpl(ret)
-	return ret
+	return ret, nil
+}
+
+func (c *Client) Echo(uid int64, message *message.Message) *pb.Response {
+	m := pb.Message{
+		Seq:    message.Seq,
+		Action: string(message.Action),
+		Data:   message.Data,
+	}
+	arg := &pb.HandleRequest{
+		Uid:     uid,
+		Message: &m,
+	}
+
+	resp := &pb.Response{
+		Ok:      false,
+		Message: "",
+	}
+	err := c.Call(rpc.NewCtx(), "Echo", arg, resp)
+	if err != nil {
+		panic(err)
+	}
+	return resp
 }
 
 func (c *Client) Handle(uid int64, message *message.Message) {

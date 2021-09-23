@@ -16,10 +16,15 @@ type Client struct {
 	rpc.Cli
 }
 
-func NewClient(options *rpc.ClientOptions) *Client {
-	return &Client{
-		Cli: rpc.NewBaseClient(options),
+func NewClient(options *rpc.ClientOptions) (*Client, error) {
+	c, err := rpc.NewBaseClient(options)
+	if err != nil {
+		return nil, err
 	}
+	cli := &Client{
+		Cli: c,
+	}
+	return cli, nil
 }
 
 func (c *Client) Unregister(srvId string) error {
@@ -99,13 +104,16 @@ func (c *Client) RouteByTag(target, tag string, request, reply interface{}) erro
 }
 
 func RegisterService(srvId string, etcd []string) error {
-	cli := NewClient(&rpc.ClientOptions{
+	cli, err := NewClient(&rpc.ClientOptions{
 		Name:        "route",
 		EtcdServers: etcd,
 	})
-	//defer func() {
-	//	_ = cli.Close()
-	//}()
+	defer func() {
+		_ = cli.Close()
+	}()
+	if err != nil {
+		return err
+	}
 
 	req := &pb.RegisterRtReq{
 		SrvId:           srvId,

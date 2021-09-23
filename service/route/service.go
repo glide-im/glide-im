@@ -13,18 +13,22 @@ type service struct {
 	selector *selector
 }
 
-func newService(options *rpc.ClientOptions) *service {
+func newService(options *rpc.ClientOptions) (*service, error) {
 	// unmarshal Any to exactly type
 	options.SerializeType = rpc.SerialTypeProtoBuffWrapAny
 	s := newSelector()
 	options.Selector = s
 
+	c, err := rpc.NewBaseClient(options)
+	if err != nil {
+		return nil, err
+	}
 	ret := &service{
-		BaseClient: rpc.NewBaseClient(options),
+		BaseClient: c,
 		name:       options.Name,
 		selector:   s,
 	}
-	return ret
+	return ret, nil
 }
 
 func (r *service) addTag(tag string, value string) {
@@ -36,7 +40,6 @@ func (r *service) removeTag(tag string) {
 }
 
 func (r *service) route(ctx context.Context, fn string, param *pb.RouteReq, reply *pb.RouteReply) error {
-	_ = r.Call(ctx, fn, param.GetParams(), reply.GetReply())
 	logger.D("%s.%s", r.name, fn)
-	return nil
+	return r.Call(ctx, fn, param.GetParams(), reply.GetReply())
 }

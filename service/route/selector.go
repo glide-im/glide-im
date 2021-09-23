@@ -5,6 +5,7 @@ import (
 	"github.com/smallnest/rpcx/client"
 	"github.com/smallnest/rpcx/share"
 	"go_im/pkg/logger"
+	"go_im/service/rpc"
 )
 
 type selector struct {
@@ -17,7 +18,7 @@ func newSelector() *selector {
 	s := map[string]string{}
 	return &selector{
 		services: s,
-		round:    newRoundRobinSelector(),
+		round:    rpc.NewServerSelector(),
 		tags:     map[string]string{},
 	}
 }
@@ -42,34 +43,4 @@ func (r *selector) UpdateServer(servers map[string]string) {
 	for k, v := range servers {
 		r.services[k] = v
 	}
-}
-
-type roundRobinSelector struct {
-	servers []string
-	i       int
-}
-
-func newRoundRobinSelector() client.Selector {
-	return &roundRobinSelector{servers: []string{}}
-}
-
-func (s *roundRobinSelector) Select(ctx context.Context, servicePath, serviceMethod string, args interface{}) string {
-	ss := s.servers
-	if len(ss) == 0 {
-		return ""
-	}
-	i := s.i
-	i = i % len(ss)
-	s.i = i + 1
-
-	return ss[i]
-}
-
-func (s *roundRobinSelector) UpdateServer(servers map[string]string) {
-	ss := make([]string, 0, len(servers))
-	for k := range servers {
-		ss = append(ss, k)
-	}
-
-	s.servers = ss
 }
