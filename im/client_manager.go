@@ -7,6 +7,7 @@ import (
 	"go_im/im/comm"
 	"go_im/im/conn"
 	"go_im/im/dao"
+	"go_im/im/dao/uid"
 	"go_im/im/group"
 	"go_im/im/message"
 	"go_im/pkg/logger"
@@ -14,44 +15,41 @@ import (
 
 type ClientManagerImpl struct {
 	clients *clientMap
-	idGen   *dao.TempIdGen
 }
 
 func NewClientManager() *ClientManagerImpl {
 	ret := new(ClientManagerImpl)
 	ret.clients = newClientMap()
-	ret.idGen = &dao.TempIdGen{}
 	return ret
 }
 
 func (c *ClientManagerImpl) ClientConnected(conn conn.Connection) int64 {
-	connUid := c.idGen.Obtain()
+	// 获取一个临时 uid 标识这个连接
+	connUid := uid.GenTemp()
 	ret := client.NewClient(conn, connUid)
 	c.clients.Put(connUid, ret)
+	// 开始处理连接的消息
 	ret.Run()
 	return connUid
 }
 
-func (c *ClientManagerImpl) ClientSignIn(oldUid, uid int64, device int64) {
-	logger.I("ClientManager.ClientSignIn: connUid=%d, uid=%d", oldUid, uid)
+func (c *ClientManagerImpl) ClientSignIn(oldUid, uid_ int64, device int64) {
 	cl := c.clients.Get(oldUid)
 	if cl == nil {
 		return
 	}
-	cl.SignIn(uid, device)
-	c.idGen.Recycle(oldUid)
+	cl.SignIn(uid_, device)
 	c.clients.Delete(oldUid)
-	c.clients.Put(uid, cl)
+	c.clients.Put(uid_, cl)
 }
 
 func (c *ClientManagerImpl) UserLogout(uid int64) {
-	logger.I("ClientManager.UserLogout: uid=%d", uid)
 	cl := c.clients.Get(uid)
 	if cl == nil {
 		return
 	}
-	cl.Exit()
 	c.clients.Delete(uid)
+	cl.Exit()
 }
 
 func (c *ClientManagerImpl) HandleMessage(from int64, msg *message.Message) error {
@@ -168,6 +166,11 @@ func (g *clientMap) Get(uid int64) *client.Client {
 		return cl
 	}
 	return nil
+}
+
+func (g *clientMap) Contains(uid int64) bool {
+	_, ok := g.clients[uid]
+	return ok
 }
 
 func (g *clientMap) Put(uid int64, client *client.Client) {

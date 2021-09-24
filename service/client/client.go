@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"go_im/im/client"
 	"go_im/im/conn"
 	"go_im/im/message"
@@ -25,10 +26,10 @@ func NewClient(options *rpc.ClientOptions) (*Client, error) {
 	return ret, nil
 }
 
-func NewClientByRouter(srvId string, rtOpts *rpc.ClientOptions) (*Client, error) {
+func NewClientByRouter(rtOpts *rpc.ClientOptions) (*Client, error) {
 	ret := &Client{}
 	var err error
-	ret.Cli, err = route.NewRouter(srvId, rtOpts)
+	ret.Cli, err = route.NewRouter(ServiceName, rtOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +49,7 @@ func (c *Client) ClientSignIn(oldUid int64, uid int64, device int64) {
 		Device: device,
 	}
 	resp := &pb.Response{}
-	err := c.Call(context.Background(), "ClientSignIn", req, resp)
+	err := c.Call(uidTagContext(oldUid), "ClientSignIn", req, resp)
 	if err != nil {
 
 	}
@@ -56,7 +57,7 @@ func (c *Client) ClientSignIn(oldUid int64, uid int64, device int64) {
 
 func (c *Client) UserLogout(uid int64) {
 	resp := &pb.Response{}
-	err := c.Call(context.Background(), "UserLogout", &pb.UidRequest{Uid: uid}, resp)
+	err := c.Call(uidTagContext(uid), "UserLogout", &pb.UidRequest{Uid: uid}, resp)
 	if err != nil {
 
 	}
@@ -69,7 +70,7 @@ func (c *Client) HandleMessage(from int64, message *message.Message) error {
 	}
 	resp := &pb.Response{}
 
-	err := c.Call(context.Background(), "HandleMessage", req, resp)
+	err := c.Call(uidTagContext(from), "HandleMessage", req, resp)
 	if err != nil {
 
 	}
@@ -83,7 +84,7 @@ func (c *Client) EnqueueMessage(uid int64, message *message.Message) {
 		Message: wrapMessage(message),
 	}
 	resp := &pb.Response{}
-	err := c.Call(context.Background(), "EnqueueMessage", req, resp)
+	err := c.Call(uidTagContext(uid), "EnqueueMessage", req, resp)
 	if err != nil {
 
 	}
@@ -92,6 +93,13 @@ func (c *Client) EnqueueMessage(uid int64, message *message.Message) {
 func (c *Client) AllClient() []int64 {
 	// TODO
 	return nil
+}
+
+func uidTagContext(uid int64) context.Context {
+	ret := rpc.NewCtxFrom(context.Background())
+	t := fmt.Sprintf("uid_%d", uid)
+	ret.PutReqExtra(route.ExtraTag, t)
+	return ret
 }
 
 func wrapMessage(msg *message.Message) *pb.Message {

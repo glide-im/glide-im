@@ -2,11 +2,14 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"go_im/im/client"
 	"go_im/im/message"
 	"go_im/service/pb"
 	"go_im/service/rpc"
 )
+
+const ServiceName = "client"
 
 type Server struct {
 	*rpc.BaseServer
@@ -17,9 +20,10 @@ func NewServer(options *rpc.ServerOptions) *Server {
 		BaseServer: rpc.NewBaseServer(options),
 	}
 	var err error
-	client.Manager, err = newManager(options.EtcdServers)
+	myAddr := fmt.Sprintf("%s@%s:%d", options.Network, options.Addr, options.Port)
+	client.Manager, err = newManager(options.EtcdServers, myAddr)
 	if err != nil {
-
+		return nil
 	}
 	s.Register(options.Name, s)
 	return s

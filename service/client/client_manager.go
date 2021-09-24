@@ -1,6 +1,7 @@
 package client
 
 import (
+	"fmt"
 	"go_im/im"
 	"go_im/im/conn"
 	"go_im/im/message"
@@ -12,10 +13,12 @@ type manager struct {
 	appId  int64
 	m      *im.ClientManagerImpl
 	router *route.Client
+	myAddr string
 }
 
-func newManager(etcd []string) (*manager, error) {
+func newManager(etcd []string, myAddr string) (*manager, error) {
 	ret := &manager{}
+	ret.myAddr = myAddr
 	ret.m = im.NewClientManager()
 	options := &rpc.ClientOptions{
 		Name:        route.ServiceName,
@@ -30,16 +33,33 @@ func newManager(etcd []string) (*manager, error) {
 }
 
 func (m *manager) ClientConnected(conn conn.Connection) int64 {
-	c := m.m.ClientConnected(conn)
-	m.m.AllClient()
-	return c
+	uid := m.m.ClientConnected(conn)
+	uidTag := fmt.Sprintf("uid_%d", uid)
+	err := m.router.SetTag("client", uidTag, m.myAddr)
+	if err != nil {
+		return 0
+	}
+	return uid
 }
 
 func (m *manager) ClientSignIn(oldUid int64, uid int64, device int64) {
+	err := m.router.RemoveTag("client", fmt.Sprintf("uid_%d", oldUid))
+	if err != nil {
+
+	}
+	uidTag := fmt.Sprintf("uid_%d", uid)
+	err = m.router.SetTag("client", uidTag, m.myAddr)
+	if err != nil {
+
+	}
 	m.m.ClientSignIn(oldUid, uid, device)
 }
 
 func (m *manager) UserLogout(uid int64) {
+	err := m.router.RemoveTag("client", fmt.Sprintf("uid_%d", uid))
+	if err != nil {
+
+	}
 	m.m.UserLogout(uid)
 }
 
