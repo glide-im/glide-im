@@ -72,10 +72,10 @@ func (c *Client) EnqueueMessage(message *message.Message) {
 
 func (c *Client) readMessage() {
 	defer func() {
-		//err := recover()
-		//if err != nil {
-		//	comm.D("Recover: conn read message error: %v", err)
-		//}
+		err := recover()
+		if err != nil {
+			logger.D("Client read message error: %v", err)
+		}
 	}()
 
 	logger.I("start read message")
@@ -104,6 +104,13 @@ func (c *Client) readMessage() {
 func (c *Client) writeMessage() {
 	logger.I("start write message")
 
+	defer func() {
+		err := recover()
+		if err != nil {
+			logger.D("Client write message error: %v", err)
+		}
+	}()
+
 	for msg := range c.messages {
 		err := c.conn.Write(msg)
 		if err != nil {
@@ -125,7 +132,7 @@ func (c *Client) handleError(seq int64, err error) bool {
 	}
 	_, ok := fatalErr[err]
 	if ok {
-		Manager.UserLogout(c.uid)
+		Manager.ClientLogout(c.uid)
 		return true
 	}
 	logger.E("err", err.Error())

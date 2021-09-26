@@ -54,6 +54,18 @@ func (s *Server) RemoveTag(ctx context.Context, req *pb.ClearTagReq, _ *emptypb.
 	return nil
 }
 
+func (s *Server) GetAllTag(ctx context.Context, req *pb.AllTagReq, reply *pb.AllTagResp) error {
+	rt, ok := s.rts[req.SrvId]
+	if !ok {
+		return nil
+	}
+	reply.Tags = map[string]string{}
+	for k, v := range rt.selector.tags {
+		reply.Tags[k] = v
+	}
+	return nil
+}
+
 func (s *Server) Route(ctx context.Context, param *pb.RouteReq, reply *pb.RouteReply) error {
 	rt, ok := s.rts[param.GetSrvId()]
 	if !ok {
@@ -102,4 +114,9 @@ func (s *Server) Register(ctx context.Context, param *pb.RegisterRtReq, _ *empty
 	s.rts[param.GetSrvId()] = sv
 	logger.D("service registered: %s", param.GetSrvId())
 	return nil
+}
+
+func (s *Server) Run() error {
+	// TODO sync tags from redis, init service
+	return s.BaseServer.Run()
 }

@@ -5,6 +5,7 @@ import (
 	"go_im/im"
 	"go_im/im/conn"
 	"go_im/im/message"
+	"go_im/pkg/logger"
 	"go_im/service/route"
 	"go_im/service/rpc"
 )
@@ -37,6 +38,7 @@ func (m *manager) ClientConnected(conn conn.Connection) int64 {
 	uidTag := fmt.Sprintf("uid_%d", uid)
 	err := m.router.SetTag("client", uidTag, m.myAddr)
 	if err != nil {
+		logger.E("set route tag error", err)
 		return 0
 	}
 	return uid
@@ -55,12 +57,12 @@ func (m *manager) ClientSignIn(oldUid int64, uid int64, device int64) {
 	m.m.ClientSignIn(oldUid, uid, device)
 }
 
-func (m *manager) UserLogout(uid int64) {
+func (m *manager) ClientLogout(uid int64) {
 	err := m.router.RemoveTag("client", fmt.Sprintf("uid_%d", uid))
 	if err != nil {
 
 	}
-	m.m.UserLogout(uid)
+	m.m.ClientLogout(uid)
 }
 
 func (m *manager) HandleMessage(from int64, message *message.Message) error {

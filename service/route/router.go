@@ -12,6 +12,7 @@ type RouterCli struct {
 }
 
 func NewRouter(srvId string, routeOpts *rpc.ClientOptions) (*RouterCli, error) {
+	routeOpts.Name = ServiceName
 	c, err := NewClient(routeOpts)
 	if err != nil {
 		return nil, err

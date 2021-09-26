@@ -29,9 +29,9 @@ func (r *selector) Select(ctx context.Context, servicePath, serviceMethod string
 
 	if tag, ok := m[ExtraTag]; ok {
 		if path, ok := r.tags[tag]; ok {
-			if s, ok := r.services[path]; ok {
+			if _, ok := r.services[path]; ok {
 				logger.D("route by tag: %s=%s", tag, path)
-				return s
+				return path
 			}
 		}
 	}

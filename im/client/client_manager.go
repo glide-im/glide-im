@@ -12,7 +12,7 @@ type IClientManager interface {
 
 	ClientSignIn(oldUid int64, uid int64, device int64)
 
-	UserLogout(uid int64)
+	ClientLogout(uid int64)
 
 	HandleMessage(from int64, message *message.Message) error
 

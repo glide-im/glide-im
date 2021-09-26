@@ -43,7 +43,7 @@ func (c *ClientManagerImpl) ClientSignIn(oldUid, uid_ int64, device int64) {
 	c.clients.Put(uid_, cl)
 }
 
-func (c *ClientManagerImpl) UserLogout(uid int64) {
+func (c *ClientManagerImpl) ClientLogout(uid int64) {
 	cl := c.clients.Get(uid)
 	if cl == nil {
 		return

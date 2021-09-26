@@ -42,6 +42,14 @@ message ClearTagReq {
   string tag = 1;
 }
 
+message AllTagReq {
+  string srvId = 1;
+}
+
+message AllTagResp {
+  map<string, string> tags = 1;
+}
+
 message RouteReqParam {
   google.protobuf.Any data = 1;
 }

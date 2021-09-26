@@ -51,6 +51,12 @@ func (c *Client) RemoveTag(srvId, tag string) error {
 	}, &emptypb.Empty{})
 }
 
+func (c *Client) GetAllTag(srvId string) (map[string]string, error) {
+	resp := &pb.AllTagResp{Tags: map[string]string{}}
+	err := c.Call(context.Background(), "GetAllTag", &pb.AllTagReq{SrvId: srvId}, resp)
+	return resp.GetTags(), err
+}
+
 func (c *Client) Route(ctx context.Context, target string, request, reply interface{}) error {
 
 	split := strings.Split(target, ".")

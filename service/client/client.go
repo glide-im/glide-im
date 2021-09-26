@@ -37,7 +37,7 @@ func NewClientByRouter(rtOpts *rpc.ClientOptions) (*Client, error) {
 	return ret, nil
 }
 
-// idle function
+// ClientConnected idle function
 func (c *Client) ClientConnected(conn conn.Connection) int64 {
 	return 0
 }
@@ -55,9 +55,9 @@ func (c *Client) ClientSignIn(oldUid int64, uid int64, device int64) {
 	}
 }
 
-func (c *Client) UserLogout(uid int64) {
+func (c *Client) ClientLogout(uid int64) {
 	resp := &pb.Response{}
-	err := c.Call(uidTagContext(uid), "UserLogout", &pb.UidRequest{Uid: uid}, resp)
+	err := c.Call(uidTagContext(uid), "ClientLogout", &pb.UidRequest{Uid: uid}, resp)
 	if err != nil {
 
 	}

@@ -34,8 +34,8 @@ func (s *Server) ClientSignIn(ctx context.Context, request *pb.SignInRequest, re
 	return nil
 }
 
-func (s *Server) UserLogout(ctx context.Context, request *pb.UidRequest, reply *pb.Response) error {
-	client.Manager.UserLogout(request.GetUid())
+func (s *Server) ClientLogout(ctx context.Context, request *pb.UidRequest, reply *pb.Response) error {
+	client.Manager.ClientLogout(request.GetUid())
 	return nil
 }
 
