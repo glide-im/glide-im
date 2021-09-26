@@ -4,7 +4,6 @@ import (
 	"errors"
 	"go_im/im/client"
 	"go_im/im/dao"
-	"go_im/im/group"
 	"go_im/im/message"
 	"go_im/pkg/logger"
 )
@@ -59,11 +58,14 @@ func (a *UserApi) GetAndInitRelationList(msg *RequestInfo) error {
 	for _, contacts := range allContacts {
 
 		if contacts.Type == dao.ContactsTypeGroup {
-			g := group.Manager.GetGroup(contacts.TargetId)
+			g, er := dao.GroupDao.GetGroup(contacts.TargetId)
+			if er != nil {
+				return er
+			}
 			if g == nil {
 				return errors.New("group not exist")
 			}
-			members, err := group.Manager.GetMembers(g.Gid)
+			members, err := dao.GroupDao.GetMembers(g.Gid)
 			if err != nil {
 				return err
 			}

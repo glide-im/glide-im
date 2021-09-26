@@ -15,7 +15,7 @@ func (m *GroupApi) CreateGroup(msg *RequestInfo, request *CreateGroupRequest) er
 	if err != nil {
 		return err
 	}
-	members, _ := group.Manager.GetMembers(g.Gid)
+	members, _ := dao.GroupDao.GetMembers(g.Gid)
 	c := ContactResponse{
 		Friends: []*UserInfoResponse{},
 		Groups: []*GroupResponse{{
@@ -53,7 +53,7 @@ func (m *GroupApi) CreateGroup(msg *RequestInfo, request *CreateGroupRequest) er
 
 func (m *GroupApi) GetGroupMember(msg *RequestInfo, request *GetGroupMemberRequest) error {
 
-	members, err := group.Manager.GetMembers(request.Gid)
+	members, err := dao.GroupDao.GetMembers(request.Gid)
 	if err != nil {
 		return err
 	}
@@ -78,14 +78,14 @@ func (m *GroupApi) GetGroupInfo(msg *RequestInfo, request *GroupInfoRequest) err
 	var groups []*GroupResponse
 
 	for _, gid := range request.Gid {
-		g := group.Manager.GetGroup(gid)
-		members, err := group.Manager.GetMembers(gid)
-		if err != nil {
-			return err
+		group1, e := dao.GroupDao.GetGroup(gid)
+		if e != nil {
+			return e
 		}
+		ms, _ := dao.GroupDao.GetMembers(gid)
 		gr := GroupResponse{
-			Group:   *g,
-			Members: members,
+			Group:   *group1,
+			Members: ms,
 		}
 		groups = append(groups, &gr)
 	}
@@ -113,7 +113,10 @@ func (m *GroupApi) RemoveMember(msg *RequestInfo, request *RemoveMemberRequest) 
 
 func (m *GroupApi) AddGroupMember(msg *RequestInfo, request *AddMemberRequest) error {
 
-	g := group.Manager.GetGroup(request.Gid)
+	g, err := dao.GroupDao.GetGroup(request.Gid)
+	if err != nil {
+		return err
+	}
 
 	members, err := m.addGroupMember(g.Gid, request.Uid...)
 	if err != nil {
@@ -135,7 +138,7 @@ func (m *GroupApi) AddGroupMember(msg *RequestInfo, request *AddMemberRequest) e
 			_ = group.Manager.RemoveMember(request.Gid, member.Uid)
 			continue
 		}
-		ms, err := group.Manager.GetMembers(request.Gid)
+		ms, err := dao.GroupDao.GetMembers(request.Gid)
 		if err != nil {
 			return err
 		}
@@ -150,7 +153,7 @@ func (m *GroupApi) AddGroupMember(msg *RequestInfo, request *AddMemberRequest) e
 		respond(member.Uid, -1, ActionUserAddFriend, c)
 
 		// default add user chat
-		chat, er := dao.ChatDao.NewUserChat(group.Manager.GetGroupCid(g.Gid), member.Uid, g.Gid, dao.ChatTypeGroup)
+		chat, er := dao.ChatDao.NewUserChat(g.ChatId, member.Uid, g.Gid, dao.ChatTypeGroup)
 		if er != nil {
 			continue
 		}
@@ -181,7 +184,10 @@ func (m *GroupApi) ExitGroup(msg *RequestInfo, request *ExitGroupRequest) error 
 
 func (m *GroupApi) JoinGroup(msg *RequestInfo, request *JoinGroupRequest) error {
 
-	g := group.Manager.GetGroup(request.Gid)
+	g, err := dao.GroupDao.GetGroup(request.Gid)
+	if err != nil {
+		return err
+	}
 
 	if g == nil {
 		return errors.New("group does not exist")
@@ -194,7 +200,7 @@ func (m *GroupApi) JoinGroup(msg *RequestInfo, request *JoinGroupRequest) error 
 
 	_, err = dao.UserDao.AddContacts(msg.Uid, g.Gid, dao.ContactsTypeGroup, "")
 
-	members, err := group.Manager.GetMembers(request.Gid)
+	members, err := dao.GroupDao.GetMembers(request.Gid)
 	if err != nil {
 		return err
 	}
@@ -208,7 +214,7 @@ func (m *GroupApi) JoinGroup(msg *RequestInfo, request *JoinGroupRequest) error 
 	}
 	respond(msg.Uid, -1, ActionUserAddFriend, c)
 
-	chat, err := dao.ChatDao.NewUserChat(group.Manager.GetGroupCid(g.Gid), msg.Uid, g.Gid, dao.ChatTypeGroup)
+	chat, err := dao.ChatDao.NewUserChat(g.ChatId, msg.Uid, g.Gid, dao.ChatTypeGroup)
 	if err != nil {
 		_ = dao.GroupDao.RemoveMember(request.Gid, msg.Uid)
 		return err
@@ -232,6 +238,12 @@ func (m *GroupApi) createGroup(name string, uid int64) (*dao.Group, int64, error
 		return nil, 0, err
 	}
 
+	gp.ChatId = chat.Cid
+	err = dao.GroupDao.UpdateGroupChatId(gp.Gid, chat.Cid)
+	if err != nil {
+		return nil, 0, err
+	}
+
 	owner, err := dao.GroupDao.AddMember(gp.Gid, dao.GroupMemberAdmin, uid)
 	if err != nil {
 		// TODO undo create group
@@ -250,10 +262,15 @@ func (m *GroupApi) createGroup(name string, uid int64) (*dao.Group, int64, error
 func (m *GroupApi) addGroupMember(gid int64, uid ...int64) ([]*dao.GroupMember, error) {
 
 	memberUid := make([]int64, 0, len(uid))
+	member, _ := dao.GroupDao.GetMember(gid, uid...)
+	existsMember := map[int64]interface{}{}
+	for _, i := range member {
+		existsMember[i] = nil
+	}
 
 	for _, u := range uid {
 		// member exist
-		if !group.Manager.HasMember(gid, u) {
+		if _, ok := existsMember[u]; !ok {
 			memberUid = append(memberUid, u)
 		}
 	}

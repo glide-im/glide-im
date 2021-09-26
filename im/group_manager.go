@@ -22,14 +22,6 @@ func NewGroupManager() *groupManager {
 	return ret
 }
 
-func (m *groupManager) GetGroupCid(gid int64) int64 {
-	return m.getGroup(gid).Cid
-}
-
-func (m *groupManager) HasMember(gid int64, uid int64) bool {
-	return m.getGroup(gid).HasMember(uid)
-}
-
 func (m *groupManager) PutMember(gid int64, mb *dao.GroupMember) {
 	m.getGroup(gid).PutMember(mb)
 }
@@ -55,16 +47,12 @@ func (m *groupManager) UserOffline(uid, gid int64) {
 
 }
 
-func (m *groupManager) GetMembers(gid int64) ([]*dao.GroupMember, error) {
-	g := m.getGroup(gid)
-	if g == nil {
-		return []*dao.GroupMember{}, nil
-	}
-	return g.GetMembers(), nil
+func (m *groupManager) _GetMembers(gid int64) ([]*dao.GroupMember, error) {
+	return nil, nil
 }
 
 func (m *groupManager) AddGroup(g *dao.Group, cid int64, owner *dao.GroupMember) {
-	gp := group.NewGroup(g.Gid, g, 1, []*dao.GroupMember{})
+	gp := group.NewGroup(g.Gid, g, cid, []*dao.GroupMember{owner})
 	m.groups.Put(g.Gid, gp)
 }
 

@@ -57,6 +57,7 @@ type Group struct {
 	Owner    int64
 	Mute     bool
 	Notice   string
+	ChatId   int64
 	CreateAt Timestamp `gorm:"type:datetime"`
 	Members  []*GroupMember
 }

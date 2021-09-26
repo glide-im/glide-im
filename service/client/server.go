@@ -43,6 +43,7 @@ func (s *Server) DispatchMessage(ctx context.Context, request *pb.UidMessageRequ
 	err := client.Manager.HandleMessage(request.GetFrom(), unwrapMessage(request.GetMessage()))
 	if err != nil {
 		// handle err
+		return err
 	}
 	return nil
 }

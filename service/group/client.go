@@ -60,16 +60,6 @@ func (c *Client) RemoveMember(gid int64, uid ...int64) error {
 	return nil
 }
 
-func (c *Client) GetMembers(gid int64) ([]*dao.GroupMember, error) {
-	req := &pb.GidRequest{Gid: gid}
-	resp := &pb.GetMembersResponse{}
-	err := c.Call(context.Background(), "GetMembers", req, resp)
-	if err != nil {
-
-	}
-	return pbMember2daoMember(resp.Members...), err
-}
-
 func (c *Client) AddGroup(group *dao.Group, cid int64, owner *dao.GroupMember) {
 	req := &pb.AddGroupRequest{
 		Group: daoGroup2pbGroup(group),
@@ -81,16 +71,6 @@ func (c *Client) AddGroup(group *dao.Group, cid int64, owner *dao.GroupMember) {
 	if err != nil {
 
 	}
-}
-
-func (c *Client) GetGroup(gid int64) *dao.Group {
-	req := &pb.GidRequest{Gid: gid}
-	resp := &pb.Group{}
-	err := c.Call(context.Background(), "GetGroup", req, resp)
-	if err != nil {
-
-	}
-	return pbGroup2daoGroup(resp)
 }
 
 func (c *Client) UserOnline(uid, gid int64) {
@@ -107,29 +87,6 @@ func (c *Client) UserOffline(uid, gid int64) {
 	//if err != nil {
 	//
 	//}
-}
-
-func (c *Client) GetGroupCid(gid int64) int64 {
-	req := &pb.GidRequest{Gid: gid}
-	resp := &pb.GetCidResponse{}
-	err := c.Call(context.Background(), "GetGroupCid", req, resp)
-	if err != nil {
-
-	}
-	return resp.GetCid()
-}
-
-func (c *Client) HasMember(gid int64, uid int64) bool {
-	req := &pb.HasMemberRequest{
-		Gid: gid,
-		Uid: uid,
-	}
-	resp := &pb.HasMemberResponse{}
-	err := c.Call(context.Background(), "HasMember", req, resp)
-	if err != nil {
-
-	}
-	return resp.GetHas()
 }
 
 func (c *Client) DispatchNotifyMessage(uid int64, gid int64, message *message.Message) {

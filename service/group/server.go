@@ -35,39 +35,11 @@ func (s *Server) RemoveMember(ctx context.Context, request *pb.RemoveMemberReque
 	return nil
 }
 
-func (s *Server) GetMembers(ctx context.Context, request *pb.GidRequest, reply *pb.GetMembersResponse) error {
-
-	members, err := group.Manager.GetMembers(request.GetGid())
-	if err != nil {
-
-	}
-	reply.Members = daoMember2pbMember(members...)
-	return nil
-}
-
 func (s *Server) AddGroup(ctx context.Context, request *pb.AddGroupRequest, reply *pb.Response) error {
 
 	g := pbGroup2daoGroup(request.GetGroup())
 	owner := pbMember2daoMember(request.GetOwner())[0]
 	group.Manager.AddGroup(g, request.GetCid(), owner)
-	return nil
-}
-
-func (s *Server) GetGroup(ctx context.Context, request *pb.GidRequest, reply *pb.Group) error {
-	g := group.Manager.GetGroup(request.GetGid())
-	reply = daoGroup2pbGroup(g)
-	return nil
-}
-
-func (s *Server) GetGroupCid(ctx context.Context, request *pb.GidRequest, reply *pb.GetCidResponse) error {
-	cid := group.Manager.GetGroupCid(request.GetGid())
-	reply.Cid = cid
-	return nil
-}
-
-func (s *Server) HasMember(ctx context.Context, request *pb.HasMemberRequest, reply *pb.HasMemberResponse) error {
-	r := group.Manager.HasMember(request.GetGid(), request.GetUid())
-	reply.Has = r
 	return nil
 }
 

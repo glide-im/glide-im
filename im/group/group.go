@@ -47,24 +47,6 @@ func (g *Group) IsMemberOnline(uid int64) bool {
 	return false
 }
 
-func (g *Group) GetOnlineMember() []*dao.GroupMember {
-	var online []*dao.GroupMember
-	for _, member := range g.members.members {
-		// TODO 2021-9-9 17:12:58
-		online = append(online, member)
-	}
-	return online
-}
-
-func (g *Group) GetMembers() []*dao.GroupMember {
-	defer g.LockUtilReturn()()
-	members := make([]*dao.GroupMember, 0, g.members.Size())
-	for _, v := range g.members.members {
-		members = append(members, v)
-	}
-	return members
-}
-
 func (g *Group) SendMessage(uid int64, message *message.Message) {
 	logger.D("Group.SendMessage: %s", message)
 

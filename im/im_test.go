@@ -6,6 +6,7 @@ import (
 	"go_im/im/comm"
 	"go_im/im/conn"
 	"go_im/im/dao"
+	"go_im/im/dao/uid"
 	"go_im/im/message"
 	"math/rand"
 	"sync"
@@ -64,6 +65,7 @@ var wg = new(sync.WaitGroup)
 //go test -v -run=TestIm -memprofile=mem.out
 func TestIm(t *testing.T) {
 
+	uid.Mock()
 	client.Manager = NewClientManager()
 
 	userOnline(10_0000)

@@ -33,3 +33,9 @@ func TestNewRouteServer(t *testing.T) {
 		})
 	}
 }
+
+func TestServer_GetAllTag(t *testing.T) {
+	tag, err := newClient().GetAllTag("client")
+	assert.Nil(t, err)
+	t.Log(tag)
+}

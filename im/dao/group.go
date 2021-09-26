@@ -29,6 +29,7 @@ func (d *groupDao) CreateGroup(name string, owner int64) (*Group, error) {
 		Owner:    owner,
 		Mute:     false,
 		Notice:   "",
+		ChatId:   0,
 		CreateAt: nowTimestamp(),
 	}
 
@@ -37,6 +38,23 @@ func (d *groupDao) CreateGroup(name string, owner int64) (*Group, error) {
 	}
 
 	return &g, nil
+}
+
+func (d *groupDao) UpdateGroupChatId(gid int64, cid int64) error {
+	group := Group{Gid: gid, ChatId: cid}
+	e := db.DB.Model(&group).Where("gid = ?", gid).Update("cid").Error
+	return e
+}
+
+func (d *groupDao) GetMember(gid int64, uid ...int64) ([]int64, error) {
+
+	q := db.DB.Table("im_group_member").Where("gid = ? and uid = ?")
+	for _, i := range uid {
+		q.Or("uid = ?", i)
+	}
+	var ms []int64
+	err := q.Select("uid").Find(ms).Error
+	return ms, err
 }
 
 func (d *groupDao) GetGroup(gid int64) (*Group, error) {
