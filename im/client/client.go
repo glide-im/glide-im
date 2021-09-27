@@ -10,6 +10,14 @@ import (
 
 const HeartbeatDuration = time.Second * 30
 
+type IClient interface {
+	SignIn(uid int64, device int64)
+	Closed() bool
+	EnqueueMessage(message *message.Message)
+	Exit()
+	Run()
+}
+
 // Client represent a user conn conn
 type Client struct {
 	conn conn.Connection
@@ -90,7 +98,7 @@ func (c *Client) readMessage() {
 		if msg.Action == message.ActionHeartbeat {
 			c.heartbeat.Reset(HeartbeatDuration)
 		} else {
-			err = Manager.HandleMessage(c.uid, msg)
+			err = MessageHandleFunc(c.uid, msg)
 		}
 		if err != nil {
 			if !c.handleError(msg.Seq, err) {

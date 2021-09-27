@@ -10,6 +10,7 @@ const (
 	ActionMessage      Action = "message"
 	ActionGroupMessage Action = "message.group"
 	ActionChatMessage  Action = "message.chat"
+	ActionCSMessage    Action = "message.cs"
 	ActionApi          Action = "api"
 	ActionHeartbeat    Action = "heartbeat"
 	ActionNotify       Action = "notify"

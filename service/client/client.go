@@ -42,6 +42,8 @@ func (c *Client) ClientConnected(conn conn.Connection) int64 {
 	return 0
 }
 
+func (c *Client) AddClient(uid int64, cs client.IClient) {}
+
 func (c *Client) ClientSignIn(oldUid int64, uid int64, device int64) {
 	req := &pb.SignInRequest{
 		Old:    oldUid,

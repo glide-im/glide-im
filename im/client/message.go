@@ -32,3 +32,18 @@ type ReceiverChatMessage struct {
 	Message     string
 	SendAt      dao.Timestamp
 }
+
+type CustomerServiceMessage struct {
+	// sender's id
+	From int64
+	// receiver's id
+	To int64
+	// customer service id
+	CsId int64
+
+	ChatId      int64
+	UserChatId  int64
+	MessageType int8
+	Message     string
+	SendAt      dao.Timestamp
+}

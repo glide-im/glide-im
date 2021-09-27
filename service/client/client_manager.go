@@ -3,9 +3,11 @@ package client
 import (
 	"fmt"
 	"go_im/im"
+	"go_im/im/client"
 	"go_im/im/conn"
 	"go_im/im/message"
 	"go_im/pkg/logger"
+	"go_im/service/pb"
 	"go_im/service/route"
 	"go_im/service/rpc"
 )
@@ -31,6 +33,16 @@ func newManager(etcd []string, myAddr string) (*manager, error) {
 		return nil, err
 	}
 	return ret, nil
+}
+
+func (m *manager) AddClient(uid int64, cs client.IClient) {
+	uidTag := fmt.Sprintf("uid_%d", uid)
+	err := m.router.SetTag("client", uidTag, m.myAddr)
+	if err != nil {
+		logger.E("set route tag error", err)
+	} else {
+		m.m.AddClient(uid, cs)
+	}
 }
 
 func (m *manager) ClientConnected(conn conn.Connection) int64 {
@@ -65,11 +77,15 @@ func (m *manager) ClientLogout(uid int64) {
 	m.m.ClientLogout(uid)
 }
 
-func (m *manager) HandleMessage(from int64, message *message.Message) error {
-	return m.m.HandleMessage(from, message)
-}
-
 func (m *manager) EnqueueMessage(uid int64, message *message.Message) {
+
+	req := &pb.UidMessageRequest{
+		From:    uid,
+		Message: wrapMessage(message),
+	}
+	resp := &pb.Response{}
+	_ = m.router.Route(uidTagContext(uid), "client.EnqueueMessage", req, resp)
+
 	m.m.EnqueueMessage(uid, message)
 }
 
