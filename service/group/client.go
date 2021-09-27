@@ -35,10 +35,10 @@ func NewClientByRouter(srvId string, rtOpts *rpc.ClientOptions) (*Client, error)
 	return ret, nil
 }
 
-func (c *Client) PutMember(gid int64, mb *dao.GroupMember) {
+func (c *Client) PutMember(gid int64, mb map[int64]int32) {
 	req := &pb.PutMemberRequest{
 		Gid:    gid,
-		Member: daoMember2pbMember(mb)[0],
+		Member: mb,
 	}
 	resp := &pb.Response{}
 	err := c.Call(context.Background(), "PutMember", req, resp)
@@ -60,11 +60,10 @@ func (c *Client) RemoveMember(gid int64, uid ...int64) error {
 	return nil
 }
 
-func (c *Client) AddGroup(group *dao.Group, cid int64, owner *dao.GroupMember) {
+func (c *Client) AddGroup(group *dao.Group, owner int64) {
 	req := &pb.AddGroupRequest{
 		Group: daoGroup2pbGroup(group),
-		Cid:   cid,
-		Owner: daoMember2pbMember(owner)[0],
+		Owner: owner,
 	}
 	resp := &pb.Response{}
 	err := c.Call(context.Background(), "AddGroup", req, resp)

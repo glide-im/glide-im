@@ -9,8 +9,6 @@ import (
 )
 
 type Group struct {
-	*comm.Mutex
-
 	Gid   int64
 	Cid   int64
 	Group *dao.Group
@@ -18,21 +16,17 @@ type Group struct {
 	members *groupMemberMap
 }
 
-func NewGroup(gid int64, group *dao.Group, cid int64, member []*dao.GroupMember) *Group {
+func NewGroup(group *dao.Group) *Group {
 	ret := new(Group)
-	ret.Mutex = comm.NewMutex()
 	ret.members = newGroupMemberMap()
-	ret.Gid = gid
-	ret.Cid = cid
+	ret.Gid = group.Gid
+	ret.Cid = group.ChatId
 	ret.Group = group
-	for _, m := range member {
-		ret.members.Put(m.Uid, m)
-	}
 	return ret
 }
 
-func (g *Group) PutMember(member *dao.GroupMember) {
-	g.members.Put(member.Uid, member)
+func (g *Group) PutMember(member int64, s int32) {
+	g.members.Put(member, s)
 }
 
 func (g *Group) RemoveMember(uid int64) {
@@ -59,13 +53,13 @@ func (g *Group) SendMessage(uid int64, message *message.Message) {
 
 type groupMemberMap struct {
 	*comm.Mutex
-	members map[int64]*dao.GroupMember
+	members map[int64]int32
 }
 
 func newGroupMemberMap() *groupMemberMap {
 	ret := new(groupMemberMap)
 	ret.Mutex = new(comm.Mutex)
-	ret.members = make(map[int64]*dao.GroupMember)
+	ret.members = make(map[int64]int32)
 	return ret
 }
 
@@ -73,13 +67,13 @@ func (g *groupMemberMap) Size() int {
 	return len(g.members)
 }
 
-func (g *groupMemberMap) Get(id int64) *dao.GroupMember {
+func (g *groupMemberMap) Get(id int64) int32 {
 	defer g.LockUtilReturn()()
 	member, ok := g.members[id]
 	if ok {
 		return member
 	}
-	return nil
+	return 0
 }
 
 func (g *groupMemberMap) Contain(id int64) bool {
@@ -87,7 +81,7 @@ func (g *groupMemberMap) Contain(id int64) bool {
 	return ok
 }
 
-func (g *groupMemberMap) Put(id int64, member *dao.GroupMember) {
+func (g *groupMemberMap) Put(id int64, member int32) {
 	defer g.LockUtilReturn()()
 	g.members[id] = member
 }

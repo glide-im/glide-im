@@ -8,7 +8,7 @@ import (
 var Manager IGroupManager
 
 type IGroupManager interface {
-	PutMember(gid int64, mb *dao.GroupMember)
+	PutMember(gid int64, mb map[int64]int32)
 
 	RemoveMember(gid int64, uid ...int64) error
 
@@ -16,7 +16,7 @@ type IGroupManager interface {
 
 	UserOffline(uid, gid int64)
 
-	AddGroup(group *dao.Group, cid int64, owner *dao.GroupMember)
+	AddGroup(group *dao.Group, owner int64)
 
 	DispatchNotifyMessage(uid int64, gid int64, message *message.Message)
 

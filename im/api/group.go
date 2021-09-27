@@ -158,7 +158,7 @@ func (m *GroupApi) AddGroupMember(msg *RequestInfo, request *AddMemberRequest) e
 			continue
 		}
 		// member subscribe group message
-		group.Manager.PutMember(g.Gid, member)
+		group.Manager.PutMember(g.Gid, map[int64]int32{member.Uid: 1})
 
 		// notify update chat list
 		respond(member.Uid, -1, ActionUserNewChat, chat)
@@ -193,7 +193,7 @@ func (m *GroupApi) JoinGroup(msg *RequestInfo, request *JoinGroupRequest) error 
 		return errors.New("group does not exist")
 	}
 
-	ms, err := m.addGroupMember(request.Gid, msg.Uid)
+	_, err = m.addGroupMember(request.Gid, msg.Uid)
 	if err != nil {
 		return err
 	}
@@ -219,7 +219,7 @@ func (m *GroupApi) JoinGroup(msg *RequestInfo, request *JoinGroupRequest) error 
 		_ = dao.GroupDao.RemoveMember(request.Gid, msg.Uid)
 		return err
 	}
-	group.Manager.PutMember(g.Gid, ms[0])
+	group.Manager.PutMember(g.Gid, map[int64]int32{msg.Uid: 1})
 	respond(msg.Uid, -1, ActionUserNewChat, chat)
 	respond(msg.Uid, msg.Seq, ActionSuccess, "join group success")
 	return nil
@@ -244,7 +244,7 @@ func (m *GroupApi) createGroup(name string, uid int64) (*dao.Group, int64, error
 		return nil, 0, err
 	}
 
-	owner, err := dao.GroupDao.AddMember(gp.Gid, dao.GroupMemberAdmin, uid)
+	_, err = dao.GroupDao.AddMember(gp.Gid, dao.GroupMemberAdmin, uid)
 	if err != nil {
 		// TODO undo create group
 		return nil, 0, err
@@ -254,8 +254,7 @@ func (m *GroupApi) createGroup(name string, uid int64) (*dao.Group, int64, error
 		// TODO undo
 		return nil, 0, err
 	}
-	group.Manager.AddGroup(gp, chat.Cid, owner[0])
-	group.Manager.PutMember(gp.Gid, owner[0])
+	group.Manager.AddGroup(gp, uid)
 	return gp, chat.Cid, nil
 }
 

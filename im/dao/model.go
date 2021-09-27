@@ -68,7 +68,7 @@ type GroupMember struct {
 	Uid    int64
 	Mute   int64
 	Remark string
-	Type   int8
+	Type   int32
 	JoinAt Timestamp `gorm:"type:datetime"`
 }
 

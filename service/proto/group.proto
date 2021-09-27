@@ -19,7 +19,7 @@ message GetMembersResponse {
 
 message PutMemberRequest {
   int64 gid = 1;
-  GroupMember member = 2;
+  map<int64, int32> member = 2;
 }
 
 //message UnsubscribeGroupRequest{
@@ -43,7 +43,8 @@ message Group {
   bool  mute = 5;
   string notice = 6;
   int64 createAt = 7;
-  repeated GroupMember members = 8;
+  int64 chatId = 9;
+  map<int64, int32> members = 8;
 }
 
 message RemoveMemberRequest {
@@ -65,7 +66,7 @@ message DispatchMessageRequest{
 message AddGroupRequest {
   Group group = 1;
   int64 cid = 2;
-  GroupMember owner = 3;
+  int64 owner = 3;
 }
 
 message HasMemberRequest{

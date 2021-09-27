@@ -22,8 +22,7 @@ func NewServer(options *rpc.ServerOptions) *Server {
 }
 
 func (s *Server) PutMember(ctx context.Context, request *pb.PutMemberRequest, reply *pb.Response) error {
-	gm := pbMember2daoMember(request.GetMember())[0]
-	group.Manager.PutMember(request.GetGid(), gm)
+	group.Manager.PutMember(request.GetGid(), request.GetMember())
 	return nil
 }
 
@@ -38,8 +37,7 @@ func (s *Server) RemoveMember(ctx context.Context, request *pb.RemoveMemberReque
 func (s *Server) AddGroup(ctx context.Context, request *pb.AddGroupRequest, reply *pb.Response) error {
 
 	g := pbGroup2daoGroup(request.GetGroup())
-	owner := pbMember2daoMember(request.GetOwner())[0]
-	group.Manager.AddGroup(g, request.GetCid(), owner)
+	group.Manager.AddGroup(g, request.GetOwner())
 	return nil
 }
 
@@ -65,7 +63,6 @@ func daoGroup2pbGroup(g *dao.Group) *pb.Group {
 		Mute:     g.Mute,
 		Notice:   g.Notice,
 		CreateAt: 0,
-		Members:  daoMember2pbMember(g.Members...),
 	}
 }
 
@@ -78,38 +75,7 @@ func pbGroup2daoGroup(g *pb.Group) *dao.Group {
 		Mute:     g.GetMute(),
 		Notice:   g.GetNotice(),
 		CreateAt: dao.Timestamp{},
-		Members:  pbMember2daoMember(g.Members...),
 	}
-}
-
-func daoMember2pbMember(members ...*dao.GroupMember) []*pb.GroupMember {
-	var gm []*pb.GroupMember
-	for _, member := range members {
-		gm = append(gm, &pb.GroupMember{
-			Id:     member.Id,
-			Gid:    member.Gid,
-			Uid:    member.Uid,
-			Mute:   member.Mute,
-			Type:   int32(member.Type),
-			Remark: member.Remark,
-		})
-	}
-	return gm
-}
-
-func pbMember2daoMember(members ...*pb.GroupMember) []*dao.GroupMember {
-	var gm []*dao.GroupMember
-	for _, member := range members {
-		gm = append(gm, &dao.GroupMember{
-			Id:     member.Id,
-			Gid:    member.Gid,
-			Uid:    member.Uid,
-			Mute:   member.Mute,
-			Type:   int8(member.Type),
-			Remark: member.Remark,
-		})
-	}
-	return gm
 }
 
 func unwrapMessage(pbMsg *pb.Message) *message.Message {

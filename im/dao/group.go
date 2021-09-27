@@ -81,7 +81,7 @@ func (d *groupDao) HasMember(gid int64, uid int64) (bool, error) {
 	return row > 0, err
 }
 
-func (d *groupDao) AddMember(gid int64, typ int8, uid ...int64) ([]*GroupMember, error) {
+func (d *groupDao) AddMember(gid int64, typ int32, uid ...int64) ([]*GroupMember, error) {
 
 	var members []*GroupMember
 

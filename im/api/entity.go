@@ -99,7 +99,7 @@ type GroupMemberResponse struct {
 	Uid        int64
 	Nickname   string
 	RemarkName string
-	Type       int8
+	Type       int32
 	Online     bool
 	Mute       bool
 }

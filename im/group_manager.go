@@ -22,8 +22,10 @@ func NewGroupManager() *groupManager {
 	return ret
 }
 
-func (m *groupManager) PutMember(gid int64, mb *dao.GroupMember) {
-	m.getGroup(gid).PutMember(mb)
+func (m *groupManager) PutMember(gid int64, mb map[int64]int32) {
+	for k, v := range mb {
+		m.getGroup(gid).PutMember(k, v)
+	}
 }
 
 func (m *groupManager) RemoveMember(gid int64, uid ...int64) error {
@@ -47,13 +49,8 @@ func (m *groupManager) UserOffline(uid, gid int64) {
 
 }
 
-func (m *groupManager) _GetMembers(gid int64) ([]*dao.GroupMember, error) {
-	return nil, nil
-}
-
-func (m *groupManager) AddGroup(g *dao.Group, cid int64, owner *dao.GroupMember) {
-	gp := group.NewGroup(g.Gid, g, cid, []*dao.GroupMember{owner})
-	m.groups.Put(g.Gid, gp)
+func (m *groupManager) AddGroup(g *dao.Group, owner int64) {
+	m.groups.Put(g.Gid, group.NewGroup(g))
 }
 
 func (m *groupManager) GetGroup(gid int64) *dao.Group {
@@ -75,12 +72,10 @@ func (m *groupManager) GetGroup(gid int64) *dao.Group {
 		return nil
 	}
 
-	chat, err := dao.ChatDao.GetChat(gid, 2)
-	if err != nil {
-		logger.E("GroupManager.GetGroup", "load chat", gid, err)
-		return nil
+	g = group.NewGroup(dbGroup)
+	for _, member := range members {
+		g.PutMember(member.Uid, member.Type)
 	}
-	g = group.NewGroup(gid, dbGroup, chat.Cid, members)
 	m.groups.Put(gid, g)
 	return g.Group
 }
