@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"go_im/im/dao/uid"
 	"go_im/pkg/db"
 	"math/rand"
 	"time"
@@ -97,6 +98,7 @@ func (d *userDao) AddUser(account string, password string) error {
 
 	t := Timestamp(time.Now())
 	u := User{
+		Uid:      uid.GenUid(),
 		Account:  account,
 		Password: password,
 		Nickname: nickName[rand.Intn(14)],

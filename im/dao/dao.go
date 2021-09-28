@@ -1,6 +1,9 @@
 package dao
 
-import "go_im/pkg/db"
+import (
+	"go_im/im/dao/uid"
+	"go_im/pkg/db"
+)
 
 func Init() {
 
@@ -23,4 +26,5 @@ func Init() {
 
 	InitUserDao()
 	InitMessageDao()
+	uid.Init()
 }
