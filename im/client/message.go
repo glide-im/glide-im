@@ -4,6 +4,7 @@ import (
 	"go_im/im/dao"
 )
 
+// GroupMessage 代表一个群消息
 type GroupMessage struct {
 	TargetId    int64
 	Cid         int64
@@ -13,7 +14,7 @@ type GroupMessage struct {
 	SendAt      dao.Timestamp
 }
 
-// SenderChatMessage simple chat room message
+// SenderChatMessage 表示服务端收到发送者的消息
 type SenderChatMessage struct {
 	Cid         int64
 	UcId        int64
@@ -23,6 +24,7 @@ type SenderChatMessage struct {
 	SendAt      dao.Timestamp
 }
 
+// ReceiverChatMessage 表示服务端分发给接受者的聊天消息
 type ReceiverChatMessage struct {
 	Mid         int64
 	Cid         int64
@@ -33,6 +35,7 @@ type ReceiverChatMessage struct {
 	SendAt      dao.Timestamp
 }
 
+// CustomerServiceMessage 表示客服消息
 type CustomerServiceMessage struct {
 	// sender's id
 	From int64

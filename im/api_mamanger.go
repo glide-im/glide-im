@@ -105,6 +105,6 @@ func (a *ApiRouter) intercept(uid int64, message *message.Message) error {
 func (a *ApiRouter) onError(uid int64, msg *message.Message, err error) {
 	logger.D("a.onError: uid=%d, Action=%s, err=%s", uid, msg.Action, err.Error())
 
-	errMsg := message.NewMessage(msg.Seq, message.ActionNotify, err.Error())
+	errMsg := message.NewMessage(msg.Seq, message.ActionFailed, err.Error())
 	client.EnqueueMessage(uid, errMsg)
 }

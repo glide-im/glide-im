@@ -28,7 +28,7 @@ func NewCustomerServiceClient(uid int64) *CustomerServiceClient {
 	return client
 }
 
-func (o *CustomerServiceClient) SignIn(_ int64, _ int64) {}
+func (o *CustomerServiceClient) SetID(_ int64) {}
 
 func (o *CustomerServiceClient) Closed() bool {
 	// no connection, always online

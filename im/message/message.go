@@ -8,12 +8,13 @@ import (
 
 const (
 	ActionMessage      Action = "message"
-	ActionGroupMessage Action = "message.group"
-	ActionChatMessage  Action = "message.chat"
-	ActionCSMessage    Action = "message.cs"
-	ActionApi          Action = "api"
-	ActionHeartbeat    Action = "heartbeat"
-	ActionNotify       Action = "notify"
+	ActionGroupMessage        = "message.group"
+	ActionChatMessage         = "message.chat"
+	ActionCSMessage           = "message.cs"
+	ActionApi                 = "api"
+	ActionHeartbeat           = "heartbeat"
+	ActionNotify              = "notify"
+	ActionFailed              = "failed"
 )
 
 type Action string

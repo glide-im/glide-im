@@ -37,7 +37,7 @@ func (c *ClientManagerImpl) ClientSignIn(oldUid, uid_ int64, device int64) {
 	if cl == nil {
 		return
 	}
-	cl.SignIn(uid_, device)
+	cl.SetID(uid_)
 	c.clients.Delete(oldUid)
 	c.clients.Put(uid_, cl)
 }
@@ -55,7 +55,6 @@ func (c *ClientManagerImpl) EnqueueMessage(uid int64, msg *message.Message) {
 	cl := c.clients.Get(uid)
 	online := cl != nil && !cl.Closed()
 	if online {
-		//goland:noinspection GoNilness
 		cl.EnqueueMessage(msg)
 	} else {
 		// TODO user offline

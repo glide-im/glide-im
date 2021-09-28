@@ -8,13 +8,28 @@ import (
 	"time"
 )
 
-const HeartbeatDuration = time.Second * 30
+// MessageHandler 用于处理客户端消息
+type MessageHandler func(from int64, message *message.Message) error
 
+// MessageHandleFunc 所有客户端消息都传递到该函数处理
+var MessageHandleFunc MessageHandler = nil
+
+// IClient 表示一个客户端, 用于管理连接状态, 连接 id, 消息收发
 type IClient interface {
-	SignIn(uid int64, device int64)
+
+	// SetID 设置该客户端标识 ID
+	SetID(id int64)
+
+	// Closed 返回该客户端连接是否已关闭
 	Closed() bool
+
+	// EnqueueMessage 将消息放入到客户端消息队列中
 	EnqueueMessage(message *message.Message)
+
+	// Exit 退出客户端, 关闭连接等
 	Exit()
+
+	// Run 开始收发消息客户端连接的消息
 	Run()
 }
 
@@ -22,40 +37,30 @@ type IClient interface {
 type Client struct {
 	conn conn.Connection
 
-	uid      int64
-	deviceId int64
-	time     time.Time
-	closed   *comm.AtomicBool
+	id     int64
+	time   time.Time
+	closed *comm.AtomicBool
 
 	// buffered channel 40
 	messages chan *message.Message
 
 	seq *comm.AtomicInt64
-
-	heartbeat *time.Timer
 }
 
-func NewClient(conn conn.Connection, connUid int64) *Client {
+func NewClient(conn conn.Connection, id int64) *Client {
 	client := new(Client)
 	client.conn = conn
 	client.closed = comm.NewAtomicBool(false)
+	// 大小为 40 的缓冲管道, 防止短时间消息过多如果网络连接 output 不及时会造成程序阻塞, 可以适当调整
 	client.messages = make(chan *message.Message, 40)
 	client.time = time.Now()
-	client.uid = connUid
+	client.id = id
 	client.seq = new(comm.AtomicInt64)
-	// TODO 优化内存
-	client.heartbeat = time.AfterFunc(HeartbeatDuration, client.onDeath)
-	client.heartbeat.Stop()
 	return client
 }
 
-func (c *Client) SignIn(uid int64, device int64) {
-	c.uid = uid
-	c.deviceId = device
-}
-
-func (c *Client) Id() int64 {
-	return c.uid
+func (c *Client) SetID(id int64) {
+	c.id = id
 }
 
 func (c *Client) Closed() bool {
@@ -63,21 +68,24 @@ func (c *Client) Closed() bool {
 }
 
 func (c *Client) EnqueueMessage(message *message.Message) {
-	logger.I("EnqueueMessage(uid=%d, %s): %v", c.uid, message.Action, message)
+	logger.I("EnqueueMessage(id=%d, %s): %v", c.id, message.Action, message)
 	if c.closed.Get() {
 		logger.W("connection closed, cannot enqueue message")
 		return
 	}
 	if message.Seq <= 0 {
+		// 服务端主动发送的消息使用服务端的序列号
 		message.Seq = c.getNextSeq()
 	}
 	select {
 	case c.messages <- message:
 	default:
+		// 消息 chan 缓冲溢出, 这条消息将被丢弃
 		logger.E("Client.EnqueueMessage", "message chan is full")
 	}
 }
 
+// readMessage 开始从 Connection 中读取消息
 func (c *Client) readMessage() {
 	defer func() {
 		err := recover()
@@ -86,32 +94,31 @@ func (c *Client) readMessage() {
 		}
 	}()
 
-	logger.I("start read message")
 	for {
 		msg, err := messageReader.Read(c.conn)
 		if err != nil {
 			if !c.handleError(-1, err) {
-				continue
+				// 致命错误中断读消息
+				break
 			}
-			break
+			continue
 		}
 		if msg.Action == message.ActionHeartbeat {
-			c.heartbeat.Reset(HeartbeatDuration)
+
 		} else {
-			err = MessageHandleFunc(c.uid, msg)
-		}
-		if err != nil {
-			if !c.handleError(msg.Seq, err) {
-				continue
+			// 交给消息处理者处理消息
+			err = MessageHandleFunc(c.id, msg)
+			if err != nil {
+				if c.handleError(msg.Seq, err) {
+					break
+				}
 			}
-			break
 		}
 	}
 }
 
+// writeMessage 开始向 Connection 中写入消息队列中的消息
 func (c *Client) writeMessage() {
-	logger.I("start write message")
-
 	defer func() {
 		err := recover()
 		if err != nil {
@@ -123,6 +130,7 @@ func (c *Client) writeMessage() {
 		err := c.conn.Write(msg)
 		if err != nil {
 			if c.handleError(-1, err) {
+				// 致命错误中断写消息
 				break
 			}
 		}
@@ -140,7 +148,8 @@ func (c *Client) handleError(seq int64, err error) bool {
 	}
 	_, ok := fatalErr[err]
 	if ok {
-		Manager.ClientLogout(c.uid)
+		Manager.ClientLogout(c.id)
+		logger.D(">>>> client logout due to error: %s", err.Error())
 		return true
 	}
 	logger.E("err", err.Error())
@@ -148,20 +157,19 @@ func (c *Client) handleError(seq int64, err error) bool {
 	return false
 }
 
-func (c *Client) onDeath() {
-	// TODO
-}
-
+// Exit 退出客户端
 func (c *Client) Exit() {
 	if c.closed.Get() {
 		return
 	}
-	c.heartbeat.Stop()
+	c.id = 0
 	c.closed.Set(true)
+
 	close(c.messages)
 	_ = c.conn.Close()
 }
 
+// getNextSeq 获取下一个消息序列号 sequence
 func (c *Client) getNextSeq() int64 {
 	seq := c.seq.Get()
 	c.seq.Set(seq + 1)
@@ -169,8 +177,7 @@ func (c *Client) getNextSeq() int64 {
 }
 
 func (c *Client) Run() {
-	logger.I("///////////////////////// connection running /////////////////////////////")
+	logger.I(">>>> client %d running", c.id)
 	go c.readMessage()
 	go c.writeMessage()
-	c.heartbeat.Reset(HeartbeatDuration)
 }

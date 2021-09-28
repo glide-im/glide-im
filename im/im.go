@@ -17,10 +17,6 @@ const (
 	UDP
 )
 
-func Init() {
-	dao.Init()
-}
-
 type Options struct {
 	SvrType Type
 
@@ -35,6 +31,8 @@ type Server struct {
 }
 
 func NewServer(options Options) *Server {
+	dao.Init()
+
 	ret := &Server{
 		opts: options,
 	}
