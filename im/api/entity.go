@@ -3,19 +3,19 @@ package api
 import "go_im/im/dao"
 
 type LoginRequest struct {
-	Device   int64  `json:"device"`
-	Account  string `json:"account"`
-	Password string `json:"password"`
+	Device   int64
+	Account  string
+	Password string
 }
 
 type AuthRequest struct {
-	Token    string `json:"token"`
-	DeviceId int64  `json:"device_id"`
+	Token    string
+	DeviceId int64
 }
 
 type RegisterRequest struct {
-	Account  string `json:"account"`
-	Password string `json:"password"`
+	Account  string
+	Password string
 }
 
 // AuthorResponse login or register result

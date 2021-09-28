@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"go_im/im/message"
@@ -127,12 +128,32 @@ func (r *Rt) invokeHandleFunc(info *RequestInfo, data interface{}) error {
 				// on validate request param failed
 			}
 			reqParam = reflect.ValueOf(p).Interface()
+		} else {
+			// TODO replace single json serializer as interface or other.
+			r.tryUnmarshal(reqParam, data)
 		}
 		handleFuncArg = append(handleFuncArg, reqParam)
 	}
 
-	r.valueHandleFunc.Call(valOf(handleFuncArg...))
+	rt := r.valueHandleFunc.Call(valOf(handleFuncArg...))
+	if len(rt) == 1 {
+		err, ok := rt[0].Interface().(error)
+		if ok {
+			return err
+		}
+	}
 	return nil
+}
+
+func (r *Rt) tryUnmarshal(i interface{}, j interface{}) {
+	s, ok := j.(string)
+	if ok {
+		_ = json.Unmarshal([]byte(s), i)
+	}
+	bytes, ok := j.([]byte)
+	if ok {
+		_ = json.Unmarshal(bytes, i)
+	}
 }
 
 func valOf(i ...interface{}) []reflect.Value {
