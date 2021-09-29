@@ -9,7 +9,7 @@ import (
 )
 
 // MessageHandler 用于处理客户端消息
-type MessageHandler func(from int64, message *message.Message) error
+type MessageHandler func(from int64, device int64, message *message.Message) error
 
 // MessageHandleFunc 所有客户端消息都传递到该函数处理
 var MessageHandleFunc MessageHandler = nil
@@ -18,7 +18,7 @@ var MessageHandleFunc MessageHandler = nil
 type IClient interface {
 
 	// SetID 设置该客户端标识 ID
-	SetID(id int64)
+	SetID(id int64, device int64)
 
 	// Closed 返回该客户端连接是否已关闭
 	Closed() bool
@@ -38,6 +38,7 @@ type Client struct {
 	conn conn.Connection
 
 	id     int64
+	device int64
 	time   time.Time
 	closed *comm.AtomicBool
 
@@ -47,20 +48,20 @@ type Client struct {
 	seq *comm.AtomicInt64
 }
 
-func NewClient(conn conn.Connection, id int64) *Client {
+func NewClient(conn conn.Connection) *Client {
 	client := new(Client)
 	client.conn = conn
 	client.closed = comm.NewAtomicBool(false)
 	// 大小为 40 的缓冲管道, 防止短时间消息过多如果网络连接 output 不及时会造成程序阻塞, 可以适当调整
 	client.messages = make(chan *message.Message, 40)
 	client.time = time.Now()
-	client.id = id
 	client.seq = new(comm.AtomicInt64)
 	return client
 }
 
-func (c *Client) SetID(id int64) {
+func (c *Client) SetID(id int64, device int64) {
 	c.id = id
+	c.device = device
 }
 
 func (c *Client) Closed() bool {
@@ -107,7 +108,7 @@ func (c *Client) readMessage() {
 
 		} else {
 			// 交给消息处理者处理消息
-			err = MessageHandleFunc(c.id, msg)
+			err = MessageHandleFunc(c.id, c.device, msg)
 			if err != nil {
 				if c.handleError(msg.Seq, err) {
 					break
@@ -148,7 +149,7 @@ func (c *Client) handleError(seq int64, err error) bool {
 	}
 	_, ok := fatalErr[err]
 	if ok {
-		Manager.ClientLogout(c.id)
+		Manager.ClientLogout(c.id, c.device)
 		logger.D(">>>> client logout due to error: %s", err.Error())
 		return true
 	}

@@ -34,22 +34,13 @@ func (s *Server) ClientSignIn(ctx context.Context, request *pb.SignInRequest, re
 	return nil
 }
 
-func (s *Server) ClientLogout(ctx context.Context, request *pb.UidRequest, reply *pb.Response) error {
-	client.Manager.ClientLogout(request.GetUid())
+func (s *Server) ClientLogout(ctx context.Context, request *pb.LogoutRequest, reply *pb.Response) error {
+	client.Manager.ClientLogout(request.GetUid(), request.GetDevice())
 	return nil
 }
 
-func (s *Server) DispatchMessage(ctx context.Context, request *pb.UidMessageRequest, reply *pb.Response) error {
-	err := client.Manager.HandleMessage(request.GetFrom(), unwrapMessage(request.GetMessage()))
-	if err != nil {
-		// handle err
-		return err
-	}
-	return nil
-}
-
-func (s *Server) EnqueueMessage(ctx context.Context, request *pb.UidMessageRequest, reply *pb.Response) error {
-	client.EnqueueMessage(request.GetFrom(), unwrapMessage(request.Message))
+func (s *Server) EnqueueMessage(ctx context.Context, request *pb.EnqueueMessageRequest, reply *pb.Response) error {
+	client.Manager.EnqueueMessage(request.GetUid(), request.Device, unwrapMessage(request.Message))
 	return nil
 }
 

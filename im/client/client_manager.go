@@ -5,6 +5,14 @@ import (
 	"go_im/im/message"
 )
 
+const (
+	DeviceUnknown int64 = 0
+	DevicePhone         = 1
+	DevicePC            = 2
+	DeviceWeb           = 3
+	DeviceAll           = 99
+)
+
 // Manager 客户端管理入口
 var Manager IClientManager
 
@@ -21,17 +29,22 @@ type IClientManager interface {
 	// ClientSignIn 给一个已存在的客户端设置一个新的 id, 若 uid 已存在, 则新增一个 device 共享这个 id
 	ClientSignIn(oldUid int64, uid int64, device int64)
 
-	// ClientLogout 指定 uid 的客户端退出
-	ClientLogout(uid int64)
+	// ClientLogout 指定 uid, device 的客户端退出
+	ClientLogout(uid int64, device int64)
 
 	// EnqueueMessage 尝试将消息放入指定 uid 的客户端
-	EnqueueMessage(uid int64, message *message.Message)
+	EnqueueMessage(uid int64, device int64, message *message.Message)
 
 	// AllClient 返回所有的客户端 id
 	AllClient() []int64
 }
 
+func EnqueueMessageToDevice(uid int64, device int64, message *message.Message) {
+	Manager.EnqueueMessage(uid, device, message)
+}
+
 // EnqueueMessage Manager.EnqueueMessage 的快捷方法, 预留一个位置对消息入队列进行一些预处理
 func EnqueueMessage(uid int64, message *message.Message) {
-	Manager.EnqueueMessage(uid, message)
+	//
+	Manager.EnqueueMessage(uid, DeviceUnknown, message)
 }

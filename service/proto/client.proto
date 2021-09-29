@@ -15,8 +15,14 @@ message UidRequest{
   int64  uid = 1;
 }
 
-message UidMessageRequest{
-  int64 from = 1;
+message LogoutRequest {
+  int64  uid = 1;
+  int64 device = 3;
+}
+
+message EnqueueMessageRequest{
+  int64 uid = 1;
+  int64 device = 3;
   Message message = 2;
 }
 

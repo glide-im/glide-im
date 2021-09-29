@@ -44,49 +44,36 @@ func (c *Client) ClientConnected(conn conn.Connection) int64 {
 
 func (c *Client) AddClient(uid int64, cs client.IClient) {}
 
-func (c *Client) ClientSignIn(oldUid int64, uid int64, device int64) {
+func (c *Client) ClientSignIn(id int64, uid int64, device int64) {
 	req := &pb.SignInRequest{
-		Old:    oldUid,
+		Old:    id,
 		Uid:    uid,
 		Device: device,
 	}
 	resp := &pb.Response{}
-	err := c.Call(uidTagContext(oldUid), "ClientSignIn", req, resp)
+	err := c.Call(uidTagContext(id, device), "ClientSignIn", req, resp)
 	if err != nil {
 
 	}
 }
 
-func (c *Client) ClientLogout(uid int64) {
+func (c *Client) ClientLogout(uid int64, device int64) {
 	resp := &pb.Response{}
-	err := c.Call(uidTagContext(uid), "ClientLogout", &pb.UidRequest{Uid: uid}, resp)
+	err := c.Call(uidTagContext(uid, device), "ClientLogout", &pb.LogoutRequest{Uid: uid, Device: device}, resp)
 	if err != nil {
 
 	}
 }
 
-func (c *Client) HandleMessage(from int64, message *message.Message) error {
-	req := &pb.UidMessageRequest{
-		From:    from,
+func (c *Client) EnqueueMessage(uid int64, device int64, message *message.Message) {
+
+	req := &pb.EnqueueMessageRequest{
+		Uid:     uid,
+		Device:  device,
 		Message: wrapMessage(message),
 	}
 	resp := &pb.Response{}
-
-	err := c.Call(uidTagContext(from), "HandleMessage", req, resp)
-	if err != nil {
-
-	}
-	return nil
-}
-
-func (c *Client) EnqueueMessage(uid int64, message *message.Message) {
-
-	req := &pb.UidMessageRequest{
-		From:    uid,
-		Message: wrapMessage(message),
-	}
-	resp := &pb.Response{}
-	err := c.Call(uidTagContext(uid), "EnqueueMessage", req, resp)
+	err := c.Call(uidTagContext(uid, device), "EnqueueMessage", req, resp)
 	if err != nil {
 
 	}
@@ -97,9 +84,9 @@ func (c *Client) AllClient() []int64 {
 	return nil
 }
 
-func uidTagContext(uid int64) context.Context {
+func uidTagContext(uid int64, device int64) context.Context {
 	ret := rpc.NewCtxFrom(context.Background())
-	t := fmt.Sprintf("uid_%d", uid)
+	t := fmt.Sprintf("uid_%d_%d", uid, device)
 	ret.PutReqExtra(route.ExtraTag, t)
 	return ret
 }

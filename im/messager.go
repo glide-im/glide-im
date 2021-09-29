@@ -15,14 +15,14 @@ func init() {
 }
 
 // messageHandler handle and dispatch client message
-func messageHandler(from int64, msg *message.Message) error {
+func messageHandler(from int64, device int64, msg *message.Message) error {
 	switch msg.Action {
 	case message.ActionChatMessage:
-		return dispatchChatMessage(from, msg)
+		return dispatchChatMessage(from, device, msg)
 	case message.ActionGroupMessage:
 		return group.Manager.DispatchMessage(from, msg)
 	case message.ActionCSMessage:
-		return dispatchCustomerServiceMsg(from, msg)
+		return dispatchCustomerServiceMsg(from, device, msg)
 	default:
 		if msg.Action.Contains(message.ActionApi) {
 			api.Handle(from, msg)
@@ -33,19 +33,20 @@ func messageHandler(from int64, msg *message.Message) error {
 	return nil
 }
 
-func dispatchCustomerServiceMsg(from int64, msg *message.Message) error {
+func dispatchCustomerServiceMsg(from int64, device int64, msg *message.Message) error {
 	csMsg := new(client.CustomerServiceMessage)
 	err := msg.DeserializeData(csMsg)
-	csMsg.From = from
+	csMsg.Sender = from
 	if err != nil {
 		logger.E("cs message", err)
 		return err
 	}
-	client.EnqueueMessage(csMsg.CsId, msg)
+	// 发送消息给客服
+	client.EnqueueMessageToDevice(csMsg.CsId, client.DeviceUnknown, msg)
 	return nil
 }
 
-func dispatchChatMessage(from int64, msg *message.Message) error {
+func dispatchChatMessage(from int64, device int64, msg *message.Message) error {
 	senderMsg := new(client.SenderChatMessage)
 	err := msg.DeserializeData(senderMsg)
 	if err != nil {
@@ -68,12 +69,12 @@ func dispatchChatMessage(from int64, msg *message.Message) error {
 	}
 	affirm := message.NewMessage(msg.Seq, msg.Action, chatMsg)
 	// send success, return chat message
-	client.EnqueueMessage(from, affirm)
+	client.EnqueueMessageToDevice(from, device, affirm)
 
-	return dispatch(from, chatMsg, senderMsg)
+	return dispatch(from, device, chatMsg, senderMsg)
 }
 
-func dispatch(from int64, chatMsg *dao.ChatMessage, senderMsg *client.SenderChatMessage) error {
+func dispatch(from int64, device int64, chatMsg *dao.ChatMessage, senderMsg *client.SenderChatMessage) error {
 
 	// update receiver's list chat
 	uChat, err := dao.ChatDao.UpdateUserChatMsgTime(senderMsg.Cid, senderMsg.TargetId)

@@ -6,6 +6,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	"go_im/config"
+	"go_im/pkg/logger"
 )
 
 var (
@@ -41,4 +42,5 @@ func initRedis() {
 		MinIdleConns: 0,
 	})
 
+	logger.D("redis init: %s", Redis.Ping().Val())
 }

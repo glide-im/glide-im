@@ -130,17 +130,17 @@ func (x *UidRequest) GetUid() int64 {
 	return 0
 }
 
-type UidMessageRequest struct {
+type LogoutRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	From    int64    `protobuf:"varint,1,opt,name=from,proto3" json:"from,omitempty"`
-	Message *Message `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	Uid    int64 `protobuf:"varint,1,opt,name=uid,proto3" json:"uid,omitempty"`
+	Device int64 `protobuf:"varint,3,opt,name=device,proto3" json:"device,omitempty"`
 }
 
-func (x *UidMessageRequest) Reset() {
-	*x = UidMessageRequest{}
+func (x *LogoutRequest) Reset() {
+	*x = LogoutRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_client_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -148,13 +148,13 @@ func (x *UidMessageRequest) Reset() {
 	}
 }
 
-func (x *UidMessageRequest) String() string {
+func (x *LogoutRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UidMessageRequest) ProtoMessage() {}
+func (*LogoutRequest) ProtoMessage() {}
 
-func (x *UidMessageRequest) ProtoReflect() protoreflect.Message {
+func (x *LogoutRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_client_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -166,19 +166,82 @@ func (x *UidMessageRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UidMessageRequest.ProtoReflect.Descriptor instead.
-func (*UidMessageRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use LogoutRequest.ProtoReflect.Descriptor instead.
+func (*LogoutRequest) Descriptor() ([]byte, []int) {
 	return file_client_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *UidMessageRequest) GetFrom() int64 {
+func (x *LogoutRequest) GetUid() int64 {
 	if x != nil {
-		return x.From
+		return x.Uid
 	}
 	return 0
 }
 
-func (x *UidMessageRequest) GetMessage() *Message {
+func (x *LogoutRequest) GetDevice() int64 {
+	if x != nil {
+		return x.Device
+	}
+	return 0
+}
+
+type EnqueueMessageRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Uid     int64    `protobuf:"varint,1,opt,name=uid,proto3" json:"uid,omitempty"`
+	Device  int64    `protobuf:"varint,3,opt,name=device,proto3" json:"device,omitempty"`
+	Message *Message `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+}
+
+func (x *EnqueueMessageRequest) Reset() {
+	*x = EnqueueMessageRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_client_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EnqueueMessageRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EnqueueMessageRequest) ProtoMessage() {}
+
+func (x *EnqueueMessageRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_client_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EnqueueMessageRequest.ProtoReflect.Descriptor instead.
+func (*EnqueueMessageRequest) Descriptor() ([]byte, []int) {
+	return file_client_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *EnqueueMessageRequest) GetUid() int64 {
+	if x != nil {
+		return x.Uid
+	}
+	return 0
+}
+
+func (x *EnqueueMessageRequest) GetDevice() int64 {
+	if x != nil {
+		return x.Device
+	}
+	return 0
+}
+
+func (x *EnqueueMessageRequest) GetMessage() *Message {
 	if x != nil {
 		return x.Message
 	}
@@ -196,7 +259,7 @@ type AllClientResponse struct {
 func (x *AllClientResponse) Reset() {
 	*x = AllClientResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_client_proto_msgTypes[3]
+		mi := &file_client_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -209,7 +272,7 @@ func (x *AllClientResponse) String() string {
 func (*AllClientResponse) ProtoMessage() {}
 
 func (x *AllClientResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_client_proto_msgTypes[3]
+	mi := &file_client_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -222,7 +285,7 @@ func (x *AllClientResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AllClientResponse.ProtoReflect.Descriptor instead.
 func (*AllClientResponse) Descriptor() ([]byte, []int) {
-	return file_client_proto_rawDescGZIP(), []int{3}
+	return file_client_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *AllClientResponse) GetUid() []int64 {
@@ -245,17 +308,22 @@ var file_client_proto_rawDesc = []byte{
 	0x0a, 0x06, 0x64, 0x65, 0x76, 0x69, 0x63, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06,
 	0x64, 0x65, 0x76, 0x69, 0x63, 0x65, 0x22, 0x1e, 0x0a, 0x0a, 0x55, 0x69, 0x64, 0x52, 0x65, 0x71,
 	0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x03, 0x52, 0x03, 0x75, 0x69, 0x64, 0x22, 0x67, 0x0a, 0x11, 0x55, 0x69, 0x64, 0x4d, 0x65, 0x73,
-	0x73, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x66,
-	0x72, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x04, 0x66, 0x72, 0x6f, 0x6d, 0x12,
-	0x3e, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x24, 0x2e, 0x63, 0x6f, 0x6d, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x64, 0x65,
-	0x6e, 0x67, 0x7a, 0x69, 0x69, 0x2e, 0x69, 0x6d, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x4d,
-	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x22,
-	0x25, 0x0a, 0x11, 0x41, 0x6c, 0x6c, 0x43, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x69, 0x64, 0x18, 0x01, 0x20, 0x03, 0x28,
-	0x03, 0x52, 0x03, 0x75, 0x69, 0x64, 0x42, 0x05, 0x5a, 0x03, 0x2f, 0x70, 0x62, 0x62, 0x06, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x03, 0x52, 0x03, 0x75, 0x69, 0x64, 0x22, 0x39, 0x0a, 0x0d, 0x4c, 0x6f, 0x67, 0x6f, 0x75, 0x74,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x69, 0x64, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x03, 0x52, 0x03, 0x75, 0x69, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x64, 0x65, 0x76,
+	0x69, 0x63, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x64, 0x65, 0x76, 0x69, 0x63,
+	0x65, 0x22, 0x81, 0x01, 0x0a, 0x15, 0x45, 0x6e, 0x71, 0x75, 0x65, 0x75, 0x65, 0x4d, 0x65, 0x73,
+	0x73, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x75,
+	0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x03, 0x75, 0x69, 0x64, 0x12, 0x16, 0x0a,
+	0x06, 0x64, 0x65, 0x76, 0x69, 0x63, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x64,
+	0x65, 0x76, 0x69, 0x63, 0x65, 0x12, 0x3e, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x24, 0x2e, 0x63, 0x6f, 0x6d, 0x2e, 0x67, 0x69, 0x74,
+	0x68, 0x75, 0x62, 0x2e, 0x64, 0x65, 0x6e, 0x67, 0x7a, 0x69, 0x69, 0x2e, 0x69, 0x6d, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x52, 0x07, 0x6d, 0x65,
+	0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0x25, 0x0a, 0x11, 0x41, 0x6c, 0x6c, 0x43, 0x6c, 0x69, 0x65,
+	0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x69,
+	0x64, 0x18, 0x01, 0x20, 0x03, 0x28, 0x03, 0x52, 0x03, 0x75, 0x69, 0x64, 0x42, 0x05, 0x5a, 0x03,
+	0x2f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -270,16 +338,17 @@ func file_client_proto_rawDescGZIP() []byte {
 	return file_client_proto_rawDescData
 }
 
-var file_client_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_client_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_client_proto_goTypes = []interface{}{
-	(*SignInRequest)(nil),     // 0: com.github.dengzii.im.proto.SignInRequest
-	(*UidRequest)(nil),        // 1: com.github.dengzii.im.proto.UidRequest
-	(*UidMessageRequest)(nil), // 2: com.github.dengzii.im.proto.UidMessageRequest
-	(*AllClientResponse)(nil), // 3: com.github.dengzii.im.proto.AllClientResponse
-	(*Message)(nil),           // 4: com.github.dengzii.im.proto.Message
+	(*SignInRequest)(nil),         // 0: com.github.dengzii.im.proto.SignInRequest
+	(*UidRequest)(nil),            // 1: com.github.dengzii.im.proto.UidRequest
+	(*LogoutRequest)(nil),         // 2: com.github.dengzii.im.proto.LogoutRequest
+	(*EnqueueMessageRequest)(nil), // 3: com.github.dengzii.im.proto.EnqueueMessageRequest
+	(*AllClientResponse)(nil),     // 4: com.github.dengzii.im.proto.AllClientResponse
+	(*Message)(nil),               // 5: com.github.dengzii.im.proto.Message
 }
 var file_client_proto_depIdxs = []int32{
-	4, // 0: com.github.dengzii.im.proto.UidMessageRequest.message:type_name -> com.github.dengzii.im.proto.Message
+	5, // 0: com.github.dengzii.im.proto.EnqueueMessageRequest.message:type_name -> com.github.dengzii.im.proto.Message
 	1, // [1:1] is the sub-list for method output_type
 	1, // [1:1] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
@@ -319,7 +388,7 @@ func file_client_proto_init() {
 			}
 		}
 		file_client_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UidMessageRequest); i {
+			switch v := v.(*LogoutRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -331,6 +400,18 @@ func file_client_proto_init() {
 			}
 		}
 		file_client_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*EnqueueMessageRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_client_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*AllClientResponse); i {
 			case 0:
 				return &v.state
@@ -349,7 +430,7 @@ func file_client_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_client_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

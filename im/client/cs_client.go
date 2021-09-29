@@ -28,7 +28,7 @@ func NewCustomerServiceClient(uid int64) *CustomerServiceClient {
 	return client
 }
 
-func (o *CustomerServiceClient) SetID(_ int64) {}
+func (o *CustomerServiceClient) SetID(_, _ int64) {}
 
 func (o *CustomerServiceClient) Closed() bool {
 	// no connection, always online
@@ -43,10 +43,10 @@ func (o *CustomerServiceClient) EnqueueMessage(message *message.Message) {
 		return
 	}
 
-	_, ok := o.waiter[csMsg.From]
+	_, ok := o.waiter[csMsg.Sender]
 	if ok {
 		// customer service staffs' message, dispatch to customer
-		EnqueueMessage(csMsg.To, message)
+		EnqueueMessage(csMsg.Receiver, message)
 	} else {
 
 	}

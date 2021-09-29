@@ -38,9 +38,9 @@ type ReceiverChatMessage struct {
 // CustomerServiceMessage 表示客服消息
 type CustomerServiceMessage struct {
 	// sender's id
-	From int64
+	Sender int64
 	// receiver's id
-	To int64
+	Receiver int64
 	// customer service id
 	CsId int64
 

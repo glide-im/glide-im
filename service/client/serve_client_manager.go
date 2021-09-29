@@ -7,7 +7,6 @@ import (
 	"go_im/im/conn"
 	"go_im/im/message"
 	"go_im/pkg/logger"
-	"go_im/service/pb"
 	"go_im/service/route"
 	"go_im/service/rpc"
 )
@@ -29,10 +28,7 @@ func newManager(etcd []string, myAddr string) (*manager, error) {
 	}
 	var err error
 	ret.router, err = route.NewClient(options)
-	if err != nil {
-		return nil, err
-	}
-	return ret, nil
+	return ret, err
 }
 
 func (m *manager) AddClient(uid int64, cs client.IClient) {
@@ -47,8 +43,8 @@ func (m *manager) AddClient(uid int64, cs client.IClient) {
 
 func (m *manager) ClientConnected(conn conn.Connection) int64 {
 	uid := m.m.ClientConnected(conn)
-	uidTag := fmt.Sprintf("uid_%d", uid)
-	err := m.router.SetTag("client", uidTag, m.myAddr)
+	tag := fmt.Sprintf("uid_%d_%d", uid, client.DeviceUnknown)
+	err := m.router.SetTag("client", tag, m.myAddr)
 	if err != nil {
 		logger.E("set route tag error", err)
 		return 0
@@ -57,36 +53,29 @@ func (m *manager) ClientConnected(conn conn.Connection) int64 {
 }
 
 func (m *manager) ClientSignIn(oldUid int64, uid int64, device int64) {
-	err := m.router.RemoveTag("client", fmt.Sprintf("uid_%d", oldUid))
+	err := m.router.RemoveTag("client", fmt.Sprintf("uid_%d_%d", oldUid, client.DeviceUnknown))
 	if err != nil {
 
 	}
-	uidTag := fmt.Sprintf("uid_%d", uid)
-	err = m.router.SetTag("client", uidTag, m.myAddr)
+
+	tag := fmt.Sprintf("uid_%d_%d", uid, device)
+	err = m.router.SetTag("client", tag, m.myAddr)
 	if err != nil {
 
 	}
 	m.m.ClientSignIn(oldUid, uid, device)
 }
 
-func (m *manager) ClientLogout(uid int64) {
-	err := m.router.RemoveTag("client", fmt.Sprintf("uid_%d", uid))
+func (m *manager) ClientLogout(uid int64, device int64) {
+	err := m.router.RemoveTag("client", fmt.Sprintf("uid_%d_%d", uid, device))
 	if err != nil {
 
 	}
-	m.m.ClientLogout(uid)
+	m.m.ClientLogout(uid, device)
 }
 
-func (m *manager) EnqueueMessage(uid int64, message *message.Message) {
-
-	req := &pb.UidMessageRequest{
-		From:    uid,
-		Message: wrapMessage(message),
-	}
-	resp := &pb.Response{}
-	_ = m.router.Route(uidTagContext(uid), "client.EnqueueMessage", req, resp)
-
-	m.m.EnqueueMessage(uid, message)
+func (m *manager) EnqueueMessage(uid int64, device int64, message *message.Message) {
+	m.m.EnqueueMessage(uid, device, message)
 }
 
 func (m *manager) AllClient() []int64 {
