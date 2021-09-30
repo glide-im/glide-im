@@ -16,10 +16,11 @@ const (
 )
 
 const (
-	ExtraTag        = "rt_extra_tag"
-	ExtraSrvUrl     = "rt_extra_srv_url"
-	ExtraFrom       = "rt_extra_from"
-	ExtraSelectMode = "rt_extra_select_mode"
+	ExtraTag = "rt_extra_tag"
+
+	ExtraUid    = "rt_extra_uid"
+	ExtraDevice = "rt_extra_device"
+	ExtraGid    = "rt_extra_gid"
 )
 
 type Server struct {
@@ -34,6 +35,28 @@ func NewServer(options *rpc.ServerOptions) *Server {
 	}
 	s.BaseServer.Register(options.Name, s)
 	return s
+}
+
+func (s *Server) RtSignIn(ctx context.Context, req *pb.RtSignIn, _ *emptypb.Empty) error {
+	if req.GetUid() != 0 {
+		putDeviceRoute(req.GetUid(), req.GetDevice(), req.GetAddr())
+	} else if req.GetGid() != 0 {
+		putGroupRoute(req.GetGid(), req.GetAddr())
+	} else {
+		return errors.New("invalid request param")
+	}
+	return nil
+}
+
+func (s *Server) RtLogout(ctx context.Context, req *pb.RtLogout, _ *emptypb.Empty) error {
+	if req.GetUid() != 0 {
+		removeDeviceRoute(req.GetUid(), req.GetDevice())
+	} else if req.GetGid() != 0 {
+		removeGroupRoute(req.GetGid())
+	} else {
+		return errors.New("invalid request param")
+	}
+	return nil
 }
 
 func (s *Server) SetTag(ctx context.Context, req *pb.SetTagReq, _ *emptypb.Empty) error {

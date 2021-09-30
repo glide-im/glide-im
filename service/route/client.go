@@ -57,7 +57,7 @@ func (c *Client) GetAllTag(srvId string) (map[string]string, error) {
 	return resp.GetTags(), err
 }
 
-func (c *Client) Route(ctx context.Context, target string, request, reply interface{}) error {
+func (c *Client) Route(ctx context.Context, extra map[string]string, target string, request, reply interface{}) error {
 
 	split := strings.Split(target, ".")
 	if len(split) != 2 {
@@ -80,7 +80,7 @@ func (c *Client) Route(ctx context.Context, target string, request, reply interf
 		SrvId:  split[0],
 		Fn:     split[1],
 		Params: reqParam,
-		Extra:  map[string]string{},
+		Extra:  extra,
 	}
 	routeReply := &pb.RouteReply{}
 	err = c.Call(ctx, "Route", routeReq, routeReply)
@@ -100,13 +100,9 @@ func (c *Client) Route(ctx context.Context, target string, request, reply interf
 	return nil
 }
 
-func (c *Client) Route2(target string, request interface{}, reply interface{}) error {
-	return c.Route(context.Background(), target, request, reply)
-}
-
 func (c *Client) RouteByTag(target, tag string, request, reply interface{}) error {
 	ctx := context.WithValue(context.Background(), share.ReqMetaDataKey, map[string]string{ExtraTag: tag})
-	return c.Route(ctx, target, request, reply)
+	return c.Route(ctx, map[string]string{}, target, request, reply)
 }
 
 func RegisterService(srvId string, etcd []string) error {
@@ -126,4 +122,40 @@ func RegisterService(srvId string, etcd []string) error {
 		DiscoverySrvUrl: etcd,
 	}
 	return cli.Register(req, &emptypb.Empty{})
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+type RouterCli struct {
+	rt    *Client
+	srvId string
+}
+
+func NewRouter(srvId string, routeOpts *rpc.ClientOptions) (*RouterCli, error) {
+	routeOpts.Name = ServiceName
+	c, err := NewClient(routeOpts)
+	if err != nil {
+		return nil, err
+	}
+	return &RouterCli{
+		rt:    c,
+		srvId: srvId,
+	}, nil
+}
+
+func (r *RouterCli) Call(ctx context.Context, fn string, request, reply interface{}) error {
+	path := r.srvId + "." + fn
+	return r.rt.Route(ctx, map[string]string{}, path, request, reply)
+}
+
+func (r *RouterCli) Broadcast(fn string, request, reply interface{}) error {
+	return errors.New("broadcast on proxy mode is unsupported")
+}
+
+func (r *RouterCli) Run() error {
+	return r.rt.Run()
+}
+
+func (r *RouterCli) Close() error {
+	return r.rt.Close()
 }

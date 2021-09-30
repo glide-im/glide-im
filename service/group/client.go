@@ -5,6 +5,7 @@ import (
 	"go_im/im/dao"
 	"go_im/im/group"
 	"go_im/im/message"
+	"go_im/pkg/logger"
 	"go_im/service/pb"
 	"go_im/service/route"
 	"go_im/service/rpc"
@@ -100,7 +101,7 @@ func (c *Client) DispatchNotifyMessage(uid int64, gid int64, message *message.Me
 	}
 }
 
-func (c *Client) DispatchMessage(uid int64, message *message.Message) error {
+func (c *Client) DispatchMessage(uid int64, message *message.Message) {
 	req := &pb.DispatchMessageRequest{
 		Uid:     uid,
 		Message: wrapMessage(message),
@@ -108,9 +109,8 @@ func (c *Client) DispatchMessage(uid int64, message *message.Message) error {
 	resp := &pb.Response{}
 	err := c.Call(context.Background(), "HandleMessage", req, resp)
 	if err != nil {
-
+		logger.E("dispatch group message", err)
 	}
-	return err
 }
 
 func wrapMessage(msg *message.Message) *pb.Message {

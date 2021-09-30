@@ -1,7 +1,6 @@
 package im
 
 import (
-	"errors"
 	"go_im/im/api"
 	"go_im/im/client"
 	"go_im/im/dao"
@@ -15,14 +14,14 @@ func init() {
 }
 
 // messageHandler handle and dispatch client message
-func messageHandler(from int64, device int64, msg *message.Message) error {
+func messageHandler(from int64, device int64, msg *message.Message) {
 	switch msg.Action {
 	case message.ActionChatMessage:
-		return dispatchChatMessage(from, device, msg)
+		dispatchChatMessage(from, msg)
 	case message.ActionGroupMessage:
-		return group.Manager.DispatchMessage(from, msg)
+		group.Manager.DispatchMessage(from, msg)
 	case message.ActionCSMessage:
-		return dispatchCustomerServiceMsg(from, device, msg)
+		dispatchCustomerServiceMsg(from, msg)
 	default:
 		if msg.Action.Contains(message.ActionApi) {
 			api.Handle(from, msg)
@@ -30,33 +29,31 @@ func messageHandler(from int64, device int64, msg *message.Message) error {
 			// unknown type
 		}
 	}
-	return nil
 }
 
-func dispatchCustomerServiceMsg(from int64, device int64, msg *message.Message) error {
+func dispatchCustomerServiceMsg(from int64, msg *message.Message) {
 	csMsg := new(client.CustomerServiceMessage)
 	err := msg.DeserializeData(csMsg)
 	csMsg.Sender = from
 	if err != nil {
 		logger.E("cs message", err)
-		return err
+		return
 	}
 	// 发送消息给客服
-	client.EnqueueMessageToDevice(csMsg.CsId, client.DeviceUnknown, msg)
-	return nil
+	client.EnqueueMessage(csMsg.CsId, msg)
 }
 
-func dispatchChatMessage(from int64, device int64, msg *message.Message) error {
+func dispatchChatMessage(from int64, msg *message.Message) {
 	senderMsg := new(client.SenderChatMessage)
 	err := msg.DeserializeData(senderMsg)
 	if err != nil {
 		logger.E("sender chat senderMsg ", err)
-		return err
+		return
 	}
 	logger.D("HandleMessage(from=%d): cid=%d, senderMsg=%s", from, senderMsg.Cid, senderMsg.Message)
 
 	if senderMsg.Cid <= 0 {
-		return errors.New("chat not create")
+		logger.E("dispatch message", "chat not create")
 	}
 
 	// update sender read time
@@ -65,21 +62,22 @@ func dispatchChatMessage(from int64, device int64, msg *message.Message) error {
 	// insert message to chat
 	chatMsg, err := dao.ChatDao.NewChatMessage(senderMsg.Cid, from, senderMsg.Message, senderMsg.MessageType)
 	if err != nil {
-		return err
+		return
 	}
 	affirm := message.NewMessage(msg.Seq, msg.Action, chatMsg)
 	// send success, return chat message
-	client.EnqueueMessageToDevice(from, device, affirm)
+	client.EnqueueMessage(from, affirm)
 
-	return dispatch(from, device, chatMsg, senderMsg)
+	dispatch(from, chatMsg, senderMsg)
 }
 
-func dispatch(from int64, device int64, chatMsg *dao.ChatMessage, senderMsg *client.SenderChatMessage) error {
+func dispatch(from int64, chatMsg *dao.ChatMessage, senderMsg *client.SenderChatMessage) {
 
 	// update receiver's list chat
 	uChat, err := dao.ChatDao.UpdateUserChatMsgTime(senderMsg.Cid, senderMsg.TargetId)
 	if err != nil {
-		return err
+		logger.E("dispatch message", err)
+		return
 	}
 
 	receiverMsg := client.ReceiverChatMessage{
@@ -94,6 +92,4 @@ func dispatch(from int64, device int64, chatMsg *dao.ChatMessage, senderMsg *cli
 
 	dispatchMsg := message.NewMessage(-1, message.ActionChatMessage, receiverMsg)
 	client.EnqueueMessage(senderMsg.TargetId, dispatchMsg)
-
-	return nil
 }

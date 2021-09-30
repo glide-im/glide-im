@@ -41,5 +41,20 @@ func (r *service) removeTag(tag string) {
 
 func (r *service) route(ctx context.Context, fn string, param *pb.RouteReq, reply *pb.RouteReply) error {
 	logger.D("%s.%s", r.name, fn)
-	return r.Call(ctx, fn, param.GetParams(), reply.GetReply())
+	switch r.name {
+	case "client":
+		return r.routeClient(ctx, fn, param, reply)
+	case "group":
+		return r.routeGroup(ctx, fn, param, reply)
+	default:
+		return r.Call(ctx, fn, param.GetParams(), reply.GetReply())
+	}
+}
+
+func (r *service) routeClient(ctx context.Context, fn string, param *pb.RouteReq, reply *pb.RouteReply) error {
+	return nil
+}
+
+func (r *service) routeGroup(ctx context.Context, fn string, param *pb.RouteReq, reply *pb.RouteReply) error {
+	return nil
 }

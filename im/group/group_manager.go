@@ -20,5 +20,5 @@ type IGroupManager interface {
 
 	DispatchNotifyMessage(uid int64, gid int64, message *message.Message)
 
-	DispatchMessage(uid int64, message *message.Message) error
+	DispatchMessage(uid int64, message *message.Message)
 }

@@ -2,13 +2,13 @@ package client
 
 import (
 	"context"
-	"fmt"
 	"go_im/im/client"
 	"go_im/im/conn"
 	"go_im/im/message"
 	"go_im/service/pb"
 	"go_im/service/route"
 	"go_im/service/rpc"
+	"strconv"
 )
 
 type Client struct {
@@ -51,7 +51,7 @@ func (c *Client) ClientSignIn(id int64, uid int64, device int64) {
 		Device: device,
 	}
 	resp := &pb.Response{}
-	err := c.Call(uidTagContext(id, device), "ClientSignIn", req, resp)
+	err := c.Call(getTagContext(id, device), "ClientSignIn", req, resp)
 	if err != nil {
 
 	}
@@ -59,21 +59,20 @@ func (c *Client) ClientSignIn(id int64, uid int64, device int64) {
 
 func (c *Client) ClientLogout(uid int64, device int64) {
 	resp := &pb.Response{}
-	err := c.Call(uidTagContext(uid, device), "ClientLogout", &pb.LogoutRequest{Uid: uid, Device: device}, resp)
+	err := c.Call(getTagContext(uid, device), "ClientLogout", &pb.LogoutRequest{Uid: uid, Device: device}, resp)
 	if err != nil {
 
 	}
 }
 
-func (c *Client) EnqueueMessage(uid int64, device int64, message *message.Message) {
+func (c *Client) EnqueueMessage(uid int64, message *message.Message) {
 
 	req := &pb.EnqueueMessageRequest{
 		Uid:     uid,
-		Device:  device,
 		Message: wrapMessage(message),
 	}
 	resp := &pb.Response{}
-	err := c.Call(uidTagContext(uid, device), "EnqueueMessage", req, resp)
+	err := c.Call(getTagContext(uid, -1), "EnqueueMessage", req, resp)
 	if err != nil {
 
 	}
@@ -84,10 +83,12 @@ func (c *Client) AllClient() []int64 {
 	return nil
 }
 
-func uidTagContext(uid int64, device int64) context.Context {
+func getTagContext(uid int64, device int64) context.Context {
 	ret := rpc.NewCtxFrom(context.Background())
-	t := fmt.Sprintf("uid_%d_%d", uid, device)
-	ret.PutReqExtra(route.ExtraTag, t)
+	ret.PutReqExtra(route.ExtraUid, strconv.FormatInt(uid, 10))
+	if device >= 0 {
+		ret.PutReqExtra(route.ExtraDevice, strconv.FormatInt(device, 10))
+	}
 	return ret
 }
 

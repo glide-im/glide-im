@@ -87,26 +87,27 @@ func (m *groupManager) DispatchNotifyMessage(uid int64, gid int64, message *mess
 	}
 }
 
-func (m *groupManager) DispatchMessage(uid int64, msg *message.Message) error {
+func (m *groupManager) DispatchMessage(uid int64, msg *message.Message) {
 	logger.D("GroupManager.HandleMessage: %s", msg)
 
 	groupMsg := new(client.GroupMessage)
 	err := msg.DeserializeData(groupMsg)
 	if err != nil {
 		logger.E("dispatch group message error", err)
-		return err
+		return
 	}
 
 	g := m.getGroup(groupMsg.TargetId)
 
 	if g == nil {
-		return errors.New("group not exist")
+		logger.E("dispatch group message", "group not exist")
+		return
 	}
 
-	//
 	chatMsg, err := dao.ChatDao.NewChatMessage(groupMsg.Cid, uid, groupMsg.Message, groupMsg.MessageType)
 	if err != nil {
-		return err
+		logger.E("dispatch group message", err)
+		return
 	}
 
 	rMsg := client.ReceiverChatMessage{
@@ -122,7 +123,6 @@ func (m *groupManager) DispatchMessage(uid int64, msg *message.Message) error {
 	resp := message.NewMessage(-1, message.ActionChatMessage, rMsg)
 
 	g.SendMessage(uid, resp)
-	return nil
 }
 
 func (m *groupManager) getGroup(gid int64) *group.Group {

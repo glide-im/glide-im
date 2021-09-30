@@ -9,7 +9,7 @@ import (
 )
 
 // MessageHandler 用于处理客户端消息
-type MessageHandler func(from int64, device int64, message *message.Message) error
+type MessageHandler func(from int64, device int64, message *message.Message)
 
 // MessageHandleFunc 所有客户端消息都传递到该函数处理
 var MessageHandleFunc MessageHandler = nil
@@ -107,13 +107,7 @@ func (c *Client) readMessage() {
 		if msg.Action == message.ActionHeartbeat {
 
 		} else {
-			// 交给消息处理者处理消息
-			err = MessageHandleFunc(c.id, c.device, msg)
-			if err != nil {
-				if c.handleError(msg.Seq, err) {
-					break
-				}
-			}
+			MessageHandleFunc(c.id, c.device, msg)
 		}
 	}
 }

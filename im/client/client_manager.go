@@ -33,18 +33,14 @@ type IClientManager interface {
 	ClientLogout(uid int64, device int64)
 
 	// EnqueueMessage 尝试将消息放入指定 uid 的客户端
-	EnqueueMessage(uid int64, device int64, message *message.Message)
+	EnqueueMessage(uid int64, message *message.Message)
 
 	// AllClient 返回所有的客户端 id
 	AllClient() []int64
 }
 
-func EnqueueMessageToDevice(uid int64, device int64, message *message.Message) {
-	Manager.EnqueueMessage(uid, device, message)
-}
-
 // EnqueueMessage Manager.EnqueueMessage 的快捷方法, 预留一个位置对消息入队列进行一些预处理
 func EnqueueMessage(uid int64, message *message.Message) {
 	//
-	Manager.EnqueueMessage(uid, DeviceUnknown, message)
+	Manager.EnqueueMessage(uid, message)
 }

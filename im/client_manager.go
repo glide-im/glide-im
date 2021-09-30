@@ -66,16 +66,15 @@ func (c *ClientManagerImpl) ClientLogout(uid int64, device int64) {
 	cl.remove(device)
 }
 
-func (c *ClientManagerImpl) EnqueueMessage(uid int64, device int64, msg *message.Message) {
+func (c *ClientManagerImpl) EnqueueMessage(uid int64, msg *message.Message) {
 	ds := c.clients.get(uid)
 	if ds == nil || ds.size() == 0 {
 		// offline
 		return
 	}
-	cli := ds.get(device)
-	if cli != nil {
-		cli.EnqueueMessage(msg)
-	}
+	ds.foreach(func(device int64, c client.IClient) {
+		c.EnqueueMessage(msg)
+	})
 }
 
 func (c *ClientManagerImpl) AllClient() []int64 {
