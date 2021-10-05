@@ -16,7 +16,8 @@ const (
 )
 
 const (
-	ExtraTag = "rt_extra_tag"
+	ExtraTag    = "rt_extra_tag"
+	ExtraTarget = "rt_extra_target"
 
 	ExtraUid    = "rt_extra_uid"
 	ExtraDevice = "rt_extra_device"
