@@ -53,11 +53,11 @@ func (m *groupManager) AddGroup(g *dao.Group, owner int64) {
 	m.groups.Put(g.Gid, group.NewGroup(g))
 }
 
-func (m *groupManager) GetGroup(gid int64) *dao.Group {
+func (m *groupManager) GetGroup1(gid int64) *dao.Group {
 
 	g := m.groups.Get(gid)
 	if g != nil {
-		return g.Group
+		return nil
 	}
 
 	dbGroup, err := dao.GroupDao.GetGroup(gid)
@@ -77,7 +77,7 @@ func (m *groupManager) GetGroup(gid int64) *dao.Group {
 		g.PutMember(member.Uid, member.Type)
 	}
 	m.groups.Put(gid, g)
-	return g.Group
+	return dbGroup
 }
 
 func (m *groupManager) DispatchNotifyMessage(uid int64, gid int64, message *message.Message) {

@@ -9,9 +9,11 @@ import (
 )
 
 type Group struct {
-	Gid   int64
-	Cid   int64
-	Group *dao.Group
+	Gid int64
+	Cid int64
+
+	NextMID int64
+	group   *dao.Group
 
 	members *groupMemberMap
 }
@@ -21,7 +23,7 @@ func NewGroup(group *dao.Group) *Group {
 	ret.members = newGroupMemberMap()
 	ret.Gid = group.Gid
 	ret.Cid = group.ChatId
-	ret.Group = group
+	ret.group = group
 	return ret
 }
 
