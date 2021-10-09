@@ -71,13 +71,13 @@ func runApiService(t ServerType) {
 		options := defaultSrvOpts
 		options.Port = PortApiSrv
 		server := api.NewServer(&options)
-		api2.SetImpl(im.NewApiRouter())
+		api2.SetHandler(im.NewApiRouter())
 		run(server)
 	} else {
 		clientOpts := defaultCliOpts
 		clientOpts.Port = PortApiSrv
 		c, _ := api.NewClient(&clientOpts)
-		api2.SetImpl(c)
+		api2.SetHandler(c)
 		run(c)
 	}
 }

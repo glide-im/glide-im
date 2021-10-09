@@ -1,6 +1,7 @@
 package im
 
 import (
+	"github.com/panjf2000/ants/v2"
 	"go_im/im/api"
 	"go_im/im/client"
 	"go_im/im/dao"
@@ -9,25 +10,45 @@ import (
 	"go_im/pkg/logger"
 )
 
+// execPool 100 capacity goroutine pool, 假设每个消息处理需要10ms, 一个协程则每秒能处理100条消息
+var execPool *ants.Pool
+
 func init() {
 	client.MessageHandleFunc = messageHandler
+
+	var err error
+	execPool, err = ants.NewPool(100,
+		ants.WithNonblocking(true),
+		ants.WithPanicHandler(onHandleMessagePanic),
+		//ants.WithPreAlloc(true),
+	)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // messageHandler handle and dispatch client message
 func messageHandler(from int64, device int64, msg *message.Message) {
-	switch msg.Action {
-	case message.ActionChatMessage:
-		dispatchChatMessage(from, msg)
-	case message.ActionGroupMessage:
-		group.Manager.DispatchMessage(from, msg)
-	case message.ActionCSMessage:
-		dispatchCustomerServiceMsg(from, msg)
-	default:
-		if msg.Action.Contains(message.ActionApi) {
-			api.Handle(from, msg)
-		} else {
-			// unknown type
+	err := execPool.Submit(func() {
+		switch msg.Action {
+		case message.ActionChatMessage:
+			dispatchChatMessage(from, msg)
+		case message.ActionGroupMessage:
+			group.Manager.DispatchMessage(from, msg)
+		case message.ActionCSMessage:
+			dispatchCustomerServiceMsg(from, msg)
+		default:
+			if msg.Action.Contains(message.ActionApi) {
+				api.Handle(from, msg)
+			} else {
+				client.EnqueueMessage(from, message.NewMessage(-1, message.ActionNotify, "unknown action"))
+				logger.W("receive a unknown action message")
+			}
 		}
+	})
+	if err != nil {
+		client.EnqueueMessage(from, message.NewMessage(-1, message.ActionNotify, "internal server error"))
+		logger.E("async handle message error", err)
 	}
 }
 
@@ -47,10 +68,10 @@ func dispatchChatMessage(from int64, msg *message.Message) {
 	senderMsg := new(client.SenderChatMessage)
 	err := msg.DeserializeData(senderMsg)
 	if err != nil {
+		client.EnqueueMessage(from, message.NewMessage(-1, message.ActionNotify, "send message failed"))
 		logger.E("sender chat senderMsg ", err)
 		return
 	}
-	logger.D("HandleMessage(from=%d): cid=%d, senderMsg=%s", from, senderMsg.Cid, senderMsg.Message)
 
 	if senderMsg.Cid <= 0 {
 		logger.E("dispatch message", "chat not create")
@@ -92,4 +113,8 @@ func dispatch(from int64, chatMsg *dao.ChatMessage, senderMsg *client.SenderChat
 
 	dispatchMsg := message.NewMessage(-1, message.ActionChatMessage, receiverMsg)
 	client.EnqueueMessage(senderMsg.TargetId, dispatchMsg)
+}
+
+func onHandleMessagePanic(i interface{}) {
+	logger.E("handler message panic", i)
 }

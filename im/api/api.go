@@ -5,18 +5,18 @@ import (
 	"go_im/im/message"
 )
 
-var Impl IApiHandler
+var apiHandler IApiHandler
 
 type IApiHandler interface {
 	Handle(uid int64, message *message.Message)
 }
 
-func SetImpl(api IApiHandler) {
-	Impl = api
+func SetHandler(api IApiHandler) {
+	apiHandler = api
 }
 
 func Handle(uid int64, message *message.Message) {
-	Impl.Handle(uid, message)
+	apiHandler.Handle(uid, message)
 }
 
 func respond(uid int64, seq int64, action message.Action, data interface{}) {

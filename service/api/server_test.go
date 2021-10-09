@@ -11,7 +11,7 @@ import (
 
 func TestNewServer(t *testing.T) {
 
-	api.SetImpl(im.NewApiRouter())
+	api.SetHandler(im.NewApiRouter())
 	client.Manager = im.NewClientManager()
 	group.Manager = im.NewGroupManager()
 
@@ -29,7 +29,7 @@ func TestNewServer(t *testing.T) {
 
 func TestNewServer2(t *testing.T) {
 
-	api.SetImpl(im.NewApiRouter())
+	api.SetHandler(im.NewApiRouter())
 	client.Manager = im.NewClientManager()
 	group.Manager = im.NewGroupManager()
 

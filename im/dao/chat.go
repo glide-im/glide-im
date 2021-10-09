@@ -16,22 +16,29 @@ func InitMessageDao() {
 }
 
 var ChatDao = &chatDao{
-	keyMessageIdIncr:  "user:message:message:incr_id",
 	keyChatIdIncr:     "user:message:chat:incr_id",
 	keyUserChatIdIncr: "user:message:user_chat:incr_id",
 }
 
 type chatDao struct {
-	keyMessageIdIncr  string
 	keyChatIdIncr     string
 	keyUserChatIdIncr string
 }
 
-func (m *chatDao) GetChat(target int64, typ int8) (*Chat, error) {
+func (m *chatDao) GetChatByTarget(target int64, typ int8) (*Chat, error) {
 
 	c := new(Chat)
 	err := db.DB.Table("im_chat").Where("target_id = ? and chat_type = ?", target, typ).Limit(1).Find(c).Error
 	return c, err
+}
+
+func (m *chatDao) GetChat(chatId int64) *Chat {
+	c := new(Chat)
+	err := db.DB.Table("im_chat").Where("cid = ?", chatId).Limit(1).Find(c).Error
+	if err != nil {
+		return nil
+	}
+	return c
 }
 
 func (m *chatDao) GetUserChatList(uid int64) ([]*UserChat, error) {
@@ -111,13 +118,10 @@ func (m *chatDao) NewUserChat(cid int64, uid int64, target int64, typ int8) (*Us
 	return &uc, nil
 }
 
-// NewChatMessage
+// NewChatMessage 插入一条新消息到数据库
 func (m *chatDao) NewChatMessage(cid int64, sender int64, msg string, typ int8) (*ChatMessage, error) {
 
-	mid, err := db.Redis.Incr(m.keyMessageIdIncr).Result()
-	if err != nil {
-		return nil, err
-	}
+	mid := GenMessageId(cid)
 
 	cm := ChatMessage{
 		Mid:         mid,

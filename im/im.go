@@ -36,7 +36,7 @@ func NewServer(options Options) *Server {
 	ret := &Server{
 		opts: options,
 	}
-	api.SetImpl(options.ApiImpl)
+	api.SetHandler(options.ApiImpl)
 	group.Manager = options.GroupMgrImpl
 	client.Manager = options.ClientMgrImpl
 

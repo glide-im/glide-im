@@ -24,6 +24,7 @@ type Chat struct {
 	Cid          int64 `gorm:"primary_key"`
 	ChatType     int8
 	TargetId     int64
+	NextMid      int64
 	NewMessageAt Timestamp `gorm:"type:datetime"`
 	CreateAt     Timestamp `gorm:"type:datetime"`
 }
@@ -41,7 +42,8 @@ type UserChat struct {
 }
 
 type ChatMessage struct {
-	Mid         int64 `gorm:"primary_key"`
+	ID          int64 `gorm:"primary_key"`
+	Mid         int64
 	Cid         int64
 	Sender      int64
 	SendAt      Timestamp `gorm:"type:datetime"`

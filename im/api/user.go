@@ -260,7 +260,7 @@ func (a *UserApi) NewChat(msg *RequestInfo, request *UserNewChatRequest) error {
 	target := request.Id
 
 	// todo remove
-	chat, err := dao.ChatDao.GetChat(target, request.Type)
+	chat, err := dao.ChatDao.GetChatByTarget(target, request.Type)
 
 	if err != nil {
 		chat, err = dao.ChatDao.CreateChat(request.Type, target)
