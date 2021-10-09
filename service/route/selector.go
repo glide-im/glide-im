@@ -27,6 +27,13 @@ func (r *selector) Select(ctx context.Context, servicePath, serviceMethod string
 
 	m := ctx.Value(share.ReqMetaDataKey).(map[string]string)
 
+	if target, ok := m[ExtraTarget]; ok {
+		if _, ok := r.services[target]; ok {
+			return target
+		}
+		logger.E("unknown service addr, ExtraTarget:", target)
+	}
+
 	if tag, ok := m[ExtraTag]; ok {
 		if path, ok := r.tags[tag]; ok {
 			if _, ok := r.services[path]; ok {

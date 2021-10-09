@@ -9,6 +9,7 @@ import (
 	"go_im/service/pb"
 	"go_im/service/route"
 	"go_im/service/rpc"
+	"strconv"
 )
 
 type Client struct {
@@ -42,7 +43,7 @@ func (c *Client) PutMember(gid int64, mb map[int64]int32) {
 		Member: mb,
 	}
 	resp := &pb.Response{}
-	err := c.Call(context.Background(), "PutMember", req, resp)
+	err := c.Call(getContext(gid), "PutMember", req, resp)
 	if err != nil {
 
 	}
@@ -54,7 +55,7 @@ func (c *Client) RemoveMember(gid int64, uid ...int64) error {
 		Uid: uid,
 	}
 	resp := &pb.Response{}
-	err := c.Call(context.Background(), "RemoveMember", req, resp)
+	err := c.Call(getContext(gid), "RemoveMember", req, resp)
 	if err != nil {
 
 	}
@@ -67,7 +68,7 @@ func (c *Client) AddGroup(group *dao.Group, owner int64) {
 		Owner: owner,
 	}
 	resp := &pb.Response{}
-	err := c.Call(context.Background(), "AddGroup", req, resp)
+	err := c.Call(getContext(group.Gid), "AddGroup", req, resp)
 	if err != nil {
 
 	}
@@ -95,7 +96,7 @@ func (c *Client) DispatchNotifyMessage(uid int64, gid int64, message *message.Me
 		Message: wrapMessage(message),
 	}
 	resp := &pb.Response{}
-	err := c.Call(context.Background(), "DispatchNotifyMessage", req, resp)
+	err := c.Call(getContext(gid), "DispatchNotifyMessage", req, resp)
 	if err != nil {
 
 	}
@@ -111,6 +112,12 @@ func (c *Client) DispatchMessage(uid int64, message *message.Message) {
 	if err != nil {
 		logger.E("dispatch group message", err)
 	}
+}
+
+func getContext(gid int64) context.Context {
+	ctx := rpc.NewCtxFrom(context.Background())
+	ctx.PutReqExtra(route.ExtraGid, strconv.FormatInt(gid, 10))
+	return ctx
 }
 
 func wrapMessage(msg *message.Message) *pb.Message {
