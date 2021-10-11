@@ -121,7 +121,7 @@ func (m *chatDao) NewUserChat(cid int64, uid int64, target int64, typ int8) (*Us
 // NewChatMessage 插入一条新消息到数据库
 func (m *chatDao) NewChatMessage(cid int64, sender int64, msg string, typ int8) (*ChatMessage, error) {
 
-	mid := GenMessageId(cid)
+	mid := GetMessageId(cid)
 
 	cm := ChatMessage{
 		Mid:         mid,
