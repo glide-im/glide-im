@@ -3,7 +3,6 @@ package dao
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"go_im/im/dao/uid"
 	"go_im/pkg/db"
 	"math/rand"
@@ -13,7 +12,6 @@ import (
 var UserDao *userDao
 
 const userTokenLen = 10
-const userTokenExpireDuration = time.Hour * 24 * 3
 
 const (
 	ContactsTypeUser  = 1
@@ -40,20 +38,16 @@ var avatars = []string{
 	"https://dengzii.com/static/q.webp",
 	"https://dengzii.com/static/r.webp",
 }
-var nextAvatar = 0
 
 var nickName = []string{"佐菲", "赛文", "杰克", "艾斯", "泰罗", "雷欧", "阿斯特拉", "艾迪", "迪迦", "杰斯", "奈克斯", "梦比优斯", "盖亚", "戴拿"}
-var nextNickName = 0
 
 type userDao struct {
-	redisConfig
 	mySqlConf
 }
 
 func InitUserDao() {
 	UserDao = &userDao{
-		redisConfig: redisConfig{},
-		mySqlConf:   mySqlConf{},
+		mySqlConf: mySqlConf{},
 	}
 }
 
@@ -71,6 +65,10 @@ func (d *userDao) HasUser(uid ...int64) (bool, error) {
 	err := query.Count(&rows).Error
 
 	return rows == len(uid), err
+}
+
+func (d *userDao) Logout(uid, device int64, token string) error {
+	return delAuthToken(token)
 }
 
 func (d *userDao) GetUser(uid ...int64) ([]*User, error) {
@@ -117,7 +115,7 @@ func (d *userDao) AddUser(account string, password string) error {
 // GetUidByLogin
 //
 // return uid,token,error
-func (d *userDao) GetUidByLogin(account string, password string) (int64, string, error) {
+func (d *userDao) GetUidByLogin(account string, password string, device int64) (int64, string, error) {
 
 	where := db.DB.Table(d.getUserTableName()).Where("account = ? and password = ?", account, password)
 	row := where.Select("uid").Row()
@@ -129,37 +127,15 @@ func (d *userDao) GetUidByLogin(account string, password string) (int64, string,
 		}
 		return -1, "", err
 	}
-
 	token := genToken(userTokenLen)
-	r := db.Redis.Set(d.getKeyUserToken(uid), token, userTokenExpireDuration)
-	r2 := db.Redis.Set(token, uid, userTokenExpireDuration)
-
-	if r.Err() != nil || r2.Err() != nil {
-		return -1, "", errors.New("redis error")
+	if err := setAuthToken(uid, token, device); err != nil {
+		return 0, "", err
 	}
-
 	return uid, token, nil
 }
 
-func (d *userDao) GenToken(uid int64) (string, error) {
-
-	key := d.getKeyUserToken(uid)
-	r := db.Redis.Get(key)
-	var token string
-	if err := r.Scan(&token); err != nil {
-		return "", err
-	}
-	return token, nil
-}
-
 func (d *userDao) GetUid(token string) int64 {
-
-	var uid int64
-	r := db.Redis.Get(token)
-	if err := r.Scan(&uid); err != nil {
-		return 0
-	}
-	return uid
+	return authToken(token)
 }
 
 func (d *userDao) GetAllContacts(uid int64) ([]*Contacts, error) {
@@ -188,12 +164,6 @@ func (d *userDao) AddContacts(uid int64, targetId int64, typ int8, remark string
 		return nil, errors.New("create friend error")
 	}
 	return f, nil
-}
-
-type redisConfig struct{}
-
-func (r *redisConfig) getKeyUserToken(uid int64) string {
-	return fmt.Sprintf("user:token:%d", uid)
 }
 
 type mySqlConf struct{}

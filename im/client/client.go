@@ -98,8 +98,8 @@ func (c *Client) readMessage() {
 	for {
 		msg, err := messageReader.Read(c.conn)
 		if err != nil {
-			if !c.handleError(-1, err) {
-				// 致命错误中断读消息
+			if c.Closed() || c.handleError(-1, err) {
+				// 连接断开或致命错误中断读消息
 				break
 			}
 			continue
@@ -124,15 +124,15 @@ func (c *Client) writeMessage() {
 	for msg := range c.messages {
 		err := c.conn.Write(msg)
 		if err != nil {
-			if c.handleError(-1, err) {
-				// 致命错误中断写消息
+			if c.Closed() || c.handleError(-1, err) {
+				// 连接断开或致命错误中断写消息
 				break
 			}
 		}
 	}
 }
 
-// handleError return whether fatal error
+// handleError 处理上下行消息过程中的错误, 如果是致命错误, 则返回 true
 func (c *Client) handleError(seq int64, err error) bool {
 
 	fatalErr := map[error]int{
@@ -143,11 +143,13 @@ func (c *Client) handleError(seq int64, err error) bool {
 	}
 	_, ok := fatalErr[err]
 	if ok {
-		Manager.ClientLogout(c.id, c.device)
-		logger.D(">>>> client logout due to error: %s", err.Error())
+		logger.D("handle message fatal error: %s", err.Error())
+		if c.id >= 0 {
+			Manager.ClientLogout(c.id, c.device)
+		}
 		return true
 	}
-	logger.E("err", err.Error())
+	logger.E("handle message error", err.Error())
 	c.EnqueueMessage(message.NewMessage(seq, "notify", err.Error()))
 	return false
 }
@@ -164,7 +166,7 @@ func (c *Client) Exit() {
 	_ = c.conn.Close()
 }
 
-// getNextSeq 获取下一个消息序列号 sequence
+// getNextSeq 获取下一个下行消息序列号 sequence
 func (c *Client) getNextSeq() int64 {
 	seq := c.seq.Get()
 	c.seq.Set(seq + 1)

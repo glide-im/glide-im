@@ -19,7 +19,7 @@ func (a *UserApi) Auth(msg *RequestInfo, request *AuthRequest) error {
 		respondMessage(uid, resp)
 		return nil
 	} else {
-		return errors.New("login failed")
+		return errors.New("token expired")
 	}
 }
 
@@ -29,7 +29,7 @@ func (a *UserApi) Login(msg *RequestInfo, request *LoginRequest) error {
 		return errors.New("account or password empty")
 	}
 
-	uid, token, err := dao.UserDao.GetUidByLogin(request.Account, request.Password)
+	uid, token, err := dao.UserDao.GetUidByLogin(request.Account, request.Password, request.Device)
 	if err != nil {
 		return err
 	}
@@ -40,6 +40,15 @@ func (a *UserApi) Login(msg *RequestInfo, request *LoginRequest) error {
 	}
 	client.Manager.ClientSignIn(msg.Uid, uid, request.Device)
 	respondMessage(uid, m)
+	return nil
+}
+
+func (a *UserApi) Logout(info *RequestInfo, r *LogoutRequest) error {
+	err := dao.UserDao.Logout(info.Uid, r.Device, r.Token)
+	if err != nil {
+		return err
+	}
+	client.Manager.ClientLogout(info.Uid, r.Device)
 	return nil
 }
 

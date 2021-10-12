@@ -30,6 +30,7 @@ func (a *ApiRouter) init() {
 			),
 			api.Group("user",
 				api.Route("login", a.Login),
+				api.Route("logout", a.Logout),
 				api.Route("auth", a.Auth),
 				api.Route("register", a.Register),
 				api.Route("online", a.GetOnlineUser),

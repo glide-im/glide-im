@@ -9,11 +9,33 @@ import (
 	"time"
 )
 
-// keyIncrMessageId 每个聊天会话的消息 ID 自增值
-var keyIncrMessageId = "im:msg:mid:incr:"
+const (
+	// keyIncrMessageId 每个聊天会话的消息 ID 自增值
+	keyIncrMessageId = "im:msg:incr:mid:"
 
-// keyChatUpdateAt 会话ID, 按更新时间排序的有序集合, 每次生成消息 ID 时, 将更新指定会话 ID 的 score 为当前时间
-var keyChatUpdateAt = "im:msg:chat:update"
+	// keyChatUpdateAt 会话ID, 按更新时间排序的有序集合, 每次生成消息 ID 时, 将更新指定会话 ID 的 score 为当前时间
+	keyChatUpdateAt = "im:msg:chat:update"
+
+	keyChatIdIncr = "im:msg:incr:cid"
+
+	keyUserChatIdIncr = "im:msg:incr:ucid"
+)
+
+func GetUserChatId(uid int64, chatID int64) (int64, error) {
+	result, err := db.Redis.Incr(keyUserChatIdIncr).Result()
+	if err == nil {
+		return 0, err
+	}
+	return result, nil
+}
+
+func GetNextChatId(chatType int8) (int64, error) {
+	result, err := db.Redis.Incr(keyChatIdIncr).Result()
+	if err != nil {
+		return 0, err
+	}
+	return result, nil
+}
 
 // GetMessageId 获取会话的下一个消息 ID, 这个消息 ID 是按 Chat 自增的
 func GetMessageId(chatId int64) int64 {

@@ -17,7 +17,7 @@ type groupDao struct{}
 
 func (d *groupDao) CreateGroup(name string, owner int64) (*Group, error) {
 
-	gid, err := db.Redis.Incr("user:contact:group:incr_id").Result()
+	gid, err := getNextGid()
 	if err != nil {
 		return nil, err
 	}

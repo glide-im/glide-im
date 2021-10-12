@@ -15,15 +15,9 @@ func InitMessageDao() {
 
 }
 
-var ChatDao = &chatDao{
-	keyChatIdIncr:     "user:message:chat:incr_id",
-	keyUserChatIdIncr: "user:message:user_chat:incr_id",
-}
+var ChatDao = &chatDao{}
 
-type chatDao struct {
-	keyChatIdIncr     string
-	keyUserChatIdIncr string
-}
+type chatDao struct{}
 
 func (m *chatDao) GetChatByTarget(target int64, typ int8) (*Chat, error) {
 
@@ -71,7 +65,7 @@ func (m *chatDao) UpdateUserChatMsgTime(cid int64, uid int64) (*UserChat, error)
 func (m *chatDao) CreateChat(typ int8, targetId int64) (*Chat, error) {
 
 	now := Timestamp(time.Now())
-	cid, err := db.Redis.Incr(m.keyChatIdIncr).Result()
+	cid, err := GetNextChatId(typ)
 
 	if err != nil {
 		return nil, err
@@ -79,6 +73,7 @@ func (m *chatDao) CreateChat(typ int8, targetId int64) (*Chat, error) {
 
 	c := Chat{
 		Cid:          cid,
+		NextMid:      1,
 		TargetId:     targetId,
 		ChatType:     typ,
 		CreateAt:     now,
@@ -94,7 +89,7 @@ func (m *chatDao) CreateChat(typ int8, targetId int64) (*Chat, error) {
 func (m *chatDao) NewUserChat(cid int64, uid int64, target int64, typ int8) (*UserChat, error) {
 
 	now := nowTimestamp()
-	ucid, err := db.Redis.Incr(m.keyUserChatIdIncr).Result()
+	ucid, err := GetUserChatId(uid, cid)
 
 	if err != nil {
 		return nil, err

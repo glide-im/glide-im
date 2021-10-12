@@ -63,6 +63,13 @@ func (c *ClientManagerImpl) ClientLogout(uid int64, device int64) {
 		logger.E("uid is not sign in", uid)
 		return
 	}
+	logDevice := cl.get(device)
+	if logDevice == nil {
+		logger.E("device not exist")
+		return
+	}
+	logger.I("client logout, uid=%d, device=%d", uid, device)
+	logDevice.Exit()
 	cl.remove(device)
 }
 

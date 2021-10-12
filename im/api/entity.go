@@ -8,6 +8,12 @@ type LoginRequest struct {
 	Password string
 }
 
+type LogoutRequest struct {
+	Device  int64
+	Account string
+	Token   string
+}
+
 type AuthRequest struct {
 	Token    string
 	DeviceId int64
