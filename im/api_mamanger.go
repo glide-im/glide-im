@@ -41,7 +41,7 @@ func (a *ApiRouter) init() {
 			),
 			api.Group("contacts",
 				api.Route("get", a.GetAndInitRelationList),
-				api.Route("add", a.AddFriend),
+				api.Route("put", a.AddFriend),
 			),
 			api.Group("chat",
 				api.Route("list", a.GetUserChatList),

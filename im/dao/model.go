@@ -20,11 +20,16 @@ type Contacts struct {
 	AddTime  Timestamp `gorm:"type:datetime"`
 }
 
+type ChatMessageID struct {
+	Cid        int64
+	CurrentMid int64
+}
+
 type Chat struct {
 	Cid          int64 `gorm:"primary_key"`
 	ChatType     int8
 	TargetId     int64
-	NextMid      int64
+	CurrentMid   int64
 	NewMessageAt Timestamp `gorm:"type:datetime"`
 	CreateAt     Timestamp `gorm:"type:datetime"`
 }

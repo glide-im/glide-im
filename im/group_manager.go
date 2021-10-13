@@ -104,25 +104,7 @@ func (m *groupManager) DispatchMessage(uid int64, msg *message.Message) {
 		return
 	}
 
-	chatMsg, err := dao.ChatDao.NewChatMessage(groupMsg.Cid, uid, groupMsg.Message, groupMsg.MessageType)
-	if err != nil {
-		logger.E("dispatch group message", err)
-		return
-	}
-
-	rMsg := client.ReceiverChatMessage{
-		Mid:         chatMsg.Mid,
-		Cid:         groupMsg.Cid,
-		UcId:        groupMsg.UcId,
-		Sender:      uid,
-		MessageType: 1,
-		Message:     groupMsg.Message,
-		SendAt:      groupMsg.SendAt,
-	}
-
-	resp := message.NewMessage(-1, message.ActionChatMessage, rMsg)
-
-	g.SendMessage(uid, resp)
+	g.EnqueueMessage(uid, groupMsg)
 }
 
 func (m *groupManager) getGroup(gid int64) *group.Group {

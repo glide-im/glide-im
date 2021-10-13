@@ -28,7 +28,6 @@ type SenderChatMessage struct {
 type ReceiverChatMessage struct {
 	Mid         int64
 	Cid         int64
-	UcId        int64
 	Sender      int64
 	MessageType int8
 	Message     string

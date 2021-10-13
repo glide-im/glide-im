@@ -8,6 +8,7 @@ import (
 	"go_im/im/group"
 	"go_im/im/message"
 	"go_im/pkg/logger"
+	"runtime/debug"
 )
 
 // execPool 100 capacity goroutine pool, 假设每个消息处理需要10ms, 一个协程则每秒能处理100条消息
@@ -94,17 +95,9 @@ func dispatchChatMessage(from int64, msg *message.Message) {
 
 func dispatch(from int64, chatMsg *dao.ChatMessage, senderMsg *client.SenderChatMessage) {
 
-	// update receiver's list chat
-	uChat, err := dao.ChatDao.UpdateUserChatMsgTime(senderMsg.Cid, senderMsg.TargetId)
-	if err != nil {
-		logger.E("dispatch message", err)
-		return
-	}
-
 	receiverMsg := client.ReceiverChatMessage{
 		Mid:         chatMsg.Mid,
 		Cid:         senderMsg.Cid,
-		UcId:        uChat.UcId,
 		Sender:      from,
 		MessageType: senderMsg.MessageType,
 		Message:     senderMsg.Message,
@@ -116,5 +109,6 @@ func dispatch(from int64, chatMsg *dao.ChatMessage, senderMsg *client.SenderChat
 }
 
 func onHandleMessagePanic(i interface{}) {
+	debug.PrintStack()
 	logger.E("handler message panic", i)
 }

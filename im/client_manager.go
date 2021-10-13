@@ -50,7 +50,13 @@ func (c *ClientManagerImpl) ClientSignIn(id, uid int64, device int64) {
 
 	loggedIn := c.clients.get(uid)
 	if loggedIn != nil {
-		loggedIn.add(device, cli)
+		log := loggedIn.get(device)
+		if log != nil {
+			client.EnqueueMessage(uid, message.NewMessage(-1, message.ActionNotify, "Your account is logged in on another device"))
+			log.Exit()
+		}
+
+		loggedIn.put(device, cli)
 		//c.EnqueueMessage(uid, device, nil)
 	} else {
 		c.clients.add(uid, device, cli)
@@ -100,7 +106,7 @@ type devices struct {
 	ds map[int64]client.IClient
 }
 
-func (d *devices) add(device int64, cli client.IClient) {
+func (d *devices) put(device int64, cli client.IClient) {
 	d.ds[device] = cli
 }
 
@@ -155,10 +161,10 @@ func (g *clients) add(uid int64, device int64, c client.IClient) {
 	defer g.LockUtilReturn()()
 	cs, ok := g.clients[uid]
 	if ok {
-		cs.add(device, c)
+		cs.put(device, c)
 	} else {
 		d := &devices{map[int64]client.IClient{}}
-		d.add(device, c)
+		d.put(device, c)
 		g.clients[uid] = d
 	}
 }

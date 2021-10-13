@@ -16,8 +16,10 @@ const (
 	// keyChatUpdateAt 会话ID, 按更新时间排序的有序集合, 每次生成消息 ID 时, 将更新指定会话 ID 的 score 为当前时间
 	keyChatUpdateAt = "im:msg:chat:update"
 
+	// keyChatIdIncr 会话 ID 全局自增
 	keyChatIdIncr = "im:msg:incr:cid"
 
+	// keyUserChatIdIncr 用户会话列表会话 ID 全局自增
 	keyUserChatIdIncr = "im:msg:incr:ucid"
 )
 
@@ -37,29 +39,24 @@ func GetNextChatId(chatType int8) (int64, error) {
 	return result, nil
 }
 
-// GetMessageId 获取会话的下一个消息 ID, 这个消息 ID 是按 Chat 自增的
-func GetMessageId(chatId int64) int64 {
+// GetNextMessageId 获取会话的下一个消息 ID, 这个消息 ID 是按 Chat 自增的
+func GetNextMessageId(chatId int64) int64 {
 	k := fmt.Sprintf("%s%d", keyIncrMessageId, chatId)
 	result, err := db.Redis.Incr(k).Result()
 	if err != nil || result == 0 {
-		r := getMidFromDb(chatId)
-		if r == 0 {
+		currentMid, err := ChatDao.GetCurrentMessageID(chatId)
+		if err != nil {
+			return 0
+		}
+		if currentMid == 0 {
 			logger.E("gen message id for chat error", chatId)
 			return 0
 		}
-		db.Redis.Set(k, r, 0)
+		result = currentMid + 1
+		db.Redis.Set(k, result, 0)
 	}
 	updateChat(chatId)
 	return result
-}
-
-// getMidFromDb 从数据库中获取 mid, 一般情况是会话过期删除了
-func getMidFromDb(cid int64) int64 {
-	chat := ChatDao.GetChat(cid)
-	if chat == nil {
-		return 0
-	}
-	return chat.NextMid
 }
 
 // removeExpiredChat 移除过期的 chat, 通过有序集合 keyChatUpdateAt 中的时间为准, 从 0 到 now-secAgo 的会话信息
@@ -75,12 +72,23 @@ func removeExpiredChat(secAgo int64) {
 		return
 	}
 
-	var expiredChatMidIncr []string
 	var expiredCidUpdate []interface{}
 
 	for _, cid := range expiredCid {
-		keyChatIncr := fmt.Sprintf("%s%s", keyIncrMessageId, cid)
-		expiredChatMidIncr = append(expiredChatMidIncr, keyChatIncr)
+		keyChatMidIncr := fmt.Sprintf("%s%s", keyIncrMessageId, cid)
+
+		mid, err := db.Redis.Get(keyChatMidIncr).Result()
+		if err == nil {
+			midI, err := strconv.ParseInt(mid, 10, 64)
+			cidI, err2 := strconv.ParseInt(cid, 10, 64)
+			if err == nil && err2 == nil {
+				e := ChatDao.UpdateCurrentMessageID(cidI, midI)
+				if e == nil {
+					_, err = db.Redis.Del(keyChatMidIncr).Result()
+				}
+			}
+		}
+
 		expiredCidUpdate = append(expiredCidUpdate, cid)
 	}
 
@@ -88,12 +96,6 @@ func removeExpiredChat(secAgo int64) {
 	_, er := db.Redis.ZRem(keyChatUpdateAt, expiredCidUpdate...).Result()
 	if er != nil {
 		logger.E("redis rm chat update error", er)
-	}
-
-	_, err = db.Redis.Del(expiredChatMidIncr...).Result()
-
-	if err != nil {
-		logger.E("redis remove chat update error", err)
 	}
 }
 

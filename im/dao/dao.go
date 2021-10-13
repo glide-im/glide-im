@@ -16,6 +16,7 @@ func Init() {
 		Group{},
 		GroupMember{},
 		GroupMessage{},
+		ChatMessageID{},
 	}
 
 	for _, tb := range tables {

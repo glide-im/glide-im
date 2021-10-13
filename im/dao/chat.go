@@ -26,13 +26,33 @@ func (m *chatDao) GetChatByTarget(target int64, typ int8) (*Chat, error) {
 	return c, err
 }
 
-func (m *chatDao) GetChat(chatId int64) *Chat {
+func (m *chatDao) GetChat(chatId int64) (*Chat, error) {
 	c := new(Chat)
 	err := db.DB.Table("im_chat").Where("cid = ?", chatId).Limit(1).Find(c).Error
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return c
+	return c, nil
+}
+
+func (m *chatDao) GetCurrentMessageID(chatId int64) (int64, error) {
+	cmid := new(ChatMessageID)
+	res := db.DB.Table("im_chat_message_id").Where("cid = ?", chatId).Limit(1).Find(cmid)
+	if res.Error != nil {
+		return 0, res.Error
+	}
+	if res.RowsAffected == 0 {
+		return 0, errors.New("no such chat")
+	}
+	return cmid.CurrentMid, nil
+}
+
+func (m *chatDao) UpdateCurrentMessageID(chatID int64, mid int64) error {
+	res := db.DB.Table("im_chat_message_id").Where("cid = ?", chatID).Update("current_mid")
+	if res.Error != nil {
+		return res.Error
+	}
+	return nil
 }
 
 func (m *chatDao) GetUserChatList(uid int64) ([]*UserChat, error) {
@@ -73,12 +93,18 @@ func (m *chatDao) CreateChat(typ int8, targetId int64) (*Chat, error) {
 
 	c := Chat{
 		Cid:          cid,
-		NextMid:      1,
+		CurrentMid:   1,
 		TargetId:     targetId,
 		ChatType:     typ,
 		CreateAt:     now,
 		NewMessageAt: now,
 	}
+
+	chatMid := ChatMessageID{
+		Cid:        cid,
+		CurrentMid: 1,
+	}
+	db.DB.Model(&chatMid).Create(&chatMid)
 
 	if db.DB.Model(&c).Create(&c).RowsAffected <= 0 {
 		return nil, errors.New("create chat error")
@@ -116,7 +142,7 @@ func (m *chatDao) NewUserChat(cid int64, uid int64, target int64, typ int8) (*Us
 // NewChatMessage 插入一条新消息到数据库
 func (m *chatDao) NewChatMessage(cid int64, sender int64, msg string, typ int8) (*ChatMessage, error) {
 
-	mid := GetMessageId(cid)
+	mid := GetNextMessageId(cid)
 
 	cm := ChatMessage{
 		Mid:         mid,
@@ -133,6 +159,11 @@ func (m *chatDao) NewChatMessage(cid int64, sender int64, msg string, typ int8) 
 	}
 
 	return &cm, nil
+}
+
+func (m *chatDao) NewGroupMessage(message ChatMessage) error {
+	err := db.DB.Model(&message).Create(&message).Error
+	return err
 }
 
 func (m *chatDao) GetChatHistory(cid int64, size int) ([]*ChatMessage, error) {

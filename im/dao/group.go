@@ -48,12 +48,12 @@ func (d *groupDao) UpdateGroupChatId(gid int64, cid int64) error {
 
 func (d *groupDao) GetMember(gid int64, uid ...int64) ([]int64, error) {
 
-	q := db.DB.Table("im_group_member").Where("gid = ? and uid = ?")
+	q := db.DB.Table("im_group_member").Where("gid = ? and uid = ?", gid, 0)
 	for _, i := range uid {
 		q.Or("uid = ?", i)
 	}
 	var ms []int64
-	err := q.Select("uid").Find(ms).Error
+	err := q.Select("uid").Find(&ms).Error
 	return ms, err
 }
 
