@@ -42,11 +42,18 @@ func (m *groupManager) RemoveMember(gid int64, uid ...int64) error {
 }
 
 func (m *groupManager) AddGroup(gid int64) {
-	// TODO
+	g, err := dao.GroupDao.GetGroup(gid)
+	if err != nil {
+		logger.E("add group error", err)
+	}
+	m.groups.Put(gid, group.NewGroup(g))
 }
 
 func (m *groupManager) RemoveGroup(gid int64) {
-	// TODO
+	g := m.getGroup(gid)
+	if g != nil {
+
+	}
 }
 
 func (m *groupManager) ChangeStatus(gid int64, status int64) {

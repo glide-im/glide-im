@@ -6,6 +6,13 @@ import (
 	"go_im/im/dao"
 	"go_im/im/message"
 	"go_im/pkg/logger"
+	"time"
+)
+
+const (
+	FlagShiftCanSend    = 1
+	FlagShiftCanReceive = 2
+	FlagShiftIsManager  = 3
 )
 
 type Group struct {
@@ -14,13 +21,16 @@ type Group struct {
 
 	nextMid int64
 	group   *dao.Group
+	mute    bool
 
-	members *groupMemberMap
+	mu      *comm.Mutex
+	members map[int64]int32
 }
 
 func NewGroup(group *dao.Group) *Group {
 	ret := new(Group)
-	ret.members = newGroupMemberMap()
+	ret.mu = comm.NewMutex()
+	ret.members = map[int64]int32{}
 	ret.Gid = group.Gid
 	ret.Cid = group.ChatId
 	ret.group = group
@@ -33,29 +43,23 @@ func NewGroup(group *dao.Group) *Group {
 	return ret
 }
 
-func (g *Group) PutMember(member int64, s int32) {
-	g.members.Put(member, s)
-}
+func (g *Group) EnqueueMessage(sender int64, msg *client.GroupMessage) {
 
-func (g *Group) RemoveMember(uid int64) {
-	g.members.Delete(uid)
-}
-
-func (g *Group) HasMember(uid int64) bool {
-	return g.members.Contain(uid)
-}
-
-func (g *Group) IsMemberOnline(uid int64) bool {
-	return false
-}
-
-func (g *Group) EnqueueMessage(senderUid int64, msg *client.GroupMessage) {
+	flag, exist := g.members[sender]
+	if !exist {
+		logger.W("a non-group member send message")
+		return
+	}
+	if flag&(1<<FlagShiftCanSend) == 0 {
+		logger.W("a muted group member send message")
+		return
+	}
 
 	chatMessage := dao.ChatMessage{
 		Mid:         g.nextMid,
 		Cid:         g.Cid,
-		Sender:      senderUid,
-		SendAt:      dao.Timestamp{},
+		Sender:      sender,
+		SendAt:      dao.Timestamp(time.Now()),
 		Message:     msg.Message,
 		MessageType: msg.MessageType,
 		At:          "",
@@ -70,7 +74,7 @@ func (g *Group) EnqueueMessage(senderUid int64, msg *client.GroupMessage) {
 	rMsg := client.ReceiverChatMessage{
 		Mid:         g.nextMid,
 		Cid:         g.Cid,
-		Sender:      senderUid,
+		Sender:      sender,
 		MessageType: msg.MessageType,
 		Message:     msg.Message,
 		SendAt:      msg.SendAt,
@@ -86,49 +90,26 @@ func (g *Group) EnqueueMessage(senderUid int64, msg *client.GroupMessage) {
 func (g *Group) SendMessage(message *message.Message) {
 	logger.D("Group.SendMessage: %s", message)
 
-	for id := range g.members.members {
-		client.EnqueueMessage(id, message)
+	for uid, flag := range g.members {
+		if flag&(1<<FlagShiftCanReceive) == 1 {
+			continue
+		}
+		client.EnqueueMessage(uid, message)
 	}
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-type groupMemberMap struct {
-	*comm.Mutex
-	members map[int64]int32
+func (g *Group) PutMember(member int64, s int32) {
+	defer g.mu.LockUtilReturn()()
+	g.members[member] = s
 }
 
-func newGroupMemberMap() *groupMemberMap {
-	ret := new(groupMemberMap)
-	ret.Mutex = new(comm.Mutex)
-	ret.members = make(map[int64]int32)
-	return ret
+func (g *Group) RemoveMember(uid int64) {
+	defer g.mu.LockUtilReturn()()
+	delete(g.members, uid)
 }
 
-func (g *groupMemberMap) Size() int {
-	return len(g.members)
-}
-
-func (g *groupMemberMap) Get(id int64) int32 {
-	defer g.LockUtilReturn()()
-	member, ok := g.members[id]
-	if ok {
-		return member
-	}
-	return 0
-}
-
-func (g *groupMemberMap) Contain(id int64) bool {
-	_, ok := g.members[id]
-	return ok
-}
-
-func (g *groupMemberMap) Put(id int64, member int32) {
-	defer g.LockUtilReturn()()
-	g.members[id] = member
-}
-
-func (g *groupMemberMap) Delete(id int64) {
-	defer g.LockUtilReturn()()
-	delete(g.members, id)
+func (g *Group) HasMember(uid int64) bool {
+	defer g.mu.LockUtilReturn()()
+	_, exist := g.members[uid]
+	return exist
 }
