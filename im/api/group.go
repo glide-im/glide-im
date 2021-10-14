@@ -128,7 +128,7 @@ func (m *GroupApi) AddGroupMember(msg *RequestInfo, request *AddMemberRequest) e
 		Gid:     g.Gid,
 		Members: members,
 	}
-	group.Manager.DispatchNotifyMessage(msg.Uid, g.Gid, message.NewMessage(-1, ActionGroupAddMember, groupNotify))
+	group.Manager.DispatchNotifyMessage(g.Gid, message.NewMessage(-1, ActionGroupAddMember, groupNotify))
 
 	for _, member := range members {
 
@@ -254,17 +254,17 @@ func (m *GroupApi) createGroup(name string, uid int64) (*dao.Group, int64, error
 		// TODO undo
 		return nil, 0, err
 	}
-	group.Manager.AddGroup(gp, uid)
+	group.Manager.AddGroup(gp.Gid)
 	return gp, chat.Cid, nil
 }
 
 func (m *GroupApi) addGroupMember(gid int64, uid ...int64) ([]*dao.GroupMember, error) {
 
 	memberUid := make([]int64, 0, len(uid))
-	member, _ := dao.GroupDao.GetMember(gid, uid...)
+	members, _ := dao.GroupDao.GetMember(gid, uid...)
 	existsMember := map[int64]interface{}{}
-	for _, i := range member {
-		existsMember[i] = nil
+	for _, i := range members {
+		existsMember[i.Uid] = nil
 	}
 
 	for _, u := range uid {

@@ -2,7 +2,6 @@ package group
 
 import (
 	"context"
-	"go_im/im/dao"
 	"go_im/im/group"
 	"go_im/im/message"
 	"go_im/pkg/logger"
@@ -62,37 +61,36 @@ func (c *Client) RemoveMember(gid int64, uid ...int64) error {
 	return nil
 }
 
-func (c *Client) AddGroup(group *dao.Group, owner int64) {
-	req := &pb.AddGroupRequest{
-		Group: daoGroup2pbGroup(group),
-		Owner: owner,
-	}
+func (c *Client) ChangeStatus(gid int64, status int64) {
+	req := &pb.GroupStateRequest{Gid: gid, Status: status}
 	resp := &pb.Response{}
-	err := c.Call(getContext(group.Gid), "AddGroup", req, resp)
+	err := c.Call(getContext(gid), "ChangeStatus", req, resp)
 	if err != nil {
 
 	}
 }
 
-func (c *Client) UserOnline(uid, gid int64) {
-	//resp := &pb.Response{}
-	//err := c.Call(context.Background(),"PutMember", req, resp)
-	//if err != nil {
-	//
-	//}
+func (c *Client) AddGroup(gid int64) {
+	req := &pb.GroupIDRequest{Gid: gid}
+	resp := &pb.Response{}
+	err := c.Call(getContext(gid), "AddGroup", req, resp)
+	if err != nil {
+
+	}
 }
 
-func (c *Client) UserOffline(uid, gid int64) {
-	//resp := &pb.Response{}
-	//err := c.Call(context.Background(),"PutMember", req, resp)
-	//if err != nil {
-	//
-	//}
+func (c *Client) RemoveGroup(gid int64) {
+	req := &pb.GroupIDRequest{Gid: gid}
+	resp := &pb.Response{}
+	err := c.Call(getContext(gid), "RemoveGroup", req, resp)
+	if err != nil {
+
+	}
 }
 
-func (c *Client) DispatchNotifyMessage(uid int64, gid int64, message *message.Message) {
+func (c *Client) DispatchNotifyMessage(gid int64, message *message.Message) {
 	req := &pb.NotifyRequest{
-		Uid:     uid,
+		Gid:     gid,
 		Message: wrapMessage(message),
 	}
 	resp := &pb.Response{}
@@ -102,9 +100,9 @@ func (c *Client) DispatchNotifyMessage(uid int64, gid int64, message *message.Me
 	}
 }
 
-func (c *Client) DispatchMessage(uid int64, message *message.Message) {
+func (c *Client) DispatchMessage(gid int64, message *message.Message) {
 	req := &pb.DispatchMessageRequest{
-		Uid:     uid,
+		Gid:     gid,
 		Message: wrapMessage(message),
 	}
 	resp := &pb.Response{}

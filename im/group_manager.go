@@ -41,16 +41,16 @@ func (m *groupManager) RemoveMember(gid int64, uid ...int64) error {
 	return nil
 }
 
-func (m *groupManager) UserOnline(uid, gid int64) {
-
+func (m *groupManager) AddGroup(gid int64) {
+	// TODO
 }
 
-func (m *groupManager) UserOffline(uid, gid int64) {
-
+func (m *groupManager) RemoveGroup(gid int64) {
+	// TODO
 }
 
-func (m *groupManager) AddGroup(g *dao.Group, owner int64) {
-	m.groups.Put(g.Gid, group.NewGroup(g))
+func (m *groupManager) ChangeStatus(gid int64, status int64) {
+
 }
 
 func (m *groupManager) GetGroup1(gid int64) *dao.Group {
@@ -80,14 +80,14 @@ func (m *groupManager) GetGroup1(gid int64) *dao.Group {
 	return dbGroup
 }
 
-func (m *groupManager) DispatchNotifyMessage(uid int64, gid int64, message *message.Message) {
+func (m *groupManager) DispatchNotifyMessage(gid int64, message *message.Message) {
 	g := m.getGroup(gid)
 	if g != nil {
-		g.SendMessage(uid, message)
+		g.SendMessage(message)
 	}
 }
 
-func (m *groupManager) DispatchMessage(uid int64, msg *message.Message) {
+func (m *groupManager) DispatchMessage(gid int64, msg *message.Message) {
 	logger.D("GroupManager.HandleMessage: %s", msg)
 
 	groupMsg := new(client.GroupMessage)
@@ -104,7 +104,7 @@ func (m *groupManager) DispatchMessage(uid int64, msg *message.Message) {
 		return
 	}
 
-	g.EnqueueMessage(uid, groupMsg)
+	g.EnqueueMessage(groupMsg.Sender, groupMsg)
 }
 
 func (m *groupManager) getGroup(gid int64) *group.Group {

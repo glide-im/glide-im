@@ -78,12 +78,12 @@ func (g *Group) EnqueueMessage(senderUid int64, msg *client.GroupMessage) {
 
 	resp := message.NewMessage(-1, message.ActionChatMessage, rMsg)
 
-	g.SendMessage(senderUid, resp)
+	g.SendMessage(resp)
 
 	g.nextMid = dao.GetNextMessageId(g.Cid)
 }
 
-func (g *Group) SendMessage(uid int64, message *message.Message) {
+func (g *Group) SendMessage(message *message.Message) {
 	logger.D("Group.SendMessage: %s", message)
 
 	for id := range g.members.members {

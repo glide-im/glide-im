@@ -53,20 +53,22 @@ message RemoveMemberRequest {
 }
 
 message NotifyRequest{
-  int64 uid = 2;
   int64 gid = 1;
   Message message = 3;
 }
 
 message DispatchMessageRequest{
-  int64 uid = 1;
+  int64 gid = 1;
   Message message = 2;
 }
 
-message AddGroupRequest {
-  Group group = 1;
-  int64 cid = 2;
-  int64 owner = 3;
+message GroupIDRequest {
+  int64 gid = 2;
+}
+
+message GroupStateRequest {
+  int64 gid = 1;
+  int64 status = 2;
 }
 
 message HasMemberRequest{

@@ -2,7 +2,6 @@ package group
 
 import (
 	"context"
-	"go_im/im/dao"
 	"go_im/im/group"
 	"go_im/im/message"
 	"go_im/service/pb"
@@ -34,48 +33,29 @@ func (s *Server) RemoveMember(ctx context.Context, request *pb.RemoveMemberReque
 	return nil
 }
 
-func (s *Server) AddGroup(ctx context.Context, request *pb.AddGroupRequest, reply *pb.Response) error {
+func (s *Server) ChangeStatus(ctx context.Context, request *pb.GroupStateRequest, reply *pb.Response) error {
+	group.Manager.ChangeStatus(request.GetGid(), request.GetStatus())
+	return nil
+}
 
-	g := pbGroup2daoGroup(request.GetGroup())
-	group.Manager.AddGroup(g, request.GetOwner())
+func (s *Server) RemoveGroup(ctx context.Context, request *pb.GroupIDRequest, reply *pb.Response) error {
+	group.Manager.RemoveGroup(request.GetGid())
+	return nil
+}
+
+func (s *Server) AddGroup(ctx context.Context, request *pb.GroupIDRequest, reply *pb.Response) error {
+	group.Manager.AddGroup(request.GetGid())
 	return nil
 }
 
 func (s *Server) DispatchNotifyMessage(ctx context.Context, request *pb.NotifyRequest, reply *pb.Response) error {
-	group.Manager.DispatchNotifyMessage(request.Uid, request.GetGid(), unwrapMessage(request.GetMessage()))
+	group.Manager.DispatchNotifyMessage(request.GetGid(), unwrapMessage(request.GetMessage()))
 	return nil
 }
 
 func (s *Server) DispatchMessage(ctx context.Context, request *pb.DispatchMessageRequest, reply *pb.Response) error {
-	err := group.Manager.DispatchMessage(request.Uid, unwrapMessage(request.GetMessage()))
-	if err != nil {
-
-	}
+	group.Manager.DispatchMessage(request.GetGid(), unwrapMessage(request.GetMessage()))
 	return nil
-}
-
-func daoGroup2pbGroup(g *dao.Group) *pb.Group {
-	return &pb.Group{
-		Gid:      g.Gid,
-		Name:     g.Name,
-		Avatar:   g.Avatar,
-		Owner:    g.Owner,
-		Mute:     g.Mute,
-		Notice:   g.Notice,
-		CreateAt: 0,
-	}
-}
-
-func pbGroup2daoGroup(g *pb.Group) *dao.Group {
-	return &dao.Group{
-		Gid:      g.GetGid(),
-		Name:     g.GetName(),
-		Avatar:   g.GetAvatar(),
-		Owner:    g.GetOwner(),
-		Mute:     g.GetMute(),
-		Notice:   g.GetNotice(),
-		CreateAt: dao.Timestamp{},
-	}
 }
 
 func unwrapMessage(pbMsg *pb.Message) *message.Message {
@@ -83,12 +63,5 @@ func unwrapMessage(pbMsg *pb.Message) *message.Message {
 		Seq:    pbMsg.Seq,
 		Action: message.Action(pbMsg.Action),
 		Data:   pbMsg.Data,
-	}
-}
-
-func newResponse(ok bool, msg string) *pb.Response {
-	return &pb.Response{
-		Ok:      ok,
-		Message: msg,
 	}
 }
