@@ -4,32 +4,39 @@ import (
 	"errors"
 	"go_im/im/client"
 	"go_im/im/comm"
-	"go_im/im/dao"
 	"go_im/im/group"
 	"go_im/im/message"
 	"go_im/pkg/logger"
 )
 
 type groupManager struct {
-	*comm.Mutex
-	groups *groupMap
+	mu     *comm.Mutex
+	groups map[int64]*group.Group
 }
 
 func NewGroupManager() *groupManager {
 	ret := new(groupManager)
-	ret.Mutex = new(comm.Mutex)
-	ret.groups = NewGroupMap()
+	ret.mu = comm.NewMutex()
+	ret.groups = map[int64]*group.Group{}
 	return ret
 }
 
+func (m *groupManager) init() {
+	allGroup := group.LoadAllGroup()
+	for gid, g := range allGroup {
+		m.groups[gid] = g
+	}
+}
+
 func (m *groupManager) PutMember(gid int64, mb map[int64]int32) {
+	g := m.groups[gid]
 	for k, v := range mb {
-		m.getGroup(gid).PutMember(k, v)
+		g.PutMember(k, v)
 	}
 }
 
 func (m *groupManager) RemoveMember(gid int64, uid ...int64) error {
-	g := m.getGroup(gid)
+	g := m.groups[gid]
 	if g == nil {
 		return errors.New("unknown group")
 	}
@@ -42,15 +49,15 @@ func (m *groupManager) RemoveMember(gid int64, uid ...int64) error {
 }
 
 func (m *groupManager) AddGroup(gid int64) {
-	g, err := dao.GroupDao.GetGroup(gid)
+	g, err := group.LoadGroup(gid)
 	if err != nil {
-		logger.E("add group error", err)
+		return
 	}
-	m.groups.Put(gid, group.NewGroup(g))
+	m.groups[gid] = g
 }
 
 func (m *groupManager) RemoveGroup(gid int64) {
-	g := m.getGroup(gid)
+	g := m.groups[gid]
 	if g != nil {
 
 	}
@@ -60,35 +67,8 @@ func (m *groupManager) ChangeStatus(gid int64, status int64) {
 
 }
 
-func (m *groupManager) GetGroup1(gid int64) *dao.Group {
-
-	g := m.groups.Get(gid)
-	if g != nil {
-		return nil
-	}
-
-	dbGroup, err := dao.GroupDao.GetGroup(gid)
-	if err != nil {
-		logger.E("GroupManager.GetGroup", "load group", gid, err)
-		return nil
-	}
-
-	members, err := dao.GroupDao.GetMembers(gid)
-	if err != nil {
-		logger.E("GroupManager.GetGroup", "load members", gid, err)
-		return nil
-	}
-
-	g = group.NewGroup(dbGroup)
-	for _, member := range members {
-		g.PutMember(member.Uid, member.Type)
-	}
-	m.groups.Put(gid, g)
-	return dbGroup
-}
-
 func (m *groupManager) DispatchNotifyMessage(gid int64, message *message.Message) {
-	g := m.getGroup(gid)
+	g := m.groups[gid]
 	if g != nil {
 		g.SendMessage(message)
 	}
@@ -104,7 +84,7 @@ func (m *groupManager) DispatchMessage(gid int64, msg *message.Message) {
 		return
 	}
 
-	g := m.getGroup(groupMsg.TargetId)
+	g := m.groups[gid]
 
 	if g == nil {
 		logger.E("dispatch group message", "group not exist")
@@ -112,45 +92,4 @@ func (m *groupManager) DispatchMessage(gid int64, msg *message.Message) {
 	}
 
 	g.EnqueueMessage(groupMsg.Sender, groupMsg)
-}
-
-func (m *groupManager) getGroup(gid int64) *group.Group {
-	return m.groups.Get(gid)
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-type groupMap struct {
-	*comm.Mutex
-	groupsMap map[int64]*group.Group
-}
-
-func NewGroupMap() *groupMap {
-	ret := new(groupMap)
-	ret.Mutex = new(comm.Mutex)
-	ret.groupsMap = make(map[int64]*group.Group)
-	return ret
-}
-
-func (g *groupMap) Size() int {
-	return len(g.groupsMap)
-}
-
-func (g *groupMap) Get(gid int64) *group.Group {
-	defer g.LockUtilReturn()()
-	gp, ok := g.groupsMap[gid]
-	if ok {
-		return gp
-	}
-	return nil
-}
-
-func (g *groupMap) Put(gid int64, group *group.Group) {
-	defer g.LockUtilReturn()()
-	g.groupsMap[gid] = group
-}
-
-func (g *groupMap) Delete(gid int64) {
-	defer g.LockUtilReturn()()
-	delete(g.groupsMap, gid)
 }

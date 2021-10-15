@@ -1,8 +1,8 @@
 package dao
 
 type User struct {
-	Uid      int64 `gorm:"primary_key"`
-	Account  string
+	Uid      int64  `gorm:"primary_key"`
+	Account  string `gorm:"unique"`
 	Nickname string
 	Password string
 	Avatar   string
@@ -21,21 +21,23 @@ type Contacts struct {
 }
 
 type ChatMessageID struct {
-	Cid        int64
+	Cid        int64 `gorm:"primary_key"`
 	CurrentMid int64
 }
 
 type Chat struct {
 	Cid          int64 `gorm:"primary_key"`
 	ChatType     int8
-	TargetId     int64
+	TargetId     int64 `gorm:"unique"`
 	CurrentMid   int64
 	NewMessageAt Timestamp `gorm:"type:datetime"`
 	CreateAt     Timestamp `gorm:"type:datetime"`
 }
 
 type UserChat struct {
-	UcId         int64 `gorm:"primary_key"`
+	UcId int64 `gorm:"primary_key"`
+	// IDs 双方ID拼接字符串,小的ID在前
+	IDs          string
 	Cid          int64
 	Owner        int64
 	Target       int64
@@ -48,7 +50,7 @@ type UserChat struct {
 
 type ChatMessage struct {
 	ID          int64 `gorm:"primary_key"`
-	Mid         int64
+	Mid         int64 `gorm:"unique"`
 	Cid         int64
 	Sender      int64
 	SendAt      Timestamp `gorm:"type:datetime"`
@@ -66,7 +68,6 @@ type Group struct {
 	Notice   string
 	ChatId   int64
 	CreateAt Timestamp `gorm:"type:datetime"`
-	Members  []*GroupMember
 }
 
 type GroupMember struct {
@@ -75,7 +76,7 @@ type GroupMember struct {
 	Uid    int64
 	Mute   int64
 	Remark string
-	Type   int32
+	Flag   int32
 	JoinAt Timestamp `gorm:"type:datetime"`
 }
 

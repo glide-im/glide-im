@@ -64,7 +64,7 @@ func (m *GroupApi) GetGroupMember(msg *RequestInfo, request *GetGroupMemberReque
 			Uid:        member.Uid,
 			Nickname:   "",
 			RemarkName: member.Remark,
-			Type:       member.Type,
+			Type:       member.Flag,
 			Online:     true,
 		})
 	}

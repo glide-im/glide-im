@@ -16,30 +16,22 @@ const (
 )
 
 type Group struct {
-	Gid int64
-	Cid int64
+	gid int64
+	cid int64
 
 	nextMid int64
-	group   *dao.Group
 	mute    bool
 
 	mu      *comm.Mutex
 	members map[int64]int32
 }
 
-func NewGroup(group *dao.Group) *Group {
+func newGroup(gid int64, cid int64) *Group {
 	ret := new(Group)
 	ret.mu = comm.NewMutex()
 	ret.members = map[int64]int32{}
-	ret.Gid = group.Gid
-	ret.Cid = group.ChatId
-	ret.group = group
-	chat, err := dao.ChatDao.GetChat(group.ChatId)
-	if err != nil {
-		logger.E("new group error, chat not exist", err)
-		return nil
-	}
-	ret.nextMid = chat.CurrentMid + 1
+	ret.gid = gid
+	ret.cid = cid
 	return ret
 }
 
@@ -57,7 +49,7 @@ func (g *Group) EnqueueMessage(sender int64, msg *client.GroupMessage) {
 
 	chatMessage := dao.ChatMessage{
 		Mid:         g.nextMid,
-		Cid:         g.Cid,
+		Cid:         g.cid,
 		Sender:      sender,
 		SendAt:      dao.Timestamp(time.Now()),
 		Message:     msg.Message,
@@ -73,7 +65,7 @@ func (g *Group) EnqueueMessage(sender int64, msg *client.GroupMessage) {
 
 	rMsg := client.ReceiverChatMessage{
 		Mid:         g.nextMid,
-		Cid:         g.Cid,
+		Cid:         g.cid,
 		Sender:      sender,
 		MessageType: msg.MessageType,
 		Message:     msg.Message,
@@ -84,7 +76,7 @@ func (g *Group) EnqueueMessage(sender int64, msg *client.GroupMessage) {
 
 	g.SendMessage(resp)
 
-	g.nextMid = dao.GetNextMessageId(g.Cid)
+	g.nextMid = dao.GetNextMessageId(g.cid)
 }
 
 func (g *Group) SendMessage(message *message.Message) {

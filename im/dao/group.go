@@ -17,7 +17,7 @@ type groupDao struct{}
 
 func (d *groupDao) CreateGroup(name string, owner int64) (*Group, error) {
 
-	gid, err := getNextGid()
+	gid, err := GetNextGid()
 	if err != nil {
 		return nil, err
 	}
@@ -56,6 +56,12 @@ func (d *groupDao) GetMember(gid int64, uid ...int64) ([]*GroupMember, error) {
 	return mbs, err
 }
 
+func (d *groupDao) GetAllGroup() ([]*Group, error) {
+	var groups []*Group
+	err := db.DB.Table("im_group").Find(&groups).Error
+	return groups, err
+}
+
 func (d *groupDao) GetGroup(gid int64) (*Group, error) {
 
 	g := new(Group)
@@ -90,7 +96,7 @@ func (d *groupDao) AddMember(gid int64, typ int32, uid ...int64) ([]*GroupMember
 			Uid:    i,
 			Mute:   0,
 			Remark: "",
-			Type:   typ,
+			Flag:   typ,
 			JoinAt: nowTimestamp(),
 		}
 		if db.DB.Model(&gm).Create(&gm).RowsAffected <= 0 {

@@ -6,6 +6,7 @@ import (
 	"go_im/im/conn"
 	"go_im/im/dao"
 	"go_im/im/group"
+	"go_im/pkg/logger"
 	"time"
 )
 
@@ -40,6 +41,13 @@ func NewServer(options Options) *Server {
 	group.Manager = options.GroupMgrImpl
 	client.Manager = options.ClientMgrImpl
 
+	manager, ok := group.Manager.(*groupManager)
+	if ok {
+		manager.init()
+	} else {
+		logger.W("group manager not init")
+	}
+
 	op := &conn.WsServerOptions{
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
@@ -61,7 +69,7 @@ func (s *Server) Serve(host string, port int) {
 	s.server.SetConnHandler(onNewConn)
 	err := s.server.Run(host, port)
 	if err != nil {
-
+		panic(err)
 	}
 }
 
