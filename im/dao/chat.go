@@ -48,11 +48,11 @@ func (m *chatDao) GetCurrentMessageID(chatId int64) (int64, error) {
 }
 
 func (m *chatDao) UpdateCurrentMessageID(chatID int64, mid int64) error {
-	res := db.DB.Table("im_chat_message_id").Where("cid = ?", chatID).Update("current_mid")
-	if res.Error != nil {
-		return res.Error
-	}
-	return nil
+	res := db.DB.
+		Table("chat_message_id").
+		Where("cid = ?", chatID).
+		Update(map[string]interface{}{"current_mid": mid})
+	return resolveError(res)
 }
 
 func (m *chatDao) GetUserChatList(uid int64) ([]*UserChat, error) {

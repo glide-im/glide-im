@@ -41,9 +41,11 @@ func (d *groupDao) CreateGroup(name string, owner int64) (*Group, error) {
 }
 
 func (d *groupDao) UpdateGroupChatId(gid int64, cid int64) error {
-	group := Group{Gid: gid, ChatId: cid}
-	e := db.DB.Model(&group).Where("gid = ?", gid).Update("cid").Error
-	return e
+	res := db.DB.
+		Table("im_group").
+		Where("gid = ?", gid).
+		Update(map[string]interface{}{"chat_id": cid})
+	return resolveError(res)
 }
 
 func (d *groupDao) GetMember(gid int64, uid ...int64) ([]*GroupMember, error) {

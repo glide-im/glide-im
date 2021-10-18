@@ -1,7 +1,6 @@
 package rpc
 
 import (
-	"go_im/config"
 	"go_im/pkg/db"
 	"strconv"
 	"testing"
@@ -9,7 +8,6 @@ import (
 
 func TestRedisHSet(t *testing.T) {
 
-	config.Init()
 	db.Init()
 
 	//db.Redis.Expire("im:user:host", time.Second*3)
