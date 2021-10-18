@@ -39,6 +39,30 @@ func GetNextChatId(chatType int8) (int64, error) {
 	return result, nil
 }
 
+func GetCurrentMessageId(chatId int64) int64 {
+	k := fmt.Sprintf("%s%d", keyIncrMessageId, chatId)
+	i, _ := db.Redis.Exists(k).Result()
+	if i == 0 {
+		chat, err := ChatDao.GetChat(chatId)
+		if err != nil {
+			logger.E("get message id error", err)
+			return 0
+		}
+		return chat.CurrentMid
+	}
+	result, err := db.Redis.Get(k).Result()
+	if err != nil {
+		logger.E("get message id error", result)
+		return 0
+	}
+	mid, err := strconv.ParseInt(result, 10, 64)
+	if err != nil {
+		logger.E("get message id error", err)
+		return 0
+	}
+	return mid
+}
+
 // GetNextMessageId 获取会话的下一个消息 ID, 这个消息 ID 是按 Chat 自增的
 func GetNextMessageId(chatId int64) int64 {
 	k := fmt.Sprintf("%s%d", keyIncrMessageId, chatId)

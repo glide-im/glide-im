@@ -1,6 +1,7 @@
 package group
 
 import (
+	"go_im/im/client"
 	"go_im/im/message"
 )
 
@@ -27,5 +28,5 @@ type IGroupManager interface {
 	DispatchNotifyMessage(gid int64, message *message.Message)
 
 	// DispatchMessage 发送聊天消息
-	DispatchMessage(gid int64, message *message.Message)
+	DispatchMessage(gid int64, message *client.GroupMessage)
 }

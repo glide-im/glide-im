@@ -35,7 +35,7 @@ func messageHandler(from int64, device int64, msg *message.Message) {
 		case message.ActionChatMessage:
 			dispatchChatMessage(from, msg)
 		case message.ActionGroupMessage:
-			group.Manager.DispatchMessage(from, msg)
+			dispatchGroupMsg(from, msg)
 		case message.ActionCSMessage:
 			dispatchCustomerServiceMsg(from, msg)
 		default:
@@ -51,6 +51,18 @@ func messageHandler(from int64, device int64, msg *message.Message) {
 		client.EnqueueMessage(from, message.NewMessage(-1, message.ActionNotify, "internal server error"))
 		logger.E("async handle message error", err)
 	}
+}
+
+func dispatchGroupMsg(from int64, msg *message.Message) {
+
+	groupMsg := new(client.GroupMessage)
+	err := msg.DeserializeData(groupMsg)
+	if err != nil {
+		logger.E("dispatch group message deserialize error", err)
+		return
+	}
+	groupMsg.Sender = from
+	group.Manager.DispatchMessage(groupMsg.TargetId, groupMsg)
 }
 
 func dispatchCustomerServiceMsg(from int64, msg *message.Message) {

@@ -6,8 +6,9 @@ import (
 
 // GroupMessage 代表一个群消息
 type GroupMessage struct {
-	TargetId    int64
-	Sender      int64
+	TargetId int64
+	// internal
+	Sender      int64 `json:"-"`
 	Cid         int64
 	UcId        int64
 	MessageType int8

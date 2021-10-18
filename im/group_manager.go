@@ -30,8 +30,9 @@ func (m *groupManager) init() {
 
 func (m *groupManager) PutMember(gid int64, mb map[int64]int32) {
 	g := m.groups[gid]
-	for k, v := range mb {
-		g.PutMember(k, v)
+	for k := range mb {
+		var flag int32 = group.FlagDefault
+		g.PutMember(k, flag)
 	}
 }
 
@@ -74,15 +75,8 @@ func (m *groupManager) DispatchNotifyMessage(gid int64, message *message.Message
 	}
 }
 
-func (m *groupManager) DispatchMessage(gid int64, msg *message.Message) {
+func (m *groupManager) DispatchMessage(gid int64, msg *client.GroupMessage) {
 	logger.D("GroupManager.HandleMessage: %s", msg)
-
-	groupMsg := new(client.GroupMessage)
-	err := msg.DeserializeData(groupMsg)
-	if err != nil {
-		logger.E("dispatch group message error", err)
-		return
-	}
 
 	g := m.groups[gid]
 
@@ -91,5 +85,5 @@ func (m *groupManager) DispatchMessage(gid int64, msg *message.Message) {
 		return
 	}
 
-	g.EnqueueMessage(groupMsg.Sender, groupMsg)
+	g.EnqueueMessage(msg)
 }

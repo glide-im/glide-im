@@ -47,6 +47,16 @@ message Group {
   map<int64, int32> members = 8;
 }
 
+message GroupMessage {
+  int64 TargetId = 1;
+  int64 Sender = 2;
+  int64 Cid = 3;
+  int64 UcId = 4;
+  int32 MessageType = 5;
+  string Message = 6;
+  int64 SendAt = 7;
+}
+
 message RemoveMemberRequest {
   int64 gid = 1;
   repeated int64 uid = 2;
@@ -59,7 +69,7 @@ message NotifyRequest{
 
 message DispatchMessageRequest{
   int64 gid = 1;
-  Message message = 2;
+  GroupMessage message = 2;
 }
 
 message GroupIDRequest {

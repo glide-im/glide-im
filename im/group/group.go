@@ -13,6 +13,8 @@ const (
 	FlagShiftCanSend    = 1
 	FlagShiftCanReceive = 2
 	FlagShiftIsManager  = 3
+
+	FlagDefault = 1 << FlagShiftCanSend
 )
 
 type Group struct {
@@ -35,9 +37,9 @@ func newGroup(gid int64, cid int64) *Group {
 	return ret
 }
 
-func (g *Group) EnqueueMessage(sender int64, msg *client.GroupMessage) {
+func (g *Group) EnqueueMessage(msg *client.GroupMessage) {
 
-	flag, exist := g.members[sender]
+	flag, exist := g.members[msg.Sender]
 	if !exist {
 		logger.W("a non-group member send message")
 		return
@@ -50,13 +52,16 @@ func (g *Group) EnqueueMessage(sender int64, msg *client.GroupMessage) {
 	chatMessage := dao.ChatMessage{
 		Mid:         g.nextMid,
 		Cid:         g.cid,
-		Sender:      sender,
+		Sender:      msg.Sender,
 		SendAt:      dao.Timestamp(time.Now()),
 		Message:     msg.Message,
 		MessageType: msg.MessageType,
 		At:          "",
 	}
 	err := dao.ChatDao.NewGroupMessage(chatMessage)
+	if g.nextMid == dao.GetNextMessageId(g.cid) {
+		g.nextMid++
+	}
 
 	if err != nil {
 		logger.E("dispatch group message", err)
@@ -66,17 +71,16 @@ func (g *Group) EnqueueMessage(sender int64, msg *client.GroupMessage) {
 	rMsg := client.ReceiverChatMessage{
 		Mid:         g.nextMid,
 		Cid:         g.cid,
-		Sender:      sender,
+		Sender:      msg.Sender,
 		MessageType: msg.MessageType,
 		Message:     msg.Message,
 		SendAt:      msg.SendAt,
 	}
 
-	resp := message.NewMessage(-1, message.ActionChatMessage, rMsg)
+	resp := message.NewMessage(-1, message.ActionGroupMessage, rMsg)
 
 	g.SendMessage(resp)
 
-	g.nextMid = dao.GetNextMessageId(g.cid)
 }
 
 func (g *Group) SendMessage(message *message.Message) {

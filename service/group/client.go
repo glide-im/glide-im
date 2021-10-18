@@ -2,6 +2,7 @@ package group
 
 import (
 	"context"
+	"go_im/im/client"
 	"go_im/im/group"
 	"go_im/im/message"
 	"go_im/pkg/logger"
@@ -100,10 +101,18 @@ func (c *Client) DispatchNotifyMessage(gid int64, message *message.Message) {
 	}
 }
 
-func (c *Client) DispatchMessage(gid int64, message *message.Message) {
-	req := &pb.DispatchMessageRequest{
-		Gid:     gid,
-		Message: wrapMessage(message),
+func (c *Client) DispatchMessage(gid int64, message *client.GroupMessage) {
+	var req = &pb.DispatchMessageRequest{
+		Gid: gid,
+		Message: &pb.GroupMessage{
+			TargetId:    message.TargetId,
+			Sender:      message.Sender,
+			Cid:         message.Cid,
+			UcId:        message.UcId,
+			MessageType: int32(message.MessageType),
+			Message:     message.Message,
+			SendAt:      message.SendAt.Unix(),
+		},
 	}
 	resp := &pb.Response{}
 	err := c.Call(context.Background(), "HandleMessage", req, resp)

@@ -48,11 +48,7 @@ func initGroup(dbGroup *dao.Group) (*Group, error) {
 		}
 		group.cid = chat.Cid
 	} else {
-		chat, err := dao.ChatDao.GetChat(dbGroup.ChatId)
-		if err != nil {
-			return nil, err
-		}
-		group.nextMid = chat.CurrentMid + 1
+		group.nextMid = dao.GetCurrentMessageId(group.cid) + 1
 	}
 
 	members, err := dao.GroupDao.GetMembers(dbGroup.Gid)

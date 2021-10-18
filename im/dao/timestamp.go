@@ -40,6 +40,10 @@ func (u *Timestamp) String() string {
 	return strconv.FormatInt(time.Time(*u).Unix(), 10)
 }
 
+func (u *Timestamp) Unix() int64 {
+	return time.Time(*u).Unix()
+}
+
 func nowTimestamp() Timestamp {
 	return Timestamp(time.Now())
 }
