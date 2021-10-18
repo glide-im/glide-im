@@ -31,9 +31,9 @@ type config struct {
 	Redis RedisConf
 }
 
-func init() {
+func Init() {
 	var conf config
-	_, err := toml.DecodeFile("E:\\Go\\go_im\\config.toml", &conf)
+	_, err := toml.DecodeFile("config.toml", &conf)
 	if err != nil {
 		panic(fmt.Sprintf("error on load config: %s", err.Error()))
 	}
