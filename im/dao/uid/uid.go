@@ -5,6 +5,7 @@ import (
 	"go_im/pkg/logger"
 	"math/rand"
 	"strconv"
+	"sync"
 )
 
 const keyTempIdIncr = "im:uid:temp:incr"
@@ -56,9 +57,13 @@ type Gen interface {
 	GenTempUid() int64
 }
 
-type gen struct{}
+type gen struct {
+	muTempUid sync.Mutex
+}
 
-var instance Gen = &gen{}
+var instance Gen = &gen{
+	muTempUid: sync.Mutex{},
+}
 
 func (g *gen) GenSysUid() int64 {
 	rs, err := g.getInt64(keyTempIdIncr)
@@ -81,16 +86,15 @@ func (g *gen) GenUid() int64 {
 }
 
 func (g *gen) GenTempUid() int64 {
-	rs, err := g.getInt64(keyTempIdIncr)
+	result, err := db.Redis.Incr(keyTempIdIncr).Result()
 	if err != nil {
 		return 0
 	}
-	next := rs + rand.Int63n(4)
-	if next >= tempIdEnd {
-		next = tempIdStart
+	if result >= tempIdEnd {
+		result = tempIdStart
+		db.Redis.Set(keyTempIdIncr, result, 0)
 	}
-	db.Redis.Set(keyTempIdIncr, next, 0)
-	return next
+	return result
 }
 
 func (g *gen) getInt64(key string) (int64, error) {

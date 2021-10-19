@@ -144,7 +144,7 @@ func (c *Client) handleError(seq int64, err error) bool {
 	_, ok := fatalErr[err]
 	if ok {
 		logger.D("handle message fatal error: %s", err.Error())
-		if c.id >= 0 {
+		if c.id > 0 {
 			Manager.ClientLogout(c.id, c.device)
 		}
 		return true

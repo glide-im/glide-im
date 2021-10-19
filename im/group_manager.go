@@ -76,7 +76,7 @@ func (m *groupManager) DispatchNotifyMessage(gid int64, message *message.Message
 }
 
 func (m *groupManager) DispatchMessage(gid int64, msg *client.GroupMessage) {
-	logger.D("GroupManager.HandleMessage: %s", msg)
+	logger.D("GroupManager.HandleMessage: %v", msg)
 
 	g := m.groups[gid]
 

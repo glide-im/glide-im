@@ -9,7 +9,7 @@ var (
 	ErrClosed           = errors.New("closed")
 	ErrConnectionClosed = errors.New("connection closed")
 	ErrBadPackage       = errors.New("bad package data")
-	ErrReadTimeout      = errors.New("read timeout")
+	ErrReadTimeout      = errors.New("i/o timeout")
 )
 
 // Connection expression a network keep-alive connection, WebSocket, tcp etc
