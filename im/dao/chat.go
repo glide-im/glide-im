@@ -82,7 +82,7 @@ func (m *chatDao) UpdateUserChatMsgTime(cid int64, uid int64) (*UserChat, error)
 	return uc, err
 }
 
-func (m *chatDao) CreateChat(typ int8, targetId int64) (*Chat, error) {
+func (m *chatDao) CreateChat(typ int8, from int64, to int64) (*Chat, error) {
 
 	now := Timestamp(time.Now())
 	cid, err := GetNextChatId(typ)
@@ -93,8 +93,8 @@ func (m *chatDao) CreateChat(typ int8, targetId int64) (*Chat, error) {
 
 	c := Chat{
 		Cid:          cid,
+		TargetId:     to,
 		CurrentMid:   1,
-		TargetId:     targetId,
 		ChatType:     typ,
 		CreateAt:     now,
 		NewMessageAt: now,

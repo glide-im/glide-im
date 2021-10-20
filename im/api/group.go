@@ -232,7 +232,7 @@ func (m *GroupApi) createGroup(name string, uid int64) (*dao.Group, int64, error
 		return nil, 0, err
 	}
 	// create group chat
-	chat, err := dao.ChatDao.CreateChat(dao.ChatTypeGroup, gp.Gid)
+	chat, err := dao.ChatDao.CreateChat(dao.ChatTypeGroup, 0, gp.Gid)
 	if err != nil {
 		// TODO undo
 		return nil, 0, err

@@ -6,6 +6,7 @@ import (
 	"go_im/im/conn"
 	"go_im/im/dao/uid"
 	"go_im/im/message"
+	"go_im/im/statistics"
 	"go_im/pkg/logger"
 )
 
@@ -20,6 +21,8 @@ func NewClientManager() *ClientManagerImpl {
 }
 
 func (c *ClientManagerImpl) ClientConnected(conn conn.Connection) int64 {
+	statistics.SConnEnter()
+
 	// 获取一个临时 uid 标识这个连接
 	connUid := uid.GenTemp()
 	ret := client.NewClient(conn)

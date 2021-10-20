@@ -38,7 +38,7 @@ func initGroup(dbGroup *dao.Group) (*Group, error) {
 	group.mute = dbGroup.Mute
 
 	if dbGroup.ChatId <= 0 {
-		chat, err := dao.ChatDao.CreateChat(dao.ChatTypeGroup, dbGroup.Gid)
+		chat, err := dao.ChatDao.CreateChat(dao.ChatTypeGroup, 0, dbGroup.Gid)
 		if err != nil {
 			return nil, err
 		}

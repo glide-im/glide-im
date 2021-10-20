@@ -28,7 +28,7 @@ type ChatMessageID struct {
 type Chat struct {
 	Cid          int64 `gorm:"primary_key"`
 	ChatType     int8
-	TargetId     int64 `gorm:"unique"`
+	TargetId     int64
 	CurrentMid   int64
 	NewMessageAt Timestamp `gorm:"type:datetime"`
 	CreateAt     Timestamp `gorm:"type:datetime"`
@@ -50,7 +50,7 @@ type UserChat struct {
 
 type ChatMessage struct {
 	ID          int64 `gorm:"primary_key"`
-	Mid         int64 `gorm:"unique"`
+	Mid         int64
 	Cid         int64
 	Sender      int64
 	SendAt      Timestamp `gorm:"type:datetime"`

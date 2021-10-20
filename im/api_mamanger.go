@@ -12,6 +12,7 @@ type ApiRouter struct {
 	*api.UserApi
 	*api.GroupApi
 	*api.AppApi
+	*api.TestApi
 	router *api.Router
 }
 
@@ -60,6 +61,9 @@ func (a *ApiRouter) init() {
 					api.Route("remove", a.RemoveMember),
 				),
 			),
+			api.Group("test",
+				api.Route("login", a.TestLogin),
+			),
 		),
 	)
 	a.router = rt
@@ -91,6 +95,10 @@ const (
 )
 
 func (a *ApiRouter) intercept(uid int64, message *message.Message) error {
+
+	if message.Action.Contains("api.test") {
+		return nil
+	}
 
 	doNotNeedAuth := message.Action == actionLogin || message.Action == actionRegister || message.Action == actionAuth || message.Action == actionEcho
 	if uid <= 0 && !doNotNeedAuth {

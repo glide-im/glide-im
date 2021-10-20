@@ -8,7 +8,6 @@ import (
 	"go_im/im/group"
 	"go_im/im/message"
 	"go_im/pkg/logger"
-	"runtime/debug"
 )
 
 // execPool 100 capacity goroutine pool, 假设每个消息处理需要10ms, 一个协程则每秒能处理100条消息
@@ -18,7 +17,7 @@ func init() {
 	client.MessageHandleFunc = messageHandler
 
 	var err error
-	execPool, err = ants.NewPool(100,
+	execPool, err = ants.NewPool(10000,
 		ants.WithNonblocking(true),
 		ants.WithPanicHandler(onHandleMessagePanic),
 		//ants.WithPreAlloc(true),
@@ -121,6 +120,5 @@ func dispatch(from int64, chatMsg *dao.ChatMessage, senderMsg *client.SenderChat
 }
 
 func onHandleMessagePanic(i interface{}) {
-	debug.PrintStack()
 	logger.E("handler message panic", i)
 }

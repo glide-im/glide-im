@@ -4,7 +4,9 @@ import (
 	"go_im/im/comm"
 	"go_im/im/conn"
 	"go_im/im/message"
+	"go_im/im/statistics"
 	"go_im/pkg/logger"
+	"sync/atomic"
 	"time"
 )
 
@@ -60,8 +62,8 @@ func NewClient(conn conn.Connection) *Client {
 }
 
 func (c *Client) SetID(id int64, device int64) {
-	c.id = id
-	c.device = device
+	atomic.StoreInt64(&c.id, id)
+	atomic.StoreInt64(&c.device, device)
 }
 
 func (c *Client) Closed() bool {
@@ -97,6 +99,7 @@ func (c *Client) readMessage() {
 
 	for {
 		msg, err := messageReader.Read(c.conn)
+		statistics.SMsgInput()
 		if err != nil {
 			if c.Closed() || c.handleError(-1, err) {
 				// 连接断开或致命错误中断读消息
@@ -123,6 +126,7 @@ func (c *Client) writeMessage() {
 
 	for msg := range c.messages {
 		err := c.conn.Write(msg)
+		statistics.SMsgOutput()
 		if err != nil {
 			if c.Closed() || c.handleError(-1, err) {
 				// 连接断开或致命错误中断写消息
@@ -135,6 +139,7 @@ func (c *Client) writeMessage() {
 // handleError 处理上下行消息过程中的错误, 如果是致命错误, 则返回 true
 func (c *Client) handleError(seq int64, err error) bool {
 
+	statistics.SError(err)
 	fatalErr := map[error]int{
 		conn.ErrForciblyClosed:   0,
 		conn.ErrClosed:           0,
@@ -144,7 +149,8 @@ func (c *Client) handleError(seq int64, err error) bool {
 	_, ok := fatalErr[err]
 	if ok {
 		logger.D("handle message fatal error: %s", err.Error())
-		if c.id > 0 {
+
+		if atomic.LoadInt64(&c.id) > 0 {
 			Manager.ClientLogout(c.id, c.device)
 		}
 		return true
@@ -164,6 +170,7 @@ func (c *Client) Exit() {
 
 	close(c.messages)
 	_ = c.conn.Close()
+	statistics.SConnExit()
 }
 
 // getNextSeq 获取下一个下行消息序列号 sequence
