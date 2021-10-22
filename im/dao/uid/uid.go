@@ -3,7 +3,6 @@ package uid
 import (
 	"go_im/pkg/db"
 	"go_im/pkg/logger"
-	"math/rand"
 	"strconv"
 	"sync"
 )
@@ -76,13 +75,15 @@ func (g *gen) GenSysUid() int64 {
 }
 
 func (g *gen) GenUid() int64 {
-	rs, err := g.getInt64(keyUidIncr)
+
+	result, err := db.Redis.Incr(keyUidIncr).Result()
 	if err != nil {
 		return 0
 	}
-	next := rs + rand.Int63n(4)
-	db.Redis.Set(keyUidIncr, next, 0)
-	return next
+	if result >= userIdEnd {
+		logger.E("uid exhausted")
+	}
+	return result
 }
 
 func (g *gen) GenTempUid() int64 {

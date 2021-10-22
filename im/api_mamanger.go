@@ -63,6 +63,7 @@ func (a *ApiRouter) init() {
 			),
 			api.Group("test",
 				api.Route("login", a.TestLogin),
+				api.Route("signout", a.TestSignOut),
 			),
 		),
 	)

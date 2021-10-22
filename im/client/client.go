@@ -84,7 +84,7 @@ func (c *Client) EnqueueMessage(message *message.Message) {
 	case c.messages <- message:
 	default:
 		// 消息 chan 缓冲溢出, 这条消息将被丢弃
-		logger.E("Client.EnqueueMessage", "message chan is full")
+		logger.E("Client.EnqueueMessage", "message chan is full", c.id)
 	}
 }
 

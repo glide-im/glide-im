@@ -6,6 +6,7 @@ import (
 	"go_im/im/statistics"
 	"go_im/pkg/db"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"testing"
 	"time"
@@ -16,8 +17,6 @@ func TestServerPerf(t *testing.T) {
 
 	db.Init()
 
-	var closeAfter = time.Second * 180
-
 	server := NewServer(Options{
 		SvrType:       WebSocket,
 		ApiImpl:       NewApiRouter(),
@@ -25,16 +24,8 @@ func TestServerPerf(t *testing.T) {
 		GroupMgrImpl:  NewGroupManager(),
 	})
 
-	done := make(chan struct{})
-
 	go func() {
 		server.Serve("0.0.0.0", 8080)
-	}()
-
-	go func() {
-		time.AfterFunc(closeAfter, func() {
-			done <- struct{}{}
-		})
 	}()
 
 	go func() {
@@ -42,7 +33,7 @@ func TestServerPerf(t *testing.T) {
 		tm := 0
 		for range tick {
 			tm++
-			t.Log("CountDown", 180-tm)
+			t.Log(tm)
 		}
 	}()
 
@@ -51,8 +42,9 @@ func TestServerPerf(t *testing.T) {
 	var msgCountLine []int64
 	var onlineLine []int64
 
+	// TODO fix incorrect avg msg compute
 	go func() {
-		tick := time.Tick(time.Second)
+		tick := time.Tick(time.Millisecond * 100)
 		for range tick {
 			s := statistics.GetStatistics()
 			onlineLine = append(onlineLine, s.ConnEnter.Get()-s.ConnExit.Get())
@@ -73,15 +65,26 @@ func TestServerPerf(t *testing.T) {
 		}
 	}()
 
+	done := make(chan struct{})
+	handler := doneHandler{done: done}
+	http.Handle("/done", handler)
 	<-done
 
-	exportChart("input", msgInputLine)
-	exportChart("output", msgOutputLine)
-	exportChart("count", msgCountLine)
-	exportChart("online", onlineLine)
+	exportChart("input", "Msg Input", msgInputLine)
+	exportChart("output", "Msg Output", msgOutputLine)
+	exportChart("count", "Msg I/O Count", msgCountLine)
+	exportChart("online", "Online", onlineLine)
 }
 
-func exportChart(title string, data []int64) {
+type doneHandler struct {
+	done chan struct{}
+}
+
+func (d doneHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	d.done <- struct{}{}
+}
+
+func exportChart(title string, yName string, data []int64) {
 
 	y := make([]float64, len(data))
 	x := make([]float64, len(data))
@@ -93,12 +96,12 @@ func exportChart(title string, data []int64) {
 	graph := chart.Chart{
 		Title: title,
 		XAxis: chart.XAxis{
-			Name:      "sequence",
+			Name:      "Time/100 MillSec",
 			NameStyle: chart.StyleShow(),
 			Style:     chart.StyleShow(),
 		},
 		YAxis: chart.YAxis{
-			Name:      "value",
+			Name:      yName,
 			NameStyle: chart.StyleShow(),
 			Style:     chart.StyleShow(),
 		},
