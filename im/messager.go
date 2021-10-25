@@ -7,6 +7,7 @@ import (
 	"go_im/im/dao"
 	"go_im/im/group"
 	"go_im/im/message"
+	"go_im/im/statistics"
 	"go_im/pkg/logger"
 )
 
@@ -17,7 +18,7 @@ func init() {
 	client.MessageHandleFunc = messageHandler
 
 	var err error
-	execPool, err = ants.NewPool(10000,
+	execPool, err = ants.NewPool(100000,
 		ants.WithNonblocking(true),
 		ants.WithPanicHandler(onHandleMessagePanic),
 		//ants.WithPreAlloc(true),
@@ -30,6 +31,7 @@ func init() {
 // messageHandler handle and dispatch client message
 func messageHandler(from int64, device int64, msg *message.Message) {
 	err := execPool.Submit(func() {
+		statistics.SMsgInput()
 		switch msg.Action {
 		case message.ActionChatMessage:
 			dispatchChatMessage(from, msg)

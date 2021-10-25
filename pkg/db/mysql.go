@@ -7,6 +7,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"go_im/config"
 	"go_im/pkg/logger"
+	"runtime"
 )
 
 var (
@@ -38,8 +39,8 @@ func initRedis() {
 		Addr:         fmt.Sprintf("%s:%d", conf.Host, conf.Port),
 		Password:     conf.Password,
 		DB:           conf.Db,
-		PoolSize:     0,
-		MinIdleConns: 0,
+		PoolSize:     runtime.NumCPU() * 10,
+		MinIdleConns: 10,
 	})
 
 	logger.D("redis init: %s", Redis.Ping().Val())

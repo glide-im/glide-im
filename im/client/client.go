@@ -99,7 +99,6 @@ func (c *Client) readMessage() {
 
 	for {
 		msg, err := messageReader.Read(c.conn)
-		statistics.SMsgInput()
 		if err != nil {
 			if c.Closed() || c.handleError(-1, err) {
 				// 连接断开或致命错误中断读消息

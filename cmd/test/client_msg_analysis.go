@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gorilla/websocket"
 	"go_im/im/api"
 	"go_im/im/client"
@@ -9,12 +8,11 @@ import (
 	"go_im/im/dao/uid"
 	"go_im/im/message"
 	"go_im/pkg/db"
+	"go_im/pkg/logger"
 	"math/rand"
 	"net/http"
-	"strings"
 	"sync"
 	"sync/atomic"
-	"testing"
 	"time"
 )
 
@@ -23,6 +21,7 @@ var msgTo = map[int64]int64{}
 var ucIds = map[int64]int64{}
 var cids = map[int64]int64{}
 
+var rLock = sync.RWMutex{}
 var conns = map[int64]*websocket.Conn{}
 
 var sendMsg *int64
@@ -42,30 +41,32 @@ var dialer = websocket.Dialer{
 	WriteBufferSize:  1024,
 }
 
-func TestA(t *testing.T) {
+func main() {
 
 	db.Init()
-	initUsers(100)
-	t.Log("uids=", uids)
-	t.Log("user init complete")
+	userCount := 200
+	initUsers(userCount)
+	logger.D("uids=%v", uids)
+	logger.D("user init complete")
 
 	wgConn := sync.WaitGroup{}
 	for _, uid_ := range uids {
 		wgConn.Add(1)
-		time.Sleep(time.Millisecond * 100)
+		time.Sleep(time.Millisecond * 10)
 		id := uid_
 		go func() {
-			serverIM(t, id)
+			serverIM(id)
 			wgConn.Done()
 		}()
 	}
 	wgConn.Wait()
-	t.Log("connection establish complete, count:", len(conns))
+	logger.D("connection establish complete, %d/%d", len(conns), userCount)
 
+	time.Sleep(time.Second * 1)
 	go func() {
 		tick := time.Tick(time.Second)
 		for range tick {
-			t.Log("send:", atomic.LoadInt64(sendMsg), "-", "receive:", atomic.LoadInt64(receiveMsg))
+			logger.D("Send:%d  Receive:%d", atomic.LoadInt64(sendMsg), atomic.LoadInt64(receiveMsg))
 		}
 	}()
 
@@ -74,15 +75,16 @@ func TestA(t *testing.T) {
 		id := i
 		c := conn
 		wgMsg.Add(1)
+		sleepRndMilleSec(20, 100)
 		go func() {
 			startMsg(id, 30, c)
 			wgMsg.Done()
 		}()
 	}
 	wgMsg.Wait()
-	t.Log("msg send complete")
+	logger.D("msg send complete")
 
-	time.Sleep(time.Second * 5)
+	time.Sleep(time.Second * 1)
 	connClosed = true
 	for _, conn := range conns {
 		c := conn
@@ -93,45 +95,46 @@ func TestA(t *testing.T) {
 			_ = c.Close()
 		}()
 	}
-	t.Log("done")
+	logger.D("done")
+	_, _ = http.Get("http://localhost:8080/statistic")
 	time.Sleep(time.Second * 3)
 	_, _ = http.Get("http://localhost:8080/done")
 }
 
-func serverIM(t *testing.T, uid int64) {
+func serverIM(uid int64) {
 
 	con, _, err := dialer.Dial("ws://localhost:8080/ws", nil)
 
 	if err != nil {
-		t.Error(err)
+		logger.W(err.Error())
 		return
 	}
 
 	con.SetCloseHandler(func(code int, text string) error {
-		t.Log("closed!", code, text)
+		logger.W(text)
 		return nil
 	})
 	go func() {
 		for !connClosed {
 			_, _, e := con.ReadMessage()
 			if e != nil && !connClosed {
-				t.Log(e)
-				if strings.Contains(e.Error(), "unexpected EOF") ||
-					strings.Contains(e.Error(), "use of closed network connection") {
-					break
-				}
+				logger.W(e.Error())
+				break
 			} else {
 				atomic.AddInt64(receiveMsg, 1)
 			}
 		}
 	}()
 
+	time.Sleep(time.Millisecond * 300)
 	login := message.NewMessage(1, "api.test.login", api.TestLoginRequest{
 		Uid:    uid,
 		Device: 2,
 	})
 	_ = con.WriteJSON(login)
+	rLock.RLock()
 	conns[uid] = con
+	rLock.RUnlock()
 }
 
 func startMsg(uid int64, count int, conn *websocket.Conn) {
@@ -140,7 +143,7 @@ func startMsg(uid int64, count int, conn *websocket.Conn) {
 	to := msgTo[uid]
 
 	for i := 0; i < count; i++ {
-		sleepRndMilleSec(200, 600)
+		sleepRndMilleSec(150, 300)
 		m := &client.SenderChatMessage{
 			Cid:         c,
 			UcId:        ucId,
@@ -152,7 +155,7 @@ func startMsg(uid int64, count int, conn *websocket.Conn) {
 		msg := message.NewMessage(0, message.ActionChatMessage, m)
 		er := conn.WriteJSON(msg)
 		if er != nil {
-			fmt.Println(er.Error())
+			logger.E(er.Error())
 			break
 		} else {
 			atomic.AddInt64(sendMsg, 1)

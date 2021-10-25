@@ -2,17 +2,23 @@ package statistics
 
 import (
 	"github.com/panjf2000/ants/v2"
-	"go_im/im/comm"
+	"sync/atomic"
 	"time"
 )
 
 type Statistics struct {
-	MessageInput  comm.AtomicInt64
-	MessageOutput comm.AtomicInt64
-	Errors        comm.AtomicInt64
-	ConnEnter     comm.AtomicInt64
-	ConnExit      comm.AtomicInt64
-	StartUpAt     time.Time
+	messageInput  int64
+	messageOutput int64
+	errors        int64
+	connEnter     int64
+	connExit      int64
+
+	StartUpAt        time.Time
+	Online           []int64
+	ErrorsMillSec    []int64
+	MsgCountMillSec  []int64
+	MsgInputMillSec  []int64
+	MsgOutPutMillSec []int64
 }
 
 var statistics *Statistics
@@ -20,44 +26,63 @@ var pool *ants.Pool
 
 func init() {
 	statistics = &Statistics{
-		MessageInput:  0,
-		MessageOutput: 0,
-		Errors:        0,
-		ConnEnter:     0,
+		messageInput:  0,
+		messageOutput: 0,
+		errors:        0,
+		connEnter:     0,
 		StartUpAt:     time.Now(),
 	}
 	pool, _ = ants.NewPool(100,
 		ants.WithNonblocking(true),
 		ants.WithPreAlloc(true),
 	)
+
+	go runStatistic()
+}
+
+func runStatistic() {
+	duration := time.Millisecond * 100
+	t := time.Tick(duration)
+	for range t {
+		input := atomic.SwapInt64(&statistics.messageInput, 0)
+		output := atomic.SwapInt64(&statistics.messageOutput, 0)
+		err := atomic.SwapInt64(&statistics.errors, 0)
+		ol := atomic.LoadInt64(&statistics.connEnter) - atomic.LoadInt64(&statistics.connExit)
+
+		statistics.ErrorsMillSec = append(statistics.ErrorsMillSec, err)
+		statistics.Online = append(statistics.Online, ol)
+		statistics.MsgInputMillSec = append(statistics.MsgInputMillSec, input)
+		statistics.MsgOutPutMillSec = append(statistics.MsgOutPutMillSec, output)
+		statistics.MsgCountMillSec = append(statistics.MsgCountMillSec, input+output)
+	}
 }
 
 func SMsgInput() {
-	incr(&statistics.MessageInput)
+	incr(&statistics.messageInput)
 }
 
 func SMsgOutput() {
-	incr(&statistics.MessageOutput)
+	incr(&statistics.messageOutput)
 }
 
 func SError(e error) {
-	incr(&statistics.Errors)
+	incr(&statistics.errors)
 }
 
 func SConnEnter() {
-	incr(&statistics.ConnEnter)
+	incr(&statistics.connEnter)
 }
 
 func SConnExit() {
-	incr(&statistics.ConnExit)
+	incr(&statistics.connExit)
 }
 
 func GetStatistics() Statistics {
 	return *statistics
 }
 
-func incr(s *comm.AtomicInt64) {
+func incr(s *int64) {
 	_ = pool.Submit(func() {
-		s.Set(s.Get() + 1)
+		atomic.AddInt64(s, 1)
 	})
 }
