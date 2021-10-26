@@ -1,34 +1,46 @@
-package im
+package test
 
 import (
 	"bytes"
 	"fmt"
 	"github.com/wcharczuk/go-chart"
+	"go_im/im"
 	"go_im/im/statistics"
 	"go_im/pkg/db"
+	"go_im/pkg/logger"
 	"net/http"
 	"os"
-	"testing"
 	"time"
 )
 
-func TestServerPerf(t *testing.T) {
+var cTestPoints = 2
+
+func RunAnalysisServer() {
 
 	db.Init()
 
 	done := make(chan struct{})
-	http.Handle("/done", doneHandler{done: done})
-	http.Handle("/statistic", statistic{})
-
-	server := NewServer(Options{
-		SvrType:       WebSocket,
-		ApiImpl:       NewApiRouter(),
-		ClientMgrImpl: NewClientManager(),
-		GroupMgrImpl:  NewGroupManager(),
-	})
 
 	go func() {
+		defer func() {
+			e := recover()
+			if e != nil {
+
+			}
+		}()
+		server := im.NewServer(im.Options{
+			SvrType:       im.WebSocket,
+			ApiImpl:       im.NewApiRouter(),
+			ClientMgrImpl: im.NewClientManager(),
+			GroupMgrImpl:  im.NewGroupManager(),
+		})
 		server.Serve("0.0.0.0", 8080)
+	}()
+
+	go func() {
+		time.Sleep(time.Second * 3)
+		http.Handle("/done", &doneHandler{done: done})
+		http.Handle("/statistic", statistic{})
 	}()
 
 	go func() {
@@ -36,18 +48,31 @@ func TestServerPerf(t *testing.T) {
 		tm := 0
 		for range tick {
 			tm++
-			t.Log(tm)
+			logger.D("%d", tm)
 		}
 	}()
-
 	<-done
 }
 
 type statistic struct{}
 
-func (s statistic) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+func (s statistic) ServeHTTP(writer http.ResponseWriter, request *http.Request) {}
+
+type doneHandler struct {
+	done  chan struct{}
+	times int
+}
+
+func (d *doneHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	d.times += 1
+	if d.times >= cTestPoints {
+		genStatisticsChart()
+		d.done <- struct{}{}
+	}
+}
+
+func genStatisticsChart() {
 	st := statistics.GetStatistics()
-	fmt.Println(st.Online)
 	exportChart("input", "Msg Input", st.MsgInputMillSec)
 	exportChart("output", "Msg Output", st.MsgOutPutMillSec)
 	exportChart("count", "Msg I/O Count", st.MsgCountMillSec)
@@ -55,17 +80,6 @@ func (s statistic) ServeHTTP(writer http.ResponseWriter, request *http.Request) 
 	exportChart("error", "Errors", st.ErrorsMillSec)
 }
 
-type doneHandler struct {
-	done chan struct{}
-}
-
-func (d doneHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	d.done <- struct{}{}
-}
-
-func TestE(t *testing.T) {
-	exportChart("1", "1", []int64{1, 2, 3, 4, 3, 5, 6, 6, 0})
-}
 func exportChart(title string, yName string, data []int64) {
 
 	// transform time unit to second
@@ -121,9 +135,10 @@ func exportChart(title string, yName string, data []int64) {
 	_ = graph.Render(chart.PNG, buffer)
 
 	now := time.Now().Format("01-02_15_04_05")
-	n := "./analysis/" + title + "_" + now + ".png"
-	_ = os.MkdirAll(n, os.ModePerm)
-	f, err := os.Create(n)
+	dir := "./analysis/" + now
+	_ = os.MkdirAll(dir, os.ModePerm)
+
+	f, err := os.Create(dir + "/" + title + ".png")
 	if err != nil {
 		fmt.Println(err.Error())
 		return

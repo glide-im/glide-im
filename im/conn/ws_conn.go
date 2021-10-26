@@ -27,7 +27,7 @@ func (c *WsConnection) Write(message Serializable) error {
 
 	data, err := message.Serialize()
 	if err != nil {
-		return err
+		return c.wrapError(err)
 	}
 	err = c.conn.WriteMessage(websocket.TextMessage, data)
 	return c.wrapError(err)

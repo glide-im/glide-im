@@ -1,4 +1,4 @@
-package main
+package test
 
 import (
 	"github.com/gorilla/websocket"
@@ -41,11 +41,16 @@ var dialer = websocket.Dialer{
 	WriteBufferSize:  1024,
 }
 
-func main() {
+var host = "192.168.1.123"
+
+func RunClientMsg() {
 
 	db.Init()
-	userCount := 200
-	initUsers(userCount)
+	userCount := 2000
+
+	//initUsers(userCount)
+	initUserNoDB(userCount)
+
 	logger.D("uids=%v", uids)
 	logger.D("user init complete")
 
@@ -75,9 +80,8 @@ func main() {
 		id := i
 		c := conn
 		wgMsg.Add(1)
-		sleepRndMilleSec(20, 100)
 		go func() {
-			startMsg(id, 30, c)
+			startMsg(id, 50, c)
 			wgMsg.Done()
 		}()
 	}
@@ -96,14 +100,14 @@ func main() {
 		}()
 	}
 	logger.D("done")
-	_, _ = http.Get("http://localhost:8080/statistic")
+	_, _ = http.Get("http://" + host + ":8080/statistic")
 	time.Sleep(time.Second * 3)
-	_, _ = http.Get("http://localhost:8080/done")
+	_, _ = http.Get("http://" + host + ":8080/done")
 }
 
 func serverIM(uid int64) {
 
-	con, _, err := dialer.Dial("ws://localhost:8080/ws", nil)
+	con, _, err := dialer.Dial("ws://"+host+":8080/ws", nil)
 
 	if err != nil {
 		logger.W(err.Error())
@@ -132,9 +136,9 @@ func serverIM(uid int64) {
 		Device: 2,
 	})
 	_ = con.WriteJSON(login)
-	rLock.RLock()
+	rLock.Lock()
 	conns[uid] = con
-	rLock.RUnlock()
+	rLock.Unlock()
 }
 
 func startMsg(uid int64, count int, conn *websocket.Conn) {
@@ -143,17 +147,18 @@ func startMsg(uid int64, count int, conn *websocket.Conn) {
 	to := msgTo[uid]
 
 	for i := 0; i < count; i++ {
-		sleepRndMilleSec(150, 300)
+		sleepRndMilleSec(60, 100)
 		m := &client.SenderChatMessage{
 			Cid:         c,
 			UcId:        ucId,
 			TargetId:    to,
 			MessageType: 0,
-			Message:     "hello-world",
+			Message:     " hello-world hello-world hello-world hello-world hello-world",
 			SendAt:      dao.Timestamp(time.Now()),
 		}
 		msg := message.NewMessage(0, message.ActionChatMessage, m)
-		er := conn.WriteJSON(msg)
+		s, _ := msg.Serialize()
+		er := conn.WriteMessage(websocket.TextMessage, s)
 		if er != nil {
 			logger.E(er.Error())
 			break
@@ -168,23 +173,52 @@ func initUsers(userCount int) {
 	for i := 0; i < userCount; i++ {
 		uids = append(uids, uid.GenUid())
 	}
+	wg := sync.WaitGroup{}
+	m1 := sync.Mutex{}
+	m2 := sync.Mutex{}
+	m3 := sync.Mutex{}
 
 	for i := 0; i < userCount; i++ {
+		wg.Add(1)
+		i2 := i
+		go func() {
+			from := uids[i2]
+			to := uids[rand.Int63n(int64(userCount))]
+			m1.Lock()
+			msgTo[from] = to
+			m1.Unlock()
+
+			chat, err := dao.ChatDao.CreateChat(dao.ChatTypeUser, from, to)
+			if err != nil {
+				panic(err)
+			}
+			m2.Lock()
+			cids[from] = chat.Cid
+			m2.Unlock()
+
+			userChat, err := dao.ChatDao.NewUserChat(chat.Cid, from, to, dao.ChatTypeUser)
+			if err != nil {
+				panic(err)
+			}
+			m3.Lock()
+			ucIds[from] = userChat.UcId
+			m3.Unlock()
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+}
+
+func initUserNoDB(count int) {
+	for i := 0; i < count; i++ {
+		uids = append(uids, uid.GenUid())
+	}
+	for i := 0; i < count; i++ {
 		from := uids[i]
-		to := uids[rand.Int63n(int64(userCount))]
+		to := uids[rand.Int63n(int64(count))]
 		msgTo[from] = to
-
-		chat, err := dao.ChatDao.CreateChat(dao.ChatTypeUser, from, to)
-		if err != nil {
-			panic(err)
-		}
-		cids[from] = chat.Cid
-
-		userChat, err := dao.ChatDao.NewUserChat(chat.Cid, from, to, dao.ChatTypeUser)
-		if err != nil {
-			panic(err)
-		}
-		ucIds[from] = userChat.UcId
+		cids[from] = 0
+		ucIds[from] = 0
 	}
 }
 
