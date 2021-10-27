@@ -29,6 +29,8 @@ type SenderChatMessage struct {
 // ReceiverChatMessage 表示服务端分发给接受者的聊天消息
 type ReceiverChatMessage struct {
 	Mid         int64
+	Seq         int64
+	AlignTag    string
 	Cid         int64
 	Sender      int64
 	MessageType int8

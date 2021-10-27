@@ -147,10 +147,8 @@ func (c *Client) handleError(seq int64, err error) bool {
 	}
 	_, ok := fatalErr[err]
 	if ok {
-		logger.D("handle message fatal error: %s", err.Error())
-
 		if atomic.LoadInt64(&c.id) > 0 {
-			Manager.ClientLogout(c.id, c.device)
+			Manager.ClientLogout(atomic.LoadInt64(&c.id), c.device)
 		}
 		return true
 	}
@@ -164,7 +162,7 @@ func (c *Client) Exit() {
 	if c.closed.Get() {
 		return
 	}
-	c.id = 0
+	atomic.StoreInt64(&c.id, 0)
 	c.closed.Set(true)
 
 	close(c.messages)

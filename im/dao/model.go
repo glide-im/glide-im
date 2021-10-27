@@ -51,6 +51,7 @@ type UserChat struct {
 type ChatMessage struct {
 	ID          int64 `gorm:"primary_key"`
 	Mid         int64
+	Seq         int64
 	Cid         int64
 	Sender      int64
 	SendAt      Timestamp `gorm:"type:datetime"`

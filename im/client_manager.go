@@ -89,7 +89,11 @@ func (c *ClientManagerImpl) EnqueueMessage(uid int64, msg *message.Message) {
 		return
 	}
 	ds.foreach(func(device int64, c client.IClient) {
-		c.EnqueueMessage(msg)
+		if c.Closed() {
+			// TODO 2021-10-27 client is offline, store
+		} else {
+			c.EnqueueMessage(msg)
+		}
 	})
 }
 

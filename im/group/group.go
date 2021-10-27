@@ -6,6 +6,8 @@ import (
 	"go_im/im/dao"
 	"go_im/im/message"
 	"go_im/pkg/logger"
+	"strconv"
+	"sync/atomic"
 	"time"
 )
 
@@ -21,8 +23,10 @@ type Group struct {
 	gid int64
 	cid int64
 
-	nextMid int64
-	mute    bool
+	msgSequence int64
+	startup     string
+
+	mute bool
 
 	mu      *comm.Mutex
 	members map[int64]int32
@@ -32,6 +36,8 @@ func newGroup(gid int64, cid int64) *Group {
 	ret := new(Group)
 	ret.mu = comm.NewMutex()
 	ret.members = map[int64]int32{}
+	ret.startup = strconv.FormatInt(time.Now().Unix(), 10)
+	ret.msgSequence = 1
 	ret.gid = gid
 	ret.cid = cid
 	return ret
@@ -49,9 +55,13 @@ func (g *Group) EnqueueMessage(msg *client.GroupMessage) {
 		return
 	}
 
+	seq := atomic.LoadInt64(&g.msgSequence)
+	mid := dao.GetNextMessageId(g.cid)
+
 	chatMessage := dao.ChatMessage{
-		Mid:         g.nextMid,
+		Mid:         mid,
 		Cid:         g.cid,
+		Seq:         seq,
 		Sender:      msg.Sender,
 		SendAt:      dao.Timestamp(time.Now()),
 		Message:     msg.Message,
@@ -59,9 +69,6 @@ func (g *Group) EnqueueMessage(msg *client.GroupMessage) {
 		At:          "",
 	}
 	err := dao.ChatDao.NewGroupMessage(chatMessage)
-	if g.nextMid == dao.GetNextMessageId(g.cid) {
-		g.nextMid++
-	}
 
 	if err != nil {
 		logger.E("dispatch group message", err)
@@ -69,8 +76,10 @@ func (g *Group) EnqueueMessage(msg *client.GroupMessage) {
 	}
 
 	rMsg := client.ReceiverChatMessage{
-		Mid:         g.nextMid,
+		Mid:         mid,
 		Cid:         g.cid,
+		AlignTag:    g.startup,
+		Seq:         seq,
 		Sender:      msg.Sender,
 		MessageType: msg.MessageType,
 		Message:     msg.Message,
@@ -80,7 +89,7 @@ func (g *Group) EnqueueMessage(msg *client.GroupMessage) {
 	resp := message.NewMessage(-1, message.ActionGroupMessage, rMsg)
 
 	g.SendMessage(resp)
-
+	atomic.AddInt64(&g.msgSequence, 1)
 }
 
 func (g *Group) SendMessage(message *message.Message) {
