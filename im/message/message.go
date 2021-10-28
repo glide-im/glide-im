@@ -1,72 +1,60 @@
 package message
 
-import (
-	"encoding/json"
-	"fmt"
-	"strings"
-)
-
-const (
-	ActionMessage      Action = "message"
-	ActionGroupMessage        = "message.group"
-	ActionChatMessage         = "message.chat"
-	ActionCSMessage           = "message.cs"
-	ActionApi                 = "api"
-	ActionHeartbeat           = "heartbeat"
-	ActionNotify              = "notify"
-	ActionFailed              = "failed"
-)
-
-type Action string
-
-func (a *Action) Contains(action Action) bool {
-	return strings.HasPrefix(string(*a), string(action))
+// GroupMessage 代表一个群消息
+type GroupMessage struct {
+	TargetId int64
+	// internal
+	Sender      int64 `json:"-"`
+	Cid         int64
+	UcId        int64
+	MessageType int8
+	Message     string
+	SendAt      int64
 }
 
-type Message struct {
-	Seq    int64
-	Action Action
-	Data   string
+// SenderChatMessage 表示服务端收到发送者的消息
+type SenderChatMessage struct {
+	Cid         int64
+	UcId        int64
+	Seq         int64
+	TargetId    int64
+	MessageType int8
+	Message     string
+	SendAt      int64
 }
 
-func (m *Message) Deserialize(data []byte) error {
-	return json.Unmarshal(data, m)
+type ChatMessageAck struct {
+	Seq int64
+	Mid int64
 }
 
-func (m *Message) Serialize() ([]byte, error) {
-	return json.Marshal(m)
+type SyncChatMessage struct {
 }
 
-func (m *Message) SetData(v interface{}) error {
-	if s, ok := v.(string); ok {
-		m.Data = s
-		return nil
-	}
-	if s, ok := v.(error); ok {
-		m.Data = s.Error()
-		return nil
-	}
-
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-	m.Data = string(b)
-	return nil
+// ReceiverChatMessage 表示服务端分发给接受者的聊天消息
+type ReceiverChatMessage struct {
+	Mid         int64
+	Seq         int64
+	AlignTag    string
+	Cid         int64
+	Sender      int64
+	MessageType int8
+	Message     string
+	SendAt      int64
 }
 
-func (m *Message) DeserializeData(v interface{}) error {
-	return json.Unmarshal([]byte(m.Data), v)
-}
+// CustomerServiceMessage 表示客服消息
+type CustomerServiceMessage struct {
+	// sender's id
+	Sender int64
+	// receiver's id
+	Receiver int64
+	// customer service id
+	CsId int64
 
-func (m *Message) String() string {
-	return fmt.Sprintf("Message{Seq=%d, Action=%s, Data=%s}", m.Seq, m.Action, m.Data)
-}
-
-func NewMessage(seq int64, action Action, data interface{}) *Message {
-	ret := new(Message)
-	ret.Seq = seq
-	ret.Action = action
-	_ = ret.SetData(data)
-	return ret
+	ChatId      int64
+	UserChatId  int64
+	MessageType int8
+	Message     string
+	SendAt      int64
 }

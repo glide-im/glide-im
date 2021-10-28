@@ -5,7 +5,6 @@ import (
 	"go_im/im/client"
 	"go_im/im/comm"
 	"go_im/im/conn"
-	"go_im/im/dao"
 	"go_im/im/dao/uid"
 	"go_im/im/message"
 	"math/rand"
@@ -21,25 +20,25 @@ var mockUid int64 = 1
 type MockUserConn struct {
 	maxWriteTimeCost int64
 	uid              int64
-	ms               chan client.SenderChatMessage
+	ms               chan message.SenderChatMessage
 }
 
 func NewMockUserConn() *MockUserConn {
 	return &MockUserConn{
 		maxWriteTimeCost: 10,
-		ms:               make(chan client.SenderChatMessage, 100),
+		ms:               make(chan message.SenderChatMessage, 100),
 	}
 }
 
 func (m *MockUserConn) Send(target int64, msg string) {
 	messageCount.Set(messageCount.Get() + 1)
-	m.ms <- client.SenderChatMessage{
+	m.ms <- message.SenderChatMessage{
 		Cid:         1,
 		UcId:        1,
 		TargetId:    target,
 		MessageType: 1,
 		Message:     msg,
-		SendAt:      dao.Timestamp{},
+		SendAt:      time.Now().Unix(),
 	}
 }
 

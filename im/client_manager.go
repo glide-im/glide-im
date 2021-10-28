@@ -55,8 +55,7 @@ func (c *ClientManagerImpl) ClientSignIn(id, uid int64, device int64) {
 	if loggedIn != nil {
 		log := loggedIn.get(device)
 		if log != nil {
-			client.EnqueueMessage(uid, message.NewMessage(-1, message.ActionNotify, "Your account is logged in on another device"))
-			log.Exit()
+			log.Exit(client.ExitCodeLoginMutex, "Your account is logged in on another device")
 		}
 
 		loggedIn.put(device, cli)
@@ -78,7 +77,7 @@ func (c *ClientManagerImpl) ClientLogout(uid int64, device int64) {
 		return
 	}
 	logger.I("client logout, uid=%d, device=%d", uid, device)
-	logDevice.Exit()
+	logDevice.Exit(client.ExitCodeByUser, "")
 	cl.remove(device)
 }
 

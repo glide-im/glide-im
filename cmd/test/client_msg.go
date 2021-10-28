@@ -3,7 +3,6 @@ package test
 import (
 	"github.com/gorilla/websocket"
 	"go_im/im/api"
-	"go_im/im/client"
 	"go_im/im/dao"
 	"go_im/im/dao/uid"
 	"go_im/im/message"
@@ -148,13 +147,13 @@ func startMsg(uid int64, count int, conn *websocket.Conn) {
 
 	for i := 0; i < count; i++ {
 		sleepRndMilleSec(60, 100)
-		m := &client.SenderChatMessage{
+		m := &message.SenderChatMessage{
 			Cid:         c,
 			UcId:        ucId,
 			TargetId:    to,
 			MessageType: 0,
 			Message:     " hello-world hello-world hello-world hello-world hello-world",
-			SendAt:      dao.Timestamp(time.Now()),
+			SendAt:      time.Now().Unix(),
 		}
 		msg := message.NewMessage(0, message.ActionChatMessage, m)
 		s, _ := msg.Serialize()
@@ -217,8 +216,8 @@ func initUserNoDB(count int) {
 		from := uids[i]
 		to := uids[rand.Int63n(int64(count))]
 		msgTo[from] = to
-		cids[from] = 0
-		ucIds[from] = 0
+		cids[from] = 1
+		ucIds[from] = 1
 	}
 }
 

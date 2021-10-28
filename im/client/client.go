@@ -16,6 +16,15 @@ type MessageHandler func(from int64, device int64, message *message.Message)
 // MessageHandleFunc 所有客户端消息都传递到该函数处理
 var MessageHandleFunc MessageHandler = nil
 
+const (
+	ExitCodeTTL        = 1
+	ExitCodeBySrv      = 2
+	ExitCodeLoginMutex = 3
+	ExitCodeByUser     = 4
+)
+
+const ConnectionTTL = time.Minute * 8
+
 // IClient 表示一个客户端, 用于管理连接状态, 连接 id, 消息收发
 type IClient interface {
 
@@ -29,7 +38,7 @@ type IClient interface {
 	EnqueueMessage(message *message.Message)
 
 	// Exit 退出客户端, 关闭连接等
-	Exit()
+	Exit(code int64, reason string)
 
 	// Run 开始收发消息客户端连接的消息
 	Run()
@@ -39,14 +48,15 @@ type IClient interface {
 type Client struct {
 	conn conn.Connection
 
-	id     int64
-	device int64
-	time   time.Time
-	closed *comm.AtomicBool
+	id        int64
+	device    int64
+	connectAt time.Time
+	closed    *comm.AtomicBool
 
 	// buffered channel 40
 	messages chan *message.Message
 
+	ttl time.Duration
 	seq *comm.AtomicInt64
 }
 
@@ -56,14 +66,16 @@ func NewClient(conn conn.Connection) *Client {
 	client.closed = comm.NewAtomicBool(false)
 	// 大小为 40 的缓冲管道, 防止短时间消息过多如果网络连接 output 不及时会造成程序阻塞, 可以适当调整
 	client.messages = make(chan *message.Message, 40)
-	client.time = time.Now()
+	client.connectAt = time.Now()
 	client.seq = new(comm.AtomicInt64)
+	client.ttl = ConnectionTTL
 	return client
 }
 
 func (c *Client) SetID(id int64, device int64) {
 	atomic.StoreInt64(&c.id, id)
 	atomic.StoreInt64(&c.device, device)
+	// TODO 恢复 SEQ 序列号
 }
 
 func (c *Client) Closed() bool {
@@ -83,6 +95,7 @@ func (c *Client) EnqueueMessage(message *message.Message) {
 	select {
 	case c.messages <- message:
 	default:
+		// TODO 客户端弱网消息下行速度过慢导致缓冲溢出
 		// 消息 chan 缓冲溢出, 这条消息将被丢弃
 		logger.E("Client.EnqueueMessage", "message chan is full", c.id)
 	}
@@ -158,10 +171,14 @@ func (c *Client) handleError(seq int64, err error) bool {
 }
 
 // Exit 退出客户端
-func (c *Client) Exit() {
+func (c *Client) Exit(code int64, reason string) {
 	if c.closed.Get() {
 		return
 	}
+	if code == ExitCodeLoginMutex {
+
+	}
+
 	atomic.StoreInt64(&c.id, 0)
 	c.closed.Set(true)
 
@@ -174,6 +191,7 @@ func (c *Client) Exit() {
 func (c *Client) getNextSeq() int64 {
 	seq := c.seq.Get()
 	c.seq.Set(seq + 1)
+	// TODO SEQ 序列号使用号段模式, 定时持久化号段使用情况
 	return seq
 }
 

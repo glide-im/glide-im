@@ -2,7 +2,6 @@ package im
 
 import (
 	"errors"
-	"go_im/im/client"
 	"go_im/im/comm"
 	"go_im/im/group"
 	"go_im/im/message"
@@ -75,7 +74,7 @@ func (m *groupManager) DispatchNotifyMessage(gid int64, message *message.Message
 	}
 }
 
-func (m *groupManager) DispatchMessage(gid int64, msg *client.GroupMessage) {
+func (m *groupManager) DispatchMessage(gid int64, msg *message.GroupMessage) {
 	logger.D("GroupManager.HandleMessage: %v", msg)
 
 	g := m.groups[gid]

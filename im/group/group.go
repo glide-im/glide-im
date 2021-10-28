@@ -43,7 +43,7 @@ func newGroup(gid int64, cid int64) *Group {
 	return ret
 }
 
-func (g *Group) EnqueueMessage(msg *client.GroupMessage) {
+func (g *Group) EnqueueMessage(msg *message.GroupMessage) {
 
 	flag, exist := g.members[msg.Sender]
 	if !exist {
@@ -75,7 +75,7 @@ func (g *Group) EnqueueMessage(msg *client.GroupMessage) {
 		return
 	}
 
-	rMsg := client.ReceiverChatMessage{
+	rMsg := message.ReceiverChatMessage{
 		Mid:         mid,
 		Cid:         g.cid,
 		AlignTag:    g.startup,

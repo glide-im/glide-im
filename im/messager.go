@@ -55,11 +55,8 @@ func messageHandler(from int64, device int64, msg *message.Message) {
 }
 
 func dispatchGroupMsg(from int64, msg *message.Message) {
-
-	groupMsg := new(client.GroupMessage)
-	err := msg.DeserializeData(groupMsg)
-	if err != nil {
-		logger.E("dispatch group message deserialize error", err)
+	groupMsg := new(message.GroupMessage)
+	if !unwrap(from, msg, groupMsg) {
 		return
 	}
 	groupMsg.Sender = from
@@ -67,11 +64,8 @@ func dispatchGroupMsg(from int64, msg *message.Message) {
 }
 
 func dispatchCustomerServiceMsg(from int64, msg *message.Message) {
-	csMsg := new(client.CustomerServiceMessage)
-	err := msg.DeserializeData(csMsg)
-	csMsg.Sender = from
-	if err != nil {
-		logger.E("cs message", err)
+	csMsg := new(message.CustomerServiceMessage)
+	if !unwrap(from, msg, csMsg) {
 		return
 	}
 	// 发送消息给客服
@@ -79,11 +73,8 @@ func dispatchCustomerServiceMsg(from int64, msg *message.Message) {
 }
 
 func dispatchChatMessage(from int64, msg *message.Message) {
-	senderMsg := new(client.SenderChatMessage)
-	err := msg.DeserializeData(senderMsg)
-	if err != nil {
-		client.EnqueueMessage(from, message.NewMessage(-1, message.ActionNotify, "send message failed"))
-		logger.E("sender chat senderMsg ", err)
+	senderMsg := new(message.SenderChatMessage)
+	if !unwrap(from, msg, senderMsg) {
 		return
 	}
 
@@ -99,22 +90,19 @@ func dispatchChatMessage(from int64, msg *message.Message) {
 	if err != nil {
 		return
 	}
-	affirm := message.NewMessage(msg.Seq, msg.Action, chatMsg)
-	// send success, return chat message
-	client.EnqueueMessage(from, affirm)
-
+	ackMessage(msg.Seq, chatMsg)
 	dispatch(from, chatMsg, senderMsg)
 }
 
-func dispatch(from int64, chatMsg *dao.ChatMessage, senderMsg *client.SenderChatMessage) {
+func dispatch(from int64, chatMsg *dao.ChatMessage, senderMsg *message.SenderChatMessage) {
 
-	receiverMsg := client.ReceiverChatMessage{
+	receiverMsg := message.ReceiverChatMessage{
 		Mid:         chatMsg.Mid,
 		Cid:         senderMsg.Cid,
 		Sender:      from,
 		MessageType: senderMsg.MessageType,
 		Message:     senderMsg.Message,
-		SendAt:      chatMsg.SendAt,
+		SendAt:      chatMsg.SendAt.Unix(),
 	}
 
 	dispatchMsg := message.NewMessage(-1, message.ActionChatMessage, receiverMsg)
@@ -123,4 +111,23 @@ func dispatch(from int64, chatMsg *dao.ChatMessage, senderMsg *client.SenderChat
 
 func onHandleMessagePanic(i interface{}) {
 	logger.E("handler message panic", i)
+}
+
+func ackMessage(seq int64, m *dao.ChatMessage) {
+	ack := message.ChatMessageAck{
+		Seq: seq,
+		Mid: m.Mid,
+	}
+	ackResp := message.NewMessage(seq, message.ActionMessageAck, ack)
+	client.EnqueueMessage(m.Sender, ackResp)
+}
+
+func unwrap(from int64, msg *message.Message, to interface{}) bool {
+	err := msg.DeserializeData(to)
+	if err != nil {
+		client.EnqueueMessage(from, message.NewMessage(msg.Seq, message.ActionNotify, "send message failed"))
+		logger.E("sender chat senderMsg ", err)
+		return false
+	}
+	return true
 }

@@ -35,9 +35,9 @@ func (o *CustomerServiceClient) Closed() bool {
 	return false
 }
 
-func (o *CustomerServiceClient) EnqueueMessage(message *message.Message) {
-	csMsg := new(CustomerServiceMessage)
-	err := message.DeserializeData(csMsg)
+func (o *CustomerServiceClient) EnqueueMessage(msg *message.Message) {
+	csMsg := new(message.CustomerServiceMessage)
+	err := msg.DeserializeData(csMsg)
 	if err != nil {
 		logger.E("customer service handle msg error", err)
 		return
@@ -46,13 +46,13 @@ func (o *CustomerServiceClient) EnqueueMessage(message *message.Message) {
 	_, ok := o.waiter[csMsg.Sender]
 	if ok {
 		// customer service staffs' message, dispatch to customer
-		EnqueueMessage(csMsg.Receiver, message)
+		EnqueueMessage(csMsg.Receiver, msg)
 	} else {
 
 	}
 }
 
-func (o *CustomerServiceClient) Exit() {
+func (o *CustomerServiceClient) Exit(code int64, reason string) {
 
 }
 

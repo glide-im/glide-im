@@ -2,13 +2,10 @@ package group
 
 import (
 	"context"
-	"go_im/im/client"
-	"go_im/im/dao"
 	"go_im/im/group"
 	"go_im/im/message"
 	"go_im/service/pb"
 	"go_im/service/rpc"
-	"time"
 )
 
 type Server struct {
@@ -58,14 +55,14 @@ func (s *Server) DispatchNotifyMessage(ctx context.Context, request *pb.NotifyRe
 
 func (s *Server) DispatchMessage(ctx context.Context, request *pb.DispatchMessageRequest, reply *pb.Response) error {
 	msg := request.GetMessage()
-	group.Manager.DispatchMessage(request.GetGid(), &client.GroupMessage{
+	group.Manager.DispatchMessage(request.GetGid(), &message.GroupMessage{
 		TargetId:    msg.GetTargetId(),
 		Sender:      msg.GetSender(),
 		Cid:         msg.GetCid(),
 		UcId:        msg.GetUcId(),
 		MessageType: int8(msg.GetMessageType()),
 		Message:     msg.GetMessage(),
-		SendAt:      dao.Timestamp(time.Unix(msg.GetSendAt(), 0)),
+		SendAt:      msg.GetSendAt(),
 	})
 	return nil
 }

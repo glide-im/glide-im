@@ -2,7 +2,6 @@ package group
 
 import (
 	"context"
-	"go_im/im/client"
 	"go_im/im/group"
 	"go_im/im/message"
 	"go_im/pkg/logger"
@@ -101,7 +100,7 @@ func (c *Client) DispatchNotifyMessage(gid int64, message *message.Message) {
 	}
 }
 
-func (c *Client) DispatchMessage(gid int64, message *client.GroupMessage) {
+func (c *Client) DispatchMessage(gid int64, message *message.GroupMessage) {
 	var req = &pb.DispatchMessageRequest{
 		Gid: gid,
 		Message: &pb.GroupMessage{
@@ -111,7 +110,7 @@ func (c *Client) DispatchMessage(gid int64, message *client.GroupMessage) {
 			UcId:        message.UcId,
 			MessageType: int32(message.MessageType),
 			Message:     message.Message,
-			SendAt:      message.SendAt.Unix(),
+			SendAt:      message.SendAt,
 		},
 	}
 	resp := &pb.Response{}

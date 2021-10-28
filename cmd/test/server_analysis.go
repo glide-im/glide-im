@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-var cTestPoints = 2
+var cTestPoints = 1
 
 func RunAnalysisServer() {
 
@@ -109,7 +109,7 @@ func exportChart(title string, yName string, data []int64) {
 	graph := chart.Chart{
 		Title: title,
 		XAxis: chart.XAxis{
-			Name:      "Time/100 MillSec",
+			Name:      "Time/Second",
 			NameStyle: chart.StyleShow(),
 			Style:     chart.StyleShow(),
 		},
