@@ -3,34 +3,53 @@ package timingwheel
 import (
 	"fmt"
 	"math/rand"
+	"sync"
 	"testing"
 	"time"
 )
 
 func TestNewTimingWheel(t *testing.T) {
 
-	tw := NewTimingWheel(time.Second*1, 20)
-	after := tw.After(time.Second * 3)
+	tw := NewTimingWheel(time.Millisecond*1000, 3, 20)
 	tk := time.NewTicker(time.Second)
-	c := 0
 
 	status := func() {
 		var w = tw.wheel
 		for w != nil {
-			t.Log(w.status())
+			//t.Log(w.status())
 			w = w.child
 		}
 	}
-	for {
-		select {
-		case <-after:
-			t.Log("done")
-		case <-tk.C:
-			c++
-			t.Log("=>", c)
-			status()
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		sleepRndMilleSec(1000, 2000)
+		for i := 0; i < 10; i++ {
+			wg.Add(1)
+			go func() {
+				ch, v := tw.After(time.Second * time.Duration(10+rand.Int63n(30)))
+				d := v.at.Unix() - time.Now().Unix()
+				t.Log("after=", d)
+				<-ch
+				it := time.Now().Unix() - v.at.Unix()
+				t.Log(d, it)
+				wg.Done()
+			}()
 		}
-	}
+		wg.Done()
+	}()
+
+	go func() {
+		for {
+			select {
+			case <-tk.C:
+				//t.Log("---------------------------------------------------------------------------")
+				status()
+			}
+		}
+	}()
+	wg.Wait()
 }
 
 func (w *wheel) status() string {
