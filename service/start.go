@@ -1,7 +1,6 @@
 package main
 
 import (
-	"go_im/im"
 	api2 "go_im/im/api"
 	client2 "go_im/im/client"
 	"go_im/im/conn"
@@ -71,7 +70,7 @@ func runApiService(t ServerType) {
 		options := defaultSrvOpts
 		options.Port = PortApiSrv
 		server := api.NewServer(&options)
-		api2.SetHandler(im.NewApiRouter())
+		api2.SetHandler(api2.NewApiRouter())
 		run(server)
 	} else {
 		clientOpts := defaultCliOpts
@@ -87,7 +86,7 @@ func runClientService(t ServerType) {
 		options := defaultSrvOpts
 		options.Port = PortClientSrv
 		server := client.NewServer(&options)
-		mgr := im.NewClientManager()
+		mgr := client2.NewClientManager()
 		wsServer := conn.NewWsServer(nil)
 		wsServer.SetConnHandler(func(conn conn.Connection) {
 			mgr.ClientConnected(conn)
@@ -114,7 +113,7 @@ func runGroupService(t ServerType) {
 		options := defaultSrvOpts
 		options.Port = PortGroupSrv
 		server := group.NewServer(&options)
-		group2.Manager = im.NewGroupManager()
+		group2.Manager = group2.NewGroupManager()
 		run(server)
 	} else {
 		clientOpts := defaultCliOpts

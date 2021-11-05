@@ -2,7 +2,6 @@ package client
 
 import (
 	"fmt"
-	"go_im/im"
 	"go_im/im/client"
 	"go_im/im/conn"
 	"go_im/im/message"
@@ -13,7 +12,7 @@ import (
 
 type manager struct {
 	appId  int64
-	m      *im.ClientManagerImpl
+	m      *client.DefaultManager
 	router *route.Client
 	myAddr string
 }
@@ -21,7 +20,7 @@ type manager struct {
 func newManager(etcd []string, myAddr string) (*manager, error) {
 	ret := &manager{}
 	ret.myAddr = myAddr
-	ret.m = im.NewClientManager()
+	ret.m = client.NewClientManager()
 	options := &rpc.ClientOptions{
 		Name:        route.ServiceName,
 		EtcdServers: etcd,

@@ -79,7 +79,6 @@ func NewClient(conn conn.Connection) *Client {
 func (c *Client) SetID(id int64, device int64) {
 	atomic.StoreInt64(&c.id, id)
 	atomic.StoreInt64(&c.device, device)
-	// TODO 恢复 SEQ 序列号
 }
 
 func (c *Client) Closed() bool {
@@ -188,7 +187,6 @@ func (c *Client) Exit(code int64) {
 func (c *Client) getNextSeq() int64 {
 	seq := c.seq.Get()
 	c.seq.Set(seq + 1)
-	// TODO SEQ 序列号使用号段模式, 定时持久化号段使用情况
 	return seq
 }
 

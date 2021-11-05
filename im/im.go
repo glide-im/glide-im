@@ -38,12 +38,14 @@ func NewServer(options Options) *Server {
 		opts: options,
 	}
 	api.SetHandler(options.ApiImpl)
+	api.MessageHandleFunc = client.EnqueueMessage
+
 	group.Manager = options.GroupMgrImpl
 	client.Manager = options.ClientMgrImpl
 
-	manager, ok := group.Manager.(*groupManager)
+	manager, ok := group.Manager.(*group.DefaultManager)
 	if ok {
-		manager.init()
+		manager.Init()
 	} else {
 		logger.W("group manager not init")
 	}

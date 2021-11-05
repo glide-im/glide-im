@@ -1,31 +1,87 @@
 package group
 
 import (
+	"errors"
+	"go_im/im/comm"
 	"go_im/im/message"
+	"go_im/pkg/logger"
 )
 
-// Manager 群相关操作入口
-var Manager IGroupManager
+type DefaultManager struct {
+	mu     *comm.Mutex
+	groups map[int64]*Group
+}
 
-type IGroupManager interface {
-	// PutMember 给指定添加群成员, mb 为 uid-type, 用户ID-成员类型
-	PutMember(gid int64, mb map[int64]int32)
+func NewGroupManager() *DefaultManager {
+	ret := new(DefaultManager)
+	ret.mu = comm.NewMutex()
+	ret.groups = map[int64]*Group{}
+	return ret
+}
 
-	// RemoveMember 移除群成员
-	RemoveMember(gid int64, uid ...int64) error
+func (m *DefaultManager) Init() {
+	allGroup := LoadAllGroup()
+	for gid, g := range allGroup {
+		m.groups[gid] = g
+	}
+}
 
-	// AddGroup 添加群, 创建
-	AddGroup(gid int64)
+func (m *DefaultManager) PutMember(gid int64, mb map[int64]int32) {
+	g := m.groups[gid]
+	for k := range mb {
+		var flag int32 = FlagDefault
+		g.PutMember(k, flag)
+	}
+}
 
-	// RemoveGroup 移除群, 解散
-	RemoveGroup(gid int64)
+func (m *DefaultManager) RemoveMember(gid int64, uid ...int64) error {
+	g := m.groups[gid]
+	if g == nil {
+		return errors.New("unknown group")
+	}
+	for _, id := range uid {
+		if g.HasMember(id) {
+			g.RemoveMember(id)
+		}
+	}
+	return nil
+}
 
-	// ChangeStatus 设置群状态, 禁言等
-	ChangeStatus(gid int64, status int64)
+func (m *DefaultManager) AddGroup(gid int64) {
+	g, err := LoadGroup(gid)
+	if err != nil {
+		return
+	}
+	m.groups[gid] = g
+}
 
-	// DispatchNotifyMessage 发送通知消息
-	DispatchNotifyMessage(gid int64, message *message.Message)
+func (m *DefaultManager) RemoveGroup(gid int64) {
+	g := m.groups[gid]
+	if g != nil {
 
-	// DispatchMessage 发送聊天消息
-	DispatchMessage(gid int64, message *message.GroupMessage)
+	}
+}
+
+func (m *DefaultManager) ChangeStatus(gid int64, status int64) {
+
+}
+
+func (m *DefaultManager) DispatchNotifyMessage(gid int64, message *message.Message) {
+	g := m.groups[gid]
+	if g != nil {
+		g.SendMessage(message)
+	}
+}
+
+func (m *DefaultManager) DispatchMessage(gid int64, msg *message.GroupMessage) {
+	logger.D("GroupManager.HandleMessage: %v", msg)
+
+	g := m.groups[gid]
+
+	if g == nil {
+		logger.E("dispatch group message", "group not exist")
+		return
+	}
+
+	g.EnqueueMessage(msg)
 }

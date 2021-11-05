@@ -1,7 +1,6 @@
 package api
 
 import (
-	"go_im/im"
 	"go_im/im/api"
 	"go_im/im/client"
 	"go_im/im/group"
@@ -11,9 +10,9 @@ import (
 
 func TestNewServer(t *testing.T) {
 
-	api.SetHandler(im.NewApiRouter())
-	client.Manager = im.NewClientManager()
-	group.Manager = im.NewGroupManager()
+	api.SetHandler(api.NewApiRouter())
+	client.Manager = client.NewClientManager()
+	group.Manager = group.NewGroupManager()
 
 	op := rpc.ServerOptions{
 		Name:        "api",
@@ -29,9 +28,9 @@ func TestNewServer(t *testing.T) {
 
 func TestNewServer2(t *testing.T) {
 
-	api.SetHandler(im.NewApiRouter())
-	client.Manager = im.NewClientManager()
-	group.Manager = im.NewGroupManager()
+	api.SetHandler(api.NewApiRouter())
+	client.Manager = client.NewClientManager()
+	group.Manager = group.NewGroupManager()
 
 	op := rpc.ServerOptions{
 		Name:        "api",

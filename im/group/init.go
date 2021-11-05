@@ -9,13 +9,13 @@ func LoadAllGroup() map[int64]*Group {
 	res := map[int64]*Group{}
 	groups, err := dao.GroupDao.GetAllGroup()
 	if err != nil {
-		logger.E("init group error", err)
+		logger.E("Init group error", err)
 		return res
 	}
 	for _, g := range groups {
 		group, err := initGroup(g)
 		if err != nil {
-			logger.E("init group error", err)
+			logger.E("Init group error", err)
 			continue
 		}
 		res[g.Gid] = group

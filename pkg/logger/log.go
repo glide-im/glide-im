@@ -8,9 +8,10 @@ var Zap *zap.Logger
 
 var sugar *zap.SugaredLogger
 
-func Init() {
+func init() {
 	var err error
-	Zap, err = zap.NewProduction(
+	Zap, err = zap.NewDevelopment(
+		zap.Development(),
 		zap.AddCallerSkip(1),
 		zap.WithCaller(true),
 		zap.AddCaller(),
@@ -50,5 +51,5 @@ func ErrInt(msg string, k string, v int64) {
 }
 
 func DebugStr(msg string, k string, v string) {
-	Zap.Error(msg, zap.String(k, v))
+	Zap.Debug(msg, zap.String(k, v))
 }

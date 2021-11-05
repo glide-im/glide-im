@@ -1,5 +1,1 @@
 package message
-
-func Write() {
-
-}

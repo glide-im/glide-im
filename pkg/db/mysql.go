@@ -21,6 +21,11 @@ func Init() {
 		conf.Username, conf.Password, conf.Host, conf.Port, conf.Db, conf.Charset)
 	var err error
 	DB, err = gorm.Open("mysql", url)
+
+	//DB.DB().SetMaxOpenConns(10000)
+	//DB.DB().SetMaxIdleConns(1000)
+	//DB.DB().SetConnMaxIdleTime(time.Minute * 5)
+
 	if err != nil {
 		panic(err)
 	}
@@ -39,7 +44,7 @@ func initRedis() {
 		Addr:         fmt.Sprintf("%s:%d", conf.Host, conf.Port),
 		Password:     conf.Password,
 		DB:           conf.Db,
-		PoolSize:     runtime.NumCPU() * 10,
+		PoolSize:     runtime.NumCPU() * 30,
 		MinIdleConns: 10,
 	})
 
