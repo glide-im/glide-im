@@ -14,11 +14,11 @@ var (
 
 // Connection expression a network keep-alive connection, WebSocket, tcp etc
 type Connection interface {
-	// Write write message to the connection.
-	Write(message Serializable) error
-	// Read read message from the connection.
-	Read(message Serializable) error
-	// Close close the connection.
+	// Write message to the connection.
+	Write(data []byte) error
+	// Read message from the connection.
+	Read() ([]byte, error)
+	// Close the connection.
 	Close() error
 }
 
@@ -27,12 +27,12 @@ type ConnectionProxy struct {
 	conn Connection
 }
 
-func (c ConnectionProxy) Write(message Serializable) error {
-	return c.conn.Write(message)
+func (c ConnectionProxy) Write(data []byte) error {
+	return c.conn.Write(data)
 }
 
-func (c ConnectionProxy) Read(message Serializable) error {
-	return c.conn.Read(message)
+func (c ConnectionProxy) Read() ([]byte, error) {
+	return c.conn.Read()
 }
 
 func (c ConnectionProxy) Close() error {

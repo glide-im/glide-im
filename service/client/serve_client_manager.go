@@ -74,8 +74,8 @@ func (m *manager) ClientLogout(uid int64, device int64) {
 	m.m.ClientLogout(uid, device)
 }
 
-func (m *manager) EnqueueMessage(uid int64, message *message.Message) {
-	m.m.EnqueueMessage(uid, message)
+func (m *manager) EnqueueMessage(uid int64, device int64, message *message.Message) {
+	m.m.EnqueueMessage(uid, device, message)
 }
 
 func (m *manager) AllClient() []int64 {

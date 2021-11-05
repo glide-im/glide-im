@@ -40,7 +40,7 @@ func (s *Server) ClientLogout(ctx context.Context, request *pb.LogoutRequest, re
 }
 
 func (s *Server) EnqueueMessage(ctx context.Context, request *pb.EnqueueMessageRequest, reply *pb.Response) error {
-	client.Manager.EnqueueMessage(request.GetUid(), unwrapMessage(request.Message))
+	client.Manager.EnqueueMessage(request.GetUid(), 0, unwrapMessage(request.Message))
 	return nil
 }
 

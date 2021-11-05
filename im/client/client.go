@@ -6,6 +6,7 @@ import (
 	"go_im/im/message"
 	"go_im/im/statistics"
 	"go_im/pkg/logger"
+	"go_im/pkg/timingwheel"
 	"sync/atomic"
 	"time"
 )
@@ -16,6 +17,8 @@ type MessageHandler func(from int64, device int64, message *message.Message)
 // MessageHandleFunc 所有客户端消息都传递到该函数处理
 var MessageHandleFunc MessageHandler = nil
 
+var tw = timingwheel.NewTimingWheel(time.Millisecond*500, 3, 20)
+
 const (
 	ExitCodeTTL        = 1
 	ExitCodeBySrv      = 2
@@ -23,7 +26,7 @@ const (
 	ExitCodeByUser     = 4
 )
 
-const ConnectionTTL = time.Minute * 8
+const HeartbeatDuration = time.Minute * 8
 
 // IClient 表示一个客户端, 用于管理连接状态, 连接 id, 消息收发
 type IClient interface {
@@ -38,7 +41,7 @@ type IClient interface {
 	EnqueueMessage(message *message.Message)
 
 	// Exit 退出客户端, 关闭连接等
-	Exit(code int64, reason string)
+	Exit(code int64)
 
 	// Run 开始收发消息客户端连接的消息
 	Run()
@@ -56,7 +59,8 @@ type Client struct {
 	// buffered channel 40
 	messages chan *message.Message
 
-	ttl time.Duration
+	hb *timingwheel.Task
+
 	seq *comm.AtomicInt64
 }
 
@@ -68,7 +72,7 @@ func NewClient(conn conn.Connection) *Client {
 	client.messages = make(chan *message.Message, 40)
 	client.connectAt = time.Now()
 	client.seq = new(comm.AtomicInt64)
-	client.ttl = ConnectionTTL
+	client.hb = tw.After(HeartbeatDuration)
 	return client
 }
 
@@ -97,7 +101,7 @@ func (c *Client) EnqueueMessage(message *message.Message) {
 	default:
 		// TODO 客户端弱网消息下行速度过慢导致缓冲溢出
 		// 消息 chan 缓冲溢出, 这条消息将被丢弃
-		logger.E("Client.EnqueueMessage", "message chan is full", c.id)
+		logger.E("message chan is full, id=%d", c.id)
 	}
 }
 
@@ -106,21 +110,23 @@ func (c *Client) readMessage() {
 	defer func() {
 		err := recover()
 		if err != nil {
-			logger.D("Client read message error: %v", err)
+			logger.E("read message error", err)
 		}
+		Manager.ClientLogout(c.id, c.device)
 	}()
 
 	for {
 		msg, err := messageReader.Read(c.conn)
 		if err != nil {
-			if c.Closed() || c.handleError(-1, err) {
+			if c.Closed() || c.handleError(err) {
 				// 连接断开或致命错误中断读消息
 				break
 			}
 			continue
 		}
 		if msg.Action == message.ActionHeartbeat {
-
+			c.hb.Cancel()
+			c.hb = tw.After(HeartbeatDuration)
 		} else {
 			MessageHandleFunc(c.id, c.device, msg)
 		}
@@ -134,51 +140,42 @@ func (c *Client) writeMessage() {
 		if err != nil {
 			logger.D("Client write message error: %v", err)
 		}
+		Manager.ClientLogout(c.id, c.device)
 	}()
 
 	for msg := range c.messages {
-		err := c.conn.Write(msg)
-		statistics.SMsgOutput()
+		b, err := msg.Serialize()
 		if err != nil {
-			if c.Closed() || c.handleError(-1, err) {
+			logger.E("serialize output message", err)
+			continue
+		}
+		err = c.conn.Write(b)
+		if err != nil {
+			if c.Closed() || c.handleError(err) {
 				// 连接断开或致命错误中断写消息
 				break
 			}
+		} else {
+			statistics.SMsgOutput()
 		}
 	}
 }
 
 // handleError 处理上下行消息过程中的错误, 如果是致命错误, 则返回 true
-func (c *Client) handleError(seq int64, err error) bool {
-
+func (c *Client) handleError(err error) bool {
 	statistics.SError(err)
-	fatalErr := map[error]int{
-		conn.ErrForciblyClosed:   0,
-		conn.ErrClosed:           0,
-		conn.ErrConnectionClosed: 0,
-		conn.ErrReadTimeout:      0,
-	}
-	_, ok := fatalErr[err]
-	if ok {
-		if atomic.LoadInt64(&c.id) > 0 {
-			Manager.ClientLogout(atomic.LoadInt64(&c.id), c.device)
-		}
-		return true
-	}
 	logger.E("handle message error", err.Error())
-	c.EnqueueMessage(message.NewMessage(seq, "notify", err.Error()))
-	return false
+	if atomic.LoadInt64(&c.id) > 0 {
+		Manager.ClientLogout(atomic.LoadInt64(&c.id), c.device)
+	}
+	return true
 }
 
 // Exit 退出客户端
-func (c *Client) Exit(code int64, reason string) {
+func (c *Client) Exit(code int64) {
 	if c.closed.Get() {
 		return
 	}
-	if code == ExitCodeLoginMutex {
-
-	}
-
 	atomic.StoreInt64(&c.id, 0)
 	c.closed.Set(true)
 

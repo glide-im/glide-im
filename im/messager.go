@@ -50,7 +50,7 @@ func messageHandler(from int64, device int64, msg *message.Message) {
 	})
 	if err != nil {
 		client.EnqueueMessage(from, message.NewMessage(-1, message.ActionNotify, "internal server error"))
-		logger.E("async handle message error", err)
+		logger.E("async handle message error %v", err)
 	}
 }
 
@@ -79,7 +79,7 @@ func dispatchChatMessage(from int64, msg *message.Message) {
 	}
 
 	if senderMsg.Cid <= 0 {
-		logger.E("dispatch message", "chat not create")
+		logger.E("chat not create, from=%d, to=%d", from, senderMsg.TargetId)
 	}
 
 	// update sender read time
@@ -110,7 +110,7 @@ func dispatch(from int64, chatMsg *dao.ChatMessage, senderMsg *message.SenderCha
 }
 
 func onHandleMessagePanic(i interface{}) {
-	logger.E("handler message panic", i)
+	logger.E("handler message panic, %v", i)
 }
 
 func ackMessage(seq int64, m *dao.ChatMessage) {
@@ -126,7 +126,7 @@ func unwrap(from int64, msg *message.Message, to interface{}) bool {
 	err := msg.DeserializeData(to)
 	if err != nil {
 		client.EnqueueMessage(from, message.NewMessage(msg.Seq, message.ActionNotify, "send message failed"))
-		logger.E("sender chat senderMsg ", err)
+		logger.E("sender chat senderMsg %v", err)
 		return false
 	}
 	return true

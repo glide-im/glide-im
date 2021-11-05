@@ -2,53 +2,10 @@ package main
 
 import (
 	"github.com/gorilla/websocket"
-	"go_im/im/conn"
 	"go_im/im/message"
-	"math/rand"
 	"testing"
 	"time"
 )
-
-type MockUserConn struct {
-	maxWriteTimeCost int64
-	uid              int64
-	ms               chan message.SenderChatMessage
-}
-
-func NewMockUserConn() *MockUserConn {
-	return &MockUserConn{
-		maxWriteTimeCost: 10,
-		ms:               make(chan message.SenderChatMessage, 100),
-	}
-}
-
-func (m *MockUserConn) Send(target int64, msg string) {
-	m.ms <- message.SenderChatMessage{
-		Cid:         1,
-		UcId:        1,
-		TargetId:    target,
-		MessageType: 1,
-		Message:     msg,
-		SendAt:      time.Now().Unix(),
-	}
-}
-
-func (m *MockUserConn) Write(s conn.Serializable) error {
-	delay := rand.Int63n(m.maxWriteTimeCost)
-	time.Sleep(time.Millisecond * time.Duration(delay))
-	return nil
-}
-
-func (m *MockUserConn) Read(s conn.Serializable) error {
-	msg := <-m.ms
-	s = message.NewMessage(1, message.ActionChatMessage, msg)
-	return nil
-}
-
-func (m MockUserConn) Close() error {
-	panic("closed")
-	return nil
-}
 
 func TestClientServer(t *testing.T) {
 	runClientService(TypeClientService)

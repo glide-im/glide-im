@@ -42,7 +42,7 @@ func (c *ClientManagerImpl) ClientSignIn(id, uid int64, device int64) {
 	ds := c.clients.get(id)
 	if ds == nil || ds.size() == 0 {
 		// 该客户端不存在
-		logger.E("attempt to sign in a nonexistent id", id)
+		logger.E("attempt to sign in a nonexistent client, id=%d", id)
 		return
 	}
 	cli := ds.get(client.DeviceUnknown)
@@ -55,7 +55,8 @@ func (c *ClientManagerImpl) ClientSignIn(id, uid int64, device int64) {
 	if loggedIn != nil {
 		log := loggedIn.get(device)
 		if log != nil {
-			log.Exit(client.ExitCodeLoginMutex, "Your account is logged in on another device")
+			// "Your account is logged in on another device"
+			log.Exit(client.ExitCodeLoginMutex)
 		}
 
 		loggedIn.put(device, cli)
@@ -68,7 +69,7 @@ func (c *ClientManagerImpl) ClientSignIn(id, uid int64, device int64) {
 func (c *ClientManagerImpl) ClientLogout(uid int64, device int64) {
 	cl := c.clients.get(uid)
 	if cl == nil || cl.size() == 0 {
-		logger.E("uid is not sign in", uid)
+		logger.E("uid is not sign in, uid=%d", uid)
 		return
 	}
 	logDevice := cl.get(device)
@@ -77,17 +78,20 @@ func (c *ClientManagerImpl) ClientLogout(uid int64, device int64) {
 		return
 	}
 	logger.I("client logout, uid=%d, device=%d", uid, device)
-	logDevice.Exit(client.ExitCodeByUser, "")
+	logDevice.Exit(client.ExitCodeByUser)
 	cl.remove(device)
 }
 
-func (c *ClientManagerImpl) EnqueueMessage(uid int64, msg *message.Message) {
+func (c *ClientManagerImpl) EnqueueMessage(uid int64, device int64, msg *message.Message) {
 	ds := c.clients.get(uid)
 	if ds == nil || ds.size() == 0 {
 		// offline
 		return
 	}
-	ds.foreach(func(device int64, c client.IClient) {
+	ds.foreach(func(deviceId int64, c client.IClient) {
+		if device != 0 && deviceId != device {
+			return
+		}
 		if c.Closed() {
 			// TODO 2021-10-27 client is offline, store
 		} else {

@@ -21,26 +21,22 @@ func NewWsConnection(conn *websocket.Conn, options *WsServerOptions) *WsConnecti
 	return c
 }
 
-func (c *WsConnection) Write(message Serializable) error {
+func (c *WsConnection) Write(data []byte) error {
 	deadLine := time.Now().Add(c.options.WriteTimeout)
 	_ = c.conn.SetWriteDeadline(deadLine)
 
-	data, err := message.Serialize()
-	if err != nil {
-		return c.wrapError(err)
-	}
-	err = c.conn.WriteMessage(websocket.TextMessage, data)
+	err := c.conn.WriteMessage(websocket.TextMessage, data)
 	return c.wrapError(err)
 }
 
-func (c *WsConnection) Read(message Serializable) error {
+func (c *WsConnection) Read() ([]byte, error) {
 
 	deadLine := time.Now().Add(c.options.ReadTimeout)
 	_ = c.conn.SetReadDeadline(deadLine)
 
 	msgType, bytes, err := c.conn.ReadMessage()
 	if err != nil {
-		return c.wrapError(err)
+		return nil, c.wrapError(err)
 	}
 
 	switch msgType {
@@ -48,10 +44,10 @@ func (c *WsConnection) Read(message Serializable) error {
 	case websocket.PingMessage:
 	case websocket.BinaryMessage:
 	default:
-		return ErrBadPackage
+		return nil, ErrBadPackage
 	}
 
-	return message.Deserialize(bytes)
+	return bytes, err
 }
 
 func (c *WsConnection) Close() error {

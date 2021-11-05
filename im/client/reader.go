@@ -20,6 +20,10 @@ type defaultReader struct{}
 
 func (d *defaultReader) Read(conn conn.Connection) (*message.Message, error) {
 	m := message.Message{}
-	err := conn.Read(&m)
+	bytes, err := conn.Read()
+	if err != nil {
+		return nil, err
+	}
+	err = m.Deserialize(bytes)
 	return &m, err
 }

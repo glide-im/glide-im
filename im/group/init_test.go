@@ -10,6 +10,6 @@ func TestLoadAllGroup(t *testing.T) {
 	db.Init()
 	groups := LoadAllGroup()
 	for _, group := range groups {
-		t.Log(group.gid, group.cid, group.nextMid, len(group.members))
+		t.Log(group.gid, group.cid, group.msgSequence, len(group.members))
 	}
 }
