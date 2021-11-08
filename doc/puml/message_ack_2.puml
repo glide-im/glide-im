@@ -1,0 +1,46 @@
+@startuml
+!theme blueprint
+'https://plantuml.com/sequence-diagram
+
+title Message ACK 2
+
+actor Tom as sender
+
+participant Server as server
+actor Bob as receiver
+
+activate sender
+    sender -> server: msg/request
+
+    activate server
+        alt general case
+            server -> receiver: msg/notify
+            activate receiver
+                receiver -> server: ack/request
+            server -> sender: ack/notify
+            deactivate receiver
+        else Bob offline
+            server -> server: save message to Bob's \nmessage list
+            server -> sender : ack/notify
+        else msg/notify lost
+            server ->X receiver: msg/notify: message lost
+            note left:message lost
+            activate receiver
+            deactivate receiver
+            ...
+            sender -> sender++: ack/notify timeout
+            loop retry until ack/notify
+                sender -> server: msg/request
+                server -> receiver: msg/notify
+                activate receiver
+                    receiver -> server: ack/request
+                deactivate receiver
+                server -> sender:ack/notify
+            end
+            return
+            note over sender: send message successful
+        end
+    deactivate server
+deactivate sender
+
+@enduml
