@@ -4,10 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/wcharczuk/go-chart"
-	"go_im/im"
-	"go_im/im/api"
-	"go_im/im/client"
-	"go_im/im/group"
 	"go_im/im/statistics"
 	"go_im/pkg/db"
 	"go_im/pkg/logger"
@@ -31,13 +27,7 @@ func RunAnalysisServer() {
 
 			}
 		}()
-		server := im.NewServer(im.Options{
-			SvrType:       im.WebSocket,
-			ApiImpl:       api.NewApiRouter(),
-			ClientMgrImpl: client.NewClientManager(),
-			GroupMgrImpl:  group.NewGroupManager(),
-		})
-		server.Serve("0.0.0.0", 8080)
+		Run()
 	}()
 
 	go func() {

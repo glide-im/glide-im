@@ -3,7 +3,10 @@ package config
 import (
 	"fmt"
 	"github.com/BurntSushi/toml"
+	"os"
 )
+
+const configEnv = "IM_CONFIG"
 
 var (
 	MySql *MySqlConf
@@ -33,7 +36,11 @@ type config struct {
 
 func init() {
 	var conf config
-	_, err := toml.DecodeFile("E:\\Go\\go_im\\config.toml", &conf)
+	env, b := os.LookupEnv(configEnv)
+	if !b {
+		panic("the config file location is not configured in env, please configure env IM_CONFIG")
+	}
+	_, err := toml.DecodeFile(env, &conf)
 	if err != nil {
 		panic(fmt.Sprintf("error on load config: %s", err.Error()))
 	}
