@@ -65,6 +65,14 @@ func (m *manager) ClientSignIn(oldUid int64, uid int64, device int64) {
 	m.m.ClientSignIn(oldUid, uid, device)
 }
 
+func (m *manager) IsOnline(uid int64) bool {
+	return true
+}
+
+func (m *manager) IsDeviceOnline(uid, device int64) bool {
+	return true
+}
+
 func (m *manager) ClientLogout(uid int64, device int64) {
 	err := m.router.RemoveTag("client", fmt.Sprintf("uid_%d_%d", uid, device))
 	if err != nil {

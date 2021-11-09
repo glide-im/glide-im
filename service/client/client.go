@@ -65,7 +65,7 @@ func (c *Client) ClientLogout(uid int64, device int64) {
 	}
 }
 
-func (c *Client) EnqueueMessage(uid int64, message *message.Message) {
+func (c *Client) EnqueueMessage(uid int64, device int64, message *message.Message) {
 
 	req := &pb.EnqueueMessageRequest{
 		Uid:     uid,
@@ -76,6 +76,14 @@ func (c *Client) EnqueueMessage(uid int64, message *message.Message) {
 	if err != nil {
 
 	}
+}
+
+func (c *Client) IsOnline(uid int64) bool {
+	return true
+}
+
+func (c *Client) IsDeviceOnline(uid, device int64) bool {
+	return true
 }
 
 func (c *Client) AllClient() []int64 {

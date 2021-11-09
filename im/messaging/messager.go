@@ -1,4 +1,4 @@
-package im
+package messaging
 
 import (
 	"github.com/panjf2000/ants/v2"
@@ -28,7 +28,7 @@ func init() {
 	}
 }
 
-// messageHandler handle and dispatch client message
+// messageHandler 处理接收到的所有类型消息, 所有消息处理的入口
 func messageHandler(from int64, device int64, msg *message.Message) {
 	err := execPool.Submit(func() {
 		statistics.SMsgInput()
@@ -39,6 +39,8 @@ func messageHandler(from int64, device int64, msg *message.Message) {
 			dispatchGroupMsg(from, msg)
 		case message.ActionCSMessage:
 			dispatchCustomerServiceMsg(from, msg)
+		case message.ActionMessageAck:
+			handleAckMsg(from, msg)
 		default:
 			if msg.Action.Contains(message.ActionApi) {
 				api.Handle(from, msg)
@@ -54,47 +56,41 @@ func messageHandler(from int64, device int64, msg *message.Message) {
 	}
 }
 
-func dispatchGroupMsg(from int64, msg *message.Message) {
-	groupMsg := new(message.GroupMessage)
-	if !unwrap(from, msg, groupMsg) {
-		return
-	}
-	groupMsg.Sender = from
-	group.Manager.DispatchMessage(groupMsg.TargetId, groupMsg)
-}
-
-func dispatchCustomerServiceMsg(from int64, msg *message.Message) {
-	csMsg := new(message.CustomerServiceMessage)
-	if !unwrap(from, msg, csMsg) {
-		return
-	}
-	// 发送消息给客服
-	client.EnqueueMessage(csMsg.CsId, msg)
-}
-
+// dispatchChatMessage 分发用户单聊消息
 func dispatchChatMessage(from int64, msg *message.Message) {
 	senderMsg := new(message.SenderChatMessage)
 	if !unwrap(from, msg, senderMsg) {
 		return
 	}
 
-	if senderMsg.Cid <= 0 {
-		logger.E("chat not create, from=%d, to=%d", from, senderMsg.TargetId)
-	}
-
-	// update sender read time
-	_ = dao.ChatDao.UpdateChatEnterTime(senderMsg.UcId)
-
-	// insert message to chat
+	// 保存到历史记录
 	chatMsg, err := dao.ChatDao.NewChatMessage(senderMsg.Cid, from, senderMsg.Message, senderMsg.MessageType)
 	if err != nil {
 		return
 	}
-	ackMessage(msg.Seq, chatMsg)
-	dispatch(from, chatMsg, senderMsg)
+
+	// 对方不在线, 下发确认包
+	if !client.Manager.IsOnline(from) {
+		ackMsg := message.AckReceived{
+			Mid:    chatMsg.Mid,
+			CMid:   0,
+			Sender: from,
+		}
+		ackNotify := message.NewMessage(0, message.ActionMessageAck, ackMsg)
+		client.EnqueueMessage(ackMsg.Sender, ackNotify)
+		dispatchOffline(from, msg)
+	} else {
+		dispatchOnline(from, chatMsg, senderMsg)
+	}
 }
 
-func dispatch(from int64, chatMsg *dao.ChatMessage, senderMsg *message.SenderChatMessage) {
+// dispatchOffline 接收者不在线, 离线推送
+func dispatchOffline(from int64, message *message.Message) {
+
+}
+
+// dispatchOnline 接收者在线, 直接投递消息
+func dispatchOnline(from int64, chatMsg *dao.ChatMessage, senderMsg *message.SenderChatMessage) {
 
 	receiverMsg := message.ReceiverChatMessage{
 		Mid:         chatMsg.Mid,
@@ -109,19 +105,42 @@ func dispatch(from int64, chatMsg *dao.ChatMessage, senderMsg *message.SenderCha
 	client.EnqueueMessage(senderMsg.TargetId, dispatchMsg)
 }
 
+// handleAckMsg 处理接收者收到消息发回来的确认消息
+func handleAckMsg(from int64, msg *message.Message) {
+	ackMsg := new(message.AckReceived)
+	if !unwrap(from, msg, ackMsg) {
+		return
+	}
+	ackNotify := message.NewMessage(0, message.ActionMessageAck, ackMsg)
+	// 通知发送者, 对方已收到消息
+	client.EnqueueMessage(ackMsg.Sender, ackNotify)
+}
+
+// dispatchGroupMsg 分发群消息
+func dispatchGroupMsg(from int64, msg *message.Message) {
+	groupMsg := new(message.GroupMessage)
+	if !unwrap(from, msg, groupMsg) {
+		return
+	}
+	groupMsg.Sender = from
+	group.Manager.DispatchMessage(groupMsg.TargetId, groupMsg)
+}
+
+// dispatchCustomerServiceMsg 分发客服消息
+func dispatchCustomerServiceMsg(from int64, msg *message.Message) {
+	csMsg := new(message.CustomerServiceMessage)
+	if !unwrap(from, msg, csMsg) {
+		return
+	}
+	// 发送消息给客服
+	client.EnqueueMessage(csMsg.CsId, msg)
+}
+
 func onHandleMessagePanic(i interface{}) {
 	logger.E("handler message panic, %v", i)
 }
 
-func ackMessage(seq int64, m *dao.ChatMessage) {
-	ack := message.ChatMessageAck{
-		Seq: seq,
-		Mid: m.Mid,
-	}
-	ackResp := message.NewMessage(seq, message.ActionMessageAck, ack)
-	client.EnqueueMessage(m.Sender, ackResp)
-}
-
+// unwrap 解包, 反序列化消息包中数据到对象
 func unwrap(from int64, msg *message.Message, to interface{}) bool {
 	err := msg.DeserializeData(to)
 	if err != nil {

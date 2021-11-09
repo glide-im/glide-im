@@ -35,6 +35,12 @@ type IClientManager interface {
 	// EnqueueMessage 尝试将消息放入指定 uid 的客户端
 	EnqueueMessage(uid int64, device int64, message *message.Message)
 
+	// IsDeviceOnline 返回指定 uid 的用户设备是否在线
+	IsDeviceOnline(uid, device int64) bool
+
+	// IsOnline 返回指定 uid 的用户是否在线
+	IsOnline(uid int64) bool
+
 	// AllClient 返回所有的客户端 id
 	AllClient() []int64
 }

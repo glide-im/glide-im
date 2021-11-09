@@ -62,6 +62,9 @@ func (m *chatDao) GetUserChatList(uid int64) ([]*UserChat, error) {
 	return chats, err.Error
 }
 
+// UpdateChatEnterTime
+//
+// @Deprecated
 func (m *chatDao) UpdateChatEnterTime(ucId int64) error {
 	chat := UserChat{ReadAt: Timestamp(time.Now())}
 	db.DB.Model(&chat).Where("uc_id = ?", ucId).Update("read_at")

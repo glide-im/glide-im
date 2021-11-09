@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"go_im/im/client"
-	"go_im/im/conn"
 	"go_im/im/dao/uid"
 	"go_im/im/message"
 	"go_im/service/route"
@@ -16,15 +15,13 @@ import (
 type mockConn struct {
 }
 
-func (m *mockConn) Write(message conn.Serializable) error {
-	by, _ := message.Serialize()
-	fmt.Println("MockConnWrite=>" + string(by))
+func (m *mockConn) Write(data []byte) error {
+	fmt.Println("MockConnWrite=>" + string(data))
 	return nil
 }
 
-func (m *mockConn) Read(message conn.Serializable) error {
-	time.Sleep(time.Hour)
-	return nil
+func (m *mockConn) Read() ([]byte, error) {
+	select {}
 }
 
 func (m *mockConn) Close() error { return nil }
@@ -57,7 +54,7 @@ func TestServer_EnqueueMessage(t *testing.T) {
 	}
 	cli, err := NewClientByRouter(opts)
 	assert.Nil(t, err)
-	cli.EnqueueMessage(1000000301026, message.NewMessage(1, "api.app.echo", "hello world"))
+	cli.EnqueueMessage(1000000301026, 0, message.NewMessage(1, "api.app.echo", "hello world"))
 }
 
 func TestNewServer(t *testing.T) {

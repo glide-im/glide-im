@@ -28,6 +28,12 @@ type ChatMessageAck struct {
 	Mid int64
 }
 
+type AckReceived struct {
+	Mid    int64
+	CMid   int64
+	Sender int64
+}
+
 type SyncChatMessage struct {
 }
 
