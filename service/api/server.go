@@ -15,7 +15,7 @@ type Server struct {
 
 func (s *Server) Handle(ctx context.Context, r *pb.HandleRequest, resp *emptypb.Empty) error {
 
-	api.Handle(r.Uid, &message.Message{
+	api.Handle(r.Uid, 0, &message.Message{
 		Seq:    r.GetMessage().GetSeq(),
 		Action: message.Action(r.GetMessage().GetAction()),
 		Data:   r.GetMessage().GetData(),

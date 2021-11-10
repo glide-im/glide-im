@@ -6,29 +6,29 @@ import (
 	"go_im/pkg/logger"
 )
 
-var MessageHandleFunc func(uid int64, message *message.Message)
+var MessageHandleFunc func(uid int64, device int64, message *message.Message)
 
 var apiHandler IApiHandler
 
 type IApiHandler interface {
-	Handle(uid int64, message *message.Message)
+	Handle(uid int64, device int64, message *message.Message)
 }
 
 func SetHandler(api IApiHandler) {
 	apiHandler = api
 }
 
-func Handle(uid int64, message *message.Message) {
-	apiHandler.Handle(uid, message)
+func Handle(uid int64, device int64, message *message.Message) {
+	apiHandler.Handle(uid, device, message)
 }
 
-func respond(uid int64, seq int64, action message.Action, data interface{}) {
+func respond(uid int64, device int64, seq int64, action message.Action, data interface{}) {
 	resp := message.NewMessage(seq, action, data)
-	respondMessage(uid, resp)
+	respondMessage(uid, device, resp)
 }
 
-func respondMessage(uid int64, msg *message.Message) {
-	MessageHandleFunc(uid, msg)
+func respondMessage(uid int64, device int64, msg *message.Message) {
+	MessageHandleFunc(uid, device, msg)
 }
 
 type Routers struct {
@@ -93,22 +93,22 @@ func (a *Routers) init() {
 	a.router = rt
 }
 
-func (a *Routers) Handle(uid int64, message *message.Message) {
+func (a *Routers) Handle(uid int64, device int64, message *message.Message) {
 
 	// TODO async
-	err := a.handle(uid, message)
+	err := a.handle(uid, device, message)
 	if err != nil {
-		a.onError(uid, message, err)
+		a.onError(uid, device, message, err)
 	}
 }
 
-func (a *Routers) handle(uid int64, message *message.Message) error {
+func (a *Routers) handle(uid int64, device int64, message *message.Message) error {
 
-	if err := a.intercept(uid, message); err != nil {
+	if err := a.intercept(uid, device, message); err != nil {
 		return err
 	}
 
-	return a.router.Handle(uid, message)
+	return a.router.Handle(uid, device, message)
 }
 
 const (
@@ -118,7 +118,7 @@ const (
 	actionEcho                    = "api.app.echo"
 )
 
-func (a *Routers) intercept(uid int64, message *message.Message) error {
+func (a *Routers) intercept(uid int64, device int64, message *message.Message) error {
 
 	if message.Action.Contains("api.test") {
 		return nil
@@ -135,9 +135,9 @@ func (a *Routers) intercept(uid int64, message *message.Message) error {
 	return nil
 }
 
-func (a *Routers) onError(uid int64, msg *message.Message, err error) {
+func (a *Routers) onError(uid int64, device int64, msg *message.Message, err error) {
 	logger.D("a.onError: uid=%d, Action=%s, err=%s", uid, msg.Action, err.Error())
 
 	errMsg := message.NewMessage(msg.Seq, message.ActionFailed, err.Error())
-	MessageHandleFunc(uid, errMsg)
+	MessageHandleFunc(uid, device, errMsg)
 }

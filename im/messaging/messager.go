@@ -43,7 +43,7 @@ func messageHandler(from int64, device int64, msg *message.Message) {
 			handleAckMsg(from, msg)
 		default:
 			if msg.Action.Contains(message.ActionApi) {
-				api.Handle(from, msg)
+				api.Handle(from, device, msg)
 			} else {
 				client.EnqueueMessage(from, message.NewMessage(-1, message.ActionNotify, "unknown action"))
 				logger.W("receive a unknown action message")

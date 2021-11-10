@@ -45,6 +45,7 @@ func (p *path) next() (string, bool) {
 
 type RequestInfo struct {
 	Uid    int64
+	Device int64
 	Seq    int64
 	Action message.Action
 }
@@ -229,10 +230,11 @@ func (r *Router) Add(rts ...IRoute) {
 	}
 }
 
-func (r *Router) Handle(uid int64, msg *message.Message) error {
+func (r *Router) Handle(uid int64, device int64, msg *message.Message) error {
 	ri := &RequestInfo{
 		Uid:    uid,
 		Seq:    msg.Seq,
+		Device: device,
 		Action: msg.Action,
 	}
 	p := newPath(msg.Action)
