@@ -1,0 +1,110 @@
+@startuml
+'https://plantuml.com/activity-diagram-beta
+
+card User {
+    class user_info {
+        *uid int64
+        nickname string
+        password string
+        state int64
+        avatar string
+        register_at time
+    }
+    class user_token <<Redis>>{
+        uid_device string
+        token string
+    }
+    class user_auth_info <<Redis_Map>>{
+       uid string
+
+       info auth_info
+    }
+    class auth_info<<Redis_Map_Field>>{
+        device int
+        token string
+        appId int
+    }
+    user_info::uid-->user_auth_info::uid
+    user_info::uid-->user_token::uid
+    user_auth_info::info-->auth_info
+}
+
+card Group {
+    class group_info {
+        *gid int64
+        members int64
+        avatar string
+        mute int64
+        flag int64
+        create_at time
+    }
+    class group_member{
+        gid int64
+        uid int64
+        flag int64
+        last_mid int64
+    }
+    group_info::gid-->group_member::gid
+}
+
+card Chat_Message {
+    class chat_message {
+        *mid int64
+        uid int64
+        receiver_seq int64
+        sender int64
+        receiver int64
+        type int
+        send_at int64
+        content string
+    }
+    note top of offline_message:离线消息表, \n用户不在线则保存一份到这张表\n用户上线后拉取成功后移除消息
+
+    class user_global_message_seq<<Redis_Incr>> {
+        uid string
+        seq int64
+    }
+    note right of user_global_message_seq::seq
+        每次保存用户消息(群和单聊消息)都自增一次,
+        并且将最新的seq放入消息
+    end note
+
+    class offline_message {
+        *mid int64
+        uid int64
+        seq int64
+    }
+
+    chat_message::receiver_seq --> user_global_message_seq::seq
+    note top of chat_message: 单聊消息记录全量保存
+
+    note left of chat_message::seq
+    接收者连续递增消息 seq
+    end note
+}
+card Group_Message {
+    class group_full_message {
+        *mid int64
+        gid int64
+        from int64
+        seq int64
+        type int
+        send_at time
+        content string
+    }
+    note top of group_full_message:全量群消息记录
+
+    class group_message_state {
+        gid int64
+        last_mid int64
+        last_msg_at time
+    }
+    note top of group_message_state:群消息最新更新状态
+
+    class group_msg_seq {
+        gid int64
+        seq int64
+    }
+    note top of group_msg_seq:群消息自增序列
+}
+@enduml
