@@ -52,7 +52,7 @@ func (o *CustomerServiceClient) EnqueueMessage(msg *message.Message) {
 	}
 }
 
-func (o *CustomerServiceClient) Exit(code int64) {
+func (o *CustomerServiceClient) Exit() {
 
 }
 

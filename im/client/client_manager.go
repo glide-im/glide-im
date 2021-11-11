@@ -9,6 +9,48 @@ import (
 	"go_im/pkg/logger"
 )
 
+// Manager 客户端管理入口
+var Manager IClientManager
+
+// IClientManager 管理所有客户端的创建, 消息派发, 退出等
+type IClientManager interface {
+
+	// ClientConnected 当一个用户连接建立后, 由该方法创建 IClient 实例 Client 并管理该连接, 返回该由连接创建客户端的标识 id
+	// 返回的标识 id 是一个临时 id, 后续连接认证后会改变
+	ClientConnected(conn conn.Connection) int64
+
+	// AddClient 用于手段创建一个 IClient, 方便自定义临时 uid 以及其他的 IClient 实现
+	AddClient(uid int64, cs IClient)
+
+	// ClientSignIn 给一个已存在的客户端设置一个新的 id, 若 uid 已存在, 则新增一个 device 共享这个 id
+	ClientSignIn(oldUid int64, uid int64, device int64)
+
+	// ClientLogout 指定 uid, device 的客户端退出
+	ClientLogout(uid int64, device int64)
+
+	// EnqueueMessage 尝试将消息放入指定 uid 的客户端
+	EnqueueMessage(uid int64, device int64, message *message.Message)
+
+	// IsDeviceOnline 返回指定 uid 的用户设备是否在线
+	IsDeviceOnline(uid, device int64) bool
+
+	// IsOnline 返回指定 uid 的用户是否在线
+	IsOnline(uid int64) bool
+
+	// AllClient 返回所有的客户端 id
+	AllClient() []int64
+}
+
+// EnqueueMessage Manager.EnqueueMessage 的快捷方法, 预留一个位置对消息入队列进行一些预处理
+func EnqueueMessage(uid int64, message *message.Message) {
+	//
+	Manager.EnqueueMessage(uid, 0, message)
+}
+
+func EnqueueMessageToDevice(uid int64, device int64, message *message.Message) {
+	Manager.EnqueueMessage(uid, device, message)
+}
+
 type DefaultManager struct {
 	clients *clients
 }
@@ -24,16 +66,16 @@ func (c *DefaultManager) ClientConnected(conn conn.Connection) int64 {
 
 	// 获取一个临时 uid 标识这个连接
 	connUid := uid.GenTemp()
-	ret := NewClient(conn)
-	ret.SetID(connUid, DeviceUnknown)
-	c.clients.add(connUid, DeviceUnknown, ret)
+	ret := newClient(conn)
+	ret.SetID(connUid, 0)
+	c.clients.add(connUid, 0, ret)
 	// 开始处理连接的消息
 	ret.Run()
 	return connUid
 }
 
 func (c *DefaultManager) AddClient(uid int64, cs IClient) {
-	c.clients.add(uid, DeviceUnknown, cs)
+	c.clients.add(uid, 0, cs)
 }
 
 // ClientSignIn 客户端登录, id 为连接时使用的临时标识, uid 为用户标识, device 用于区分不同设备
@@ -44,18 +86,18 @@ func (c *DefaultManager) ClientSignIn(id, uid int64, device int64) {
 		logger.E("attempt to sign in a nonexistent client, id=%d", id)
 		return
 	}
-	cli := ds.get(DeviceUnknown)
+	cli := ds.get(0)
 	cli.SetID(uid, device)
 
 	// 移除临时 id 标识使用 uid 标记
-	c.clients.delete(id, DeviceUnknown)
+	c.clients.delete(id, 0)
 
 	loggedIn := c.clients.get(uid)
 	if loggedIn != nil {
 		log := loggedIn.get(device)
 		if log != nil {
 			// "Your account is logged in on another device"
-			log.Exit(ExitCodeLoginMutex)
+			log.Exit()
 		}
 
 		loggedIn.put(device, cli)
@@ -77,7 +119,7 @@ func (c *DefaultManager) ClientLogout(uid int64, device int64) {
 		return
 	}
 	logger.I("client logout, uid=%d, device=%d", uid, device)
-	logDevice.Exit(ExitCodeByUser)
+	logDevice.Exit()
 	cl.remove(device)
 }
 

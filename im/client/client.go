@@ -11,23 +11,13 @@ import (
 	"time"
 )
 
-// MessageHandler 用于处理客户端消息
-type MessageHandler func(from int64, device int64, message *message.Message)
-
-// MessageHandleFunc 所有客户端消息都传递到该函数处理, 定义一个消息出口方便替换及倒置依赖
-var MessageHandleFunc MessageHandler = nil
+// MessageHandleFunc 所有客户端消息都传递到该函数处理
+var MessageHandleFunc func(from int64, device int64, message *message.Message) = nil
 
 var tw = timingwheel.NewTimingWheel(time.Millisecond*500, 3, 20)
 
-const (
-	ExitCodeTTL        = 1
-	ExitCodeBySrv      = 2
-	ExitCodeLoginMutex = 3
-	ExitCodeByUser     = 4
-)
-
-// HeartbeatDuration 心跳间隔, 默认8分钟
-const HeartbeatDuration = time.Minute * 8
+// HeartbeatDuration 心跳间隔, 默认5分钟
+const HeartbeatDuration = time.Minute * 5
 
 // IClient 表示一个客户端, 用于管理连接状态, 连接 id, 消息收发
 type IClient interface {
@@ -42,7 +32,7 @@ type IClient interface {
 	EnqueueMessage(message *message.Message)
 
 	// Exit 退出客户端, 关闭连接等
-	Exit(code int64)
+	Exit()
 
 	// Run 开始收发消息客户端连接的消息
 	Run()
@@ -74,7 +64,7 @@ type Client struct {
 	seq *comm.AtomicInt64
 }
 
-func NewClient(conn conn.Connection) *Client {
+func newClient(conn conn.Connection) *Client {
 	client := new(Client)
 	client.conn = conn
 	client.closed = comm.NewAtomicBool(false)
@@ -144,11 +134,8 @@ func (c *Client) readMessage() {
 				}
 				continue
 			}
-			if r.m.Action == message.ActionHeartbeat {
-				// TODO 接收到任何消息都重置心跳倒计时
-				c.hb.Cancel()
-				c.hb = tw.After(HeartbeatDuration)
-			}
+			c.hb.Cancel()
+			c.hb = tw.After(HeartbeatDuration)
 			// 统一处理消息函数
 			MessageHandleFunc(c.id, c.device, r.m)
 			r.Recycle()
@@ -204,7 +191,7 @@ func (c *Client) handleError(err error) bool {
 }
 
 // Exit 退出客户端
-func (c *Client) Exit(code int64) {
+func (c *Client) Exit() {
 	// TODO 先关闭下行消息队列写入, 真正退出前先将下行队列然后所有消息写完
 	if c.closed.Get() {
 		return
