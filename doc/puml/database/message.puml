@@ -1,52 +1,6 @@
 @startuml
 'https://plantuml.com/activity-diagram-beta
 
-card User {
-    class user_info {
-        *uid int64
-        nickname string
-        password string
-        state int64
-        avatar string
-        register_at time
-    }
-    class user_token <<Redis>>{
-        uid_device string
-        token string
-    }
-    class user_auth_info <<Redis_Map>>{
-       uid string
-
-       info auth_info
-    }
-    class auth_info<<Redis_Map_Field>>{
-        device int
-        token string
-        appId int
-    }
-    user_info::uid-->user_auth_info::uid
-    user_info::uid-->user_token::uid
-    user_auth_info::info-->auth_info
-}
-
-card Group {
-    class group_info {
-        *gid int64
-        members int64
-        avatar string
-        mute int64
-        flag int64
-        create_at time
-    }
-    class group_member{
-        gid int64
-        uid int64
-        flag int64
-        last_mid int64
-    }
-    group_info::gid-->group_member::gid
-}
-
 card Chat_Message {
     class chat_message {
         *mid int64
@@ -60,7 +14,7 @@ card Chat_Message {
     }
     note top of offline_message:离线消息表, \n用户不在线则保存一份到这张表\n用户上线后拉取成功后移除消息
 
-    class user_global_message_seq<<Redis_Incr>> {
+    class user_global_message_seq{
         uid string
         seq int64
     }
@@ -104,7 +58,17 @@ card Group_Message {
     class group_msg_seq {
         gid int64
         seq int64
+        step int64
     }
-    note top of group_msg_seq:群消息自增序列
+    note top of group_msg_seq:群消息自增序列, 使用号段模式\n每次内存中号段耗尽则取数据库
 }
+
+'note as Note_MID
+'<b>消息ID的生成</b>
+'|   时间戳    |    自旋ID    |   ID1  |   ID2     |   类型   |
+'|   1  |   1   |  1   |  2   |
+'end note
+
+Chat_Message -[hidden]- Group_Message
+
 @enduml
