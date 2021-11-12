@@ -43,6 +43,7 @@ card Group {
         uid int64
         flag int64
         last_ack_mid int64
+        last_ack_seq int64
     }
     group_info::gid-->group_member::gid
 }
