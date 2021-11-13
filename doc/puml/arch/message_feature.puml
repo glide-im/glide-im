@@ -1,8 +1,6 @@
 @startmindmap
 'https://plantuml.com/mindmap-diagram
 
-title My super title
-
 * <&flag>消息
     ** 可靠性
         *** 上线同步离线

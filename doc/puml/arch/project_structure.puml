@@ -1,0 +1,99 @@
+@startuml
+'https://plantuml.com/deployment-diagram
+
+frame Api {
+    card userApi
+    card groupApi
+    card api
+    card app
+    interface Handle
+    interface MessageHandleFunc
+
+    Handle -[hidden]- api
+    api -[hidden]- userApi
+    api -[hidden]- groupApi
+    api -[hidden]- app
+    MessageHandleFunc -[hidden]- userApi
+
+    api .. userApi: Route
+    api .. groupApi: Route
+    api .. app: Route
+
+    userApi -> MessageHandleFunc: Response Result
+    groupApi -> MessageHandleFunc: Response Result
+    app -> MessageHandleFunc: Response Result
+
+    Handle -> api: Invoke
+}
+
+frame Client_ {
+    card Client
+    card ClientManager
+    card CsClient
+    interface Manager
+    interface EnqueueMessage
+    interface MessageHandleFunc_
+
+    Manager .. ClientManager: Instance
+    EnqueueMessage ..> ClientManager: invoke
+    ClientManager --> Client: Manager
+    ClientManager --> CsClient: Manager
+    Client --> MessageHandleFunc_: Receive Message
+    CsClient --> MessageHandleFunc_: Receive Message
+}
+frame Conn {
+    card Connection
+    card WsConn
+    card TCPConn
+    card WsServer
+    card TCPServer
+    card Server
+
+    WsConn -[hidden]- WsServer
+    TCPConn -[hidden]- TCPServer
+    WsServer -[hidden]- WsServer
+
+    Connection ..> WsConn
+    Connection ..> TCPConn
+    WsServer .. WsConn
+    TCPServer .. TCPConn
+
+    Server ..> TCPServer
+    Server ..> WsServer
+
+}
+frame Dao {
+    card chatdao
+    card userdao
+    card groupdao
+    card appdao
+}
+frame Group {
+    card group
+    card GroupManager
+
+    GroupManager .> group: Manager
+}
+
+frame Messaging {
+    card messager
+}
+
+Conn -[hidden]- Messaging
+Group -[hidden]- Messaging
+
+userApi -> Manager: Manage Client
+groupApi -> GroupManager: Manage Group
+MessageHandleFunc .. EnqueueMessage
+api --> Dao: Persistent
+group --> EnqueueMessage: Dispatch Message\nTo Client
+
+messager <.... MessageHandleFunc_: Client Receive Message
+messager --> EnqueueMessage: Dispatch Chat Message
+messager --> GroupManager: Dispatch Group Message
+messager --> Dao: Persistent
+messager --> Handle: Dispatch Api Message
+
+Server ..> Manager: OnNewConnection
+
+@enduml
