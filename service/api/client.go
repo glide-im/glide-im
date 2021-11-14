@@ -58,7 +58,7 @@ func (c *Client) Echo(uid int64, message *message.Message) *pb.Response {
 	return resp
 }
 
-func (c *Client) Handle(uid int64, message *message.Message) {
+func (c *Client) Handle(uid int64, device int64, message *message.Message) {
 	m := pb.Message{
 		Seq:    message.Seq,
 		Action: string(message.Action),

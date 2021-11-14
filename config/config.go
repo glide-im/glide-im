@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"github.com/BurntSushi/toml"
-	"os"
 )
 
 const configEnv = "IM_CONFIG"
@@ -36,11 +35,11 @@ type config struct {
 
 func init() {
 	var conf config
-	env, b := os.LookupEnv(configEnv)
-	if !b {
-		panic("the config file location is not configured in env, please configure env IM_CONFIG")
-	}
-	_, err := toml.DecodeFile(env, &conf)
+	//env, b := os.LookupEnv(configEnv)
+	//if !b {
+	//	panic("the config file location is not configured in env, please configure env IM_CONFIG")
+	//}
+	_, err := toml.DecodeFile("config.toml", &conf)
 	if err != nil {
 		panic(fmt.Sprintf("error on load config: %s", err.Error()))
 	}

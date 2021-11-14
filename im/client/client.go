@@ -109,7 +109,7 @@ func (c *Client) EnqueueMessage(message *message.Message) {
 
 // readMessage 开始从 Connection 中读取消息
 func (c *Client) readMessage() {
-	rCh, done := messageReader.ReadCh(c.conn)
+	readChan, done := messageReader.ReadCh(c.conn)
 
 	defer func() {
 		err := recover()
@@ -126,9 +126,9 @@ func (c *Client) readMessage() {
 		case <-c.hb.C:
 			// TODO 处理心跳超时
 			logger.W("heartbeat timout")
-		case r := <-rCh:
-			if r.err != nil {
-				if c.Closed() || c.handleError(r.err) {
+		case msg := <-readChan:
+			if msg.err != nil {
+				if c.Closed() || c.handleError(msg.err) {
 					// 连接断开或致命错误中断读消息
 					goto STOP
 				}
@@ -137,8 +137,8 @@ func (c *Client) readMessage() {
 			c.hb.Cancel()
 			c.hb = tw.After(HeartbeatDuration)
 			// 统一处理消息函数
-			MessageHandleFunc(c.id, c.device, r.m)
-			r.Recycle()
+			MessageHandleFunc(c.id, c.device, msg.m)
+			msg.Recycle()
 		}
 	}
 STOP:
@@ -156,7 +156,7 @@ func (c *Client) writeMessage() {
 
 	for {
 		select {
-		case <-c.readClose:
+		case <-c.writeClose:
 			goto STOP
 		case m := <-c.messages:
 			b, err := m.Serialize()
