@@ -17,12 +17,12 @@ func respondMessage(uid int64, msg *message.Message) {
 }
 
 type Interface interface {
-	SyncChatMsgBySeq(msg *route.RequestInfo, request *SyncChatMsgReq) error
+	SyncChatMsgBySeq(msg *route.Context, request *SyncChatMsgReq) error
 }
 
 type MsgApi struct {
 }
 
-func (*MsgApi) SyncChatMsgBySeq(msg *route.RequestInfo, request *SyncChatMsgReq) error {
+func (*MsgApi) SyncChatMsgBySeq(msg *route.Context, request *SyncChatMsgReq) error {
 	panic("implement me")
 }

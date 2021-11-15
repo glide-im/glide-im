@@ -20,36 +20,36 @@ func respondMessage(uid int64, msg *message.Message) {
 }
 
 type Interface interface {
-	AuthToken(info *route.RequestInfo, req *AuthTokenReq) error
-	SignIn(info *route.RequestInfo, req interface{}) error
-	Logout(info *route.RequestInfo) error
-	Register(info *route.RequestInfo, req interface{}) error
+	AuthToken(info *route.Context, req *AuthTokenReq) error
+	SignIn(info *route.Context, req interface{}) error
+	Logout(info *route.Context) error
+	Register(info *route.Context, req interface{}) error
 }
 
 type AuthApi struct {
 }
 
-func (*AuthApi) AuthToken(info *route.RequestInfo, req *AuthTokenReq) error {
+func (*AuthApi) AuthToken(info *route.Context, req *AuthTokenReq) error {
 	panic("implement me")
 }
 
-func (*AuthApi) SignIn(info *route.RequestInfo, req interface{}) error {
+func (*AuthApi) SignIn(info *route.Context, req interface{}) error {
 	panic("implement me")
 }
 
-func (*AuthApi) Register(msg *route.RequestInfo, registerEntity *RegisterRequest) error {
+func (*AuthApi) Register(ctx *route.Context, registerEntity *RegisterRequest) error {
 
-	resp := message.NewMessage(msg.Seq, "", "success")
+	resp := message.NewMessage(ctx.Seq, "", "success")
 	err := dao.UserDao.AddUser(registerEntity.Account, registerEntity.Password)
 
 	if err != nil {
-		resp = message.NewMessage(msg.Seq, "", err)
+		resp = message.NewMessage(ctx.Seq, "", err)
 	}
-	respondMessage(msg.Uid, resp)
+	ctx.Response(resp)
 	return err
 }
 
-func (a *AuthApi) Logout(info *route.RequestInfo, r *LogoutRequest) error {
+func (a *AuthApi) Logout(info *route.Context, r *LogoutRequest) error {
 	err := dao.UserDao.Logout(info.Uid, r.Device, r.Token)
 	if err != nil {
 		return err
@@ -58,12 +58,12 @@ func (a *AuthApi) Logout(info *route.RequestInfo, r *LogoutRequest) error {
 	return nil
 }
 
-func (a *AuthApi) Auth(msg *route.RequestInfo, request *AuthRequest) error {
+func (a *AuthApi) Auth(ctx *route.Context, request *AuthRequest) error {
 
-	var resp = message.NewMessage(msg.Seq, "", "success")
+	var resp = message.NewMessage(ctx.Seq, "", "success")
 	uid := dao.UserDao.GetUid(request.Token)
 	if uid > 0 {
-		client.Manager.ClientSignIn(msg.Uid, uid, request.DeviceId)
+		client.Manager.ClientSignIn(ctx.Uid, uid, request.DeviceId)
 		respondMessage(uid, resp)
 		return nil
 	} else {
@@ -71,7 +71,7 @@ func (a *AuthApi) Auth(msg *route.RequestInfo, request *AuthRequest) error {
 	}
 }
 
-func (a *AuthApi) Login(msg *route.RequestInfo, request *LoginRequest) error {
+func (a *AuthApi) Login(msg *route.Context, request *LoginRequest) error {
 
 	if len(request.Account) == 0 || len(request.Password) == 0 {
 		return errors.New("account or password empty")
@@ -87,6 +87,6 @@ func (a *AuthApi) Login(msg *route.RequestInfo, request *LoginRequest) error {
 		return err
 	}
 	client.Manager.ClientSignIn(msg.Uid, uid, request.Device)
-	respondMessage(uid, m)
+	msg.Response(m)
 	return nil
 }

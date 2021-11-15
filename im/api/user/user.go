@@ -25,7 +25,7 @@ func respondMessage(uid int64, msg *message.Message) {
 type UserApi struct{}
 
 //goland:noinspection GoPreferNilSlice
-func (a *UserApi) GetAndInitRelationList(msg *route.RequestInfo) error {
+func (a *UserApi) GetAndInitRelationList(msg *route.Context) error {
 
 	allContacts, err := dao.UserDao.GetAllContacts(msg.Uid)
 	if err != nil {
@@ -83,7 +83,7 @@ func (a *UserApi) GetAndInitRelationList(msg *route.RequestInfo) error {
 	return nil
 }
 
-func (a *UserApi) AddFriend(msg *route.RequestInfo, request *AddContacts) error {
+func (a *UserApi) AddFriend(msg *route.Context, request *AddContacts) error {
 
 	hasUser, err := dao.UserDao.HasUser(request.Uid)
 	if err != nil {
@@ -154,7 +154,7 @@ func (a *UserApi) AddFriend(msg *route.RequestInfo, request *AddContacts) error 
 	return nil
 }
 
-func (a *UserApi) GetUserInfo(msg *route.RequestInfo, request *InfoRequest) error {
+func (a *UserApi) GetUserInfo(msg *route.Context, request *InfoRequest) error {
 
 	users, err := dao.UserDao.GetUser(request.Uid...)
 	if err != nil {
@@ -185,7 +185,7 @@ func (a *UserApi) GetUserInfo(msg *route.RequestInfo, request *InfoRequest) erro
 	return nil
 }
 
-func (a *UserApi) GetOnlineUser(msg *route.RequestInfo) error {
+func (a *UserApi) GetOnlineUser(msg *route.Context) error {
 
 	type u struct {
 		Uid      int64
@@ -211,7 +211,7 @@ func (a *UserApi) GetOnlineUser(msg *route.RequestInfo) error {
 	return nil
 }
 
-func (a *UserApi) NewChat(msg *route.RequestInfo, request *NewChatRequest) error {
+func (a *UserApi) NewChat(msg *route.Context, request *NewChatRequest) error {
 
 	uid := msg.Uid
 	target := request.Id
@@ -250,7 +250,7 @@ func (a *UserApi) NewChat(msg *route.RequestInfo, request *NewChatRequest) error
 	return nil
 }
 
-func (a *UserApi) GetUserChatList(msg *route.RequestInfo) error {
+func (a *UserApi) GetUserChatList(msg *route.Context) error {
 
 	list, err := dao.ChatDao.GetUserChatList(msg.Uid)
 	if err != nil {
@@ -261,7 +261,7 @@ func (a *UserApi) GetUserChatList(msg *route.RequestInfo) error {
 	return nil
 }
 
-func (a *UserApi) UserInfo(msg *route.RequestInfo) error {
+func (a *UserApi) UserInfo(msg *route.Context) error {
 
 	return nil
 }

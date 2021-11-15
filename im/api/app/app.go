@@ -18,13 +18,13 @@ func respondMessage(uid int64, msg *message.Message) {
 }
 
 type Interface interface {
-	Echo(req *route.RequestInfo) error
+	Echo(req *route.Context) error
 }
 
 type AppApi struct {
 }
 
-func (*AppApi) Echo(req *route.RequestInfo) error {
+func (*AppApi) Echo(req *route.Context) error {
 	respondMessage(req.Uid, message.NewMessage(req.Seq, "api.app.echo", fmt.Sprintf("seq=%d, uid=%d", req.Seq, req.Uid)))
 	return nil
 }

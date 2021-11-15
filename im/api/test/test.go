@@ -24,12 +24,12 @@ type TestLoginRequest struct {
 	Device int64
 }
 
-func (t *TestApi) TestLogin(info *route.RequestInfo, request *TestLoginRequest) error {
+func (t *TestApi) TestLogin(info *route.Context, request *TestLoginRequest) error {
 	client.Manager.ClientSignIn(info.Uid, request.Uid, request.Device)
 	return nil
 }
 
-func (t *TestApi) TestSignOut(info *route.RequestInfo) error {
+func (t *TestApi) TestSignOut(info *route.Context) error {
 	client.Manager.ClientLogout(info.Uid, 2)
 	return nil
 }

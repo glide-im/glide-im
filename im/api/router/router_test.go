@@ -16,7 +16,7 @@ func (t *TestData) Validate(data interface{}) error {
 
 func TestGroup(t *testing.T) {
 
-	fn := func(info *RequestInfo, ts *TestData) {
+	fn := func(info *Context, ts *TestData) {
 		t.Log(info, ts)
 	}
 

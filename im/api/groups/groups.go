@@ -26,7 +26,7 @@ type Interface interface {
 type GroupApi struct {
 }
 
-func (m *GroupApi) CreateGroup(msg *route.RequestInfo, request *CreateGroupRequest) error {
+func (m *GroupApi) CreateGroup(msg *route.Context, request *CreateGroupRequest) error {
 
 	g, cid, err := m.createGroup(request.Name, msg.Uid)
 	if err != nil {
@@ -51,7 +51,7 @@ func (m *GroupApi) CreateGroup(msg *route.RequestInfo, request *CreateGroupReque
 
 	// add invited member to group
 	if len(request.Member) > 0 {
-		nMsg := &route.RequestInfo{
+		nMsg := &route.Context{
 			Uid: msg.Uid,
 			Seq: -1,
 		}
@@ -68,7 +68,7 @@ func (m *GroupApi) CreateGroup(msg *route.RequestInfo, request *CreateGroupReque
 	return nil
 }
 
-func (m *GroupApi) GetGroupMember(msg *route.RequestInfo, request *GetGroupMemberRequest) error {
+func (m *GroupApi) GetGroupMember(msg *route.Context, request *GetGroupMemberRequest) error {
 
 	members, err := groupdao.GroupDao.GetMembers(request.Gid)
 	if err != nil {
@@ -90,7 +90,7 @@ func (m *GroupApi) GetGroupMember(msg *route.RequestInfo, request *GetGroupMembe
 	return nil
 }
 
-func (m *GroupApi) GetGroupInfo(msg *route.RequestInfo, request *GroupInfoRequest) error {
+func (m *GroupApi) GetGroupInfo(msg *route.Context, request *GroupInfoRequest) error {
 
 	var groups []*GroupResponse
 
@@ -110,7 +110,7 @@ func (m *GroupApi) GetGroupInfo(msg *route.RequestInfo, request *GroupInfoReques
 	return nil
 }
 
-func (m *GroupApi) RemoveMember(msg *route.RequestInfo, request *RemoveMemberRequest) error {
+func (m *GroupApi) RemoveMember(msg *route.Context, request *RemoveMemberRequest) error {
 
 	for _, uid := range request.Uid {
 		err := groupdao.GroupDao.RemoveMember(request.Gid, uid)
@@ -128,7 +128,7 @@ func (m *GroupApi) RemoveMember(msg *route.RequestInfo, request *RemoveMemberReq
 	return nil
 }
 
-func (m *GroupApi) AddGroupMember(msg *route.RequestInfo, request *AddMemberRequest) error {
+func (m *GroupApi) AddGroupMember(msg *route.Context, request *AddMemberRequest) error {
 
 	g, err := groupdao.GroupDao.GetGroup(request.Gid)
 	if err != nil {
@@ -183,7 +183,7 @@ func (m *GroupApi) AddGroupMember(msg *route.RequestInfo, request *AddMemberRequ
 	return nil
 }
 
-func (m *GroupApi) ExitGroup(msg *route.RequestInfo, request *ExitGroupRequest) error {
+func (m *GroupApi) ExitGroup(msg *route.Context, request *ExitGroupRequest) error {
 
 	err := group.Manager.RemoveMember(request.Gid, msg.Uid)
 	if err != nil {
@@ -199,7 +199,7 @@ func (m *GroupApi) ExitGroup(msg *route.RequestInfo, request *ExitGroupRequest) 
 	return err
 }
 
-func (m *GroupApi) JoinGroup(msg *route.RequestInfo, request *JoinGroupRequest) error {
+func (m *GroupApi) JoinGroup(msg *route.Context, request *JoinGroupRequest) error {
 
 	g, err := groupdao.GroupDao.GetGroup(request.Gid)
 	if err != nil {

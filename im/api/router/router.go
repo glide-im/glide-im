@@ -13,7 +13,7 @@ const PathSeparator = "."
 
 var ErrNotRouteMatches = errors.New("no route matches")
 
-var typeRequestInfo = reflect.TypeOf((*RequestInfo)(nil))
+var typeRequestInfo = reflect.TypeOf((*Context)(nil))
 
 type HandleFunc interface{}
 
@@ -43,15 +43,24 @@ func (p *path) next() (string, bool) {
 	return ret, true
 }
 
-type RequestInfo struct {
+type Responsive interface {
+	Response(message *message.Message)
+}
+
+type Context struct {
 	Uid    int64
 	Device int64
 	Seq    int64
 	Action message.Action
+	R      func(message *message.Message)
+}
+
+func (i *Context) Response(message *message.Message) {
+	i.R(message)
 }
 
 type IRoute interface {
-	handle(path path, request *RequestInfo, data interface{}) error
+	handle(path path, request *Context, data interface{}) error
 }
 
 type baseRoute struct {
@@ -77,7 +86,7 @@ type Rt struct {
 	valueHandleFunc reflect.Value
 }
 
-func (r *Rt) handle(_ path, request *RequestInfo, data interface{}) error {
+func (r *Rt) handle(_ path, request *Context, data interface{}) error {
 	return r.invokeHandleFunc(request, data)
 }
 
@@ -116,7 +125,7 @@ func (r *Rt) reflectHandleFunc() {
 	r.valueHandleFunc = reflect.ValueOf(r.handleFunc)
 }
 
-func (r *Rt) invokeHandleFunc(info *RequestInfo, data interface{}) error {
+func (r *Rt) invokeHandleFunc(info *Context, data interface{}) error {
 
 	handleFuncArg := []interface{}{info}
 
@@ -174,7 +183,7 @@ type RtGroup struct {
 	rts map[string]IRoute
 }
 
-func (r *RtGroup) handle(path path, request *RequestInfo, data interface{}) error {
+func (r *RtGroup) handle(path path, request *Context, data interface{}) error {
 	p, b := path.next()
 	if !b {
 		return ErrNotRouteMatches
@@ -231,7 +240,7 @@ func (r *Router) Add(rts ...IRoute) {
 }
 
 func (r *Router) Handle(uid int64, device int64, msg *message.Message) error {
-	ri := &RequestInfo{
+	ri := &Context{
 		Uid:    uid,
 		Seq:    msg.Seq,
 		Device: device,
