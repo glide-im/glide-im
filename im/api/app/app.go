@@ -24,7 +24,7 @@ type Interface interface {
 type AppApi struct {
 }
 
-func (AppApi) Echo(req *route.RequestInfo) error {
+func (*AppApi) Echo(req *route.RequestInfo) error {
 	respondMessage(req.Uid, message.NewMessage(req.Seq, "api.app.echo", fmt.Sprintf("seq=%d, uid=%d", req.Seq, req.Uid)))
 	return nil
 }

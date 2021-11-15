@@ -29,15 +29,15 @@ type Interface interface {
 type AuthApi struct {
 }
 
-func (AuthApi) AuthToken(info *route.RequestInfo, req *AuthTokenReq) error {
+func (*AuthApi) AuthToken(info *route.RequestInfo, req *AuthTokenReq) error {
 	panic("implement me")
 }
 
-func (AuthApi) SignIn(info *route.RequestInfo, req interface{}) error {
+func (*AuthApi) SignIn(info *route.RequestInfo, req interface{}) error {
 	panic("implement me")
 }
 
-func (a *AuthApi) Register(msg *route.RequestInfo, registerEntity *RegisterRequest) error {
+func (*AuthApi) Register(msg *route.RequestInfo, registerEntity *RegisterRequest) error {
 
 	resp := message.NewMessage(msg.Seq, "", "success")
 	err := dao.UserDao.AddUser(registerEntity.Account, registerEntity.Password)

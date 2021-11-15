@@ -3,7 +3,6 @@ package groups
 import (
 	"errors"
 	"go_im/im/api/router"
-	"go_im/im/api/user"
 	"go_im/im/dao"
 	"go_im/im/dao/groupdao"
 	"go_im/im/group"
@@ -33,15 +32,15 @@ func (m *GroupApi) CreateGroup(msg *route.RequestInfo, request *CreateGroupReque
 	if err != nil {
 		return err
 	}
-	members, _ := groupdao.GroupDao.GetMembers(g.Gid)
-	c := user.ContactResponse{
-		Friends: []*user.InfoResponse{},
-		Groups: []*GroupResponse{{
-			Group:   *g,
-			Members: members,
-		}},
-	}
-	respond(msg.Uid, -1, "api.ActionUserAddFriend", c)
+	//members, _ := groupdao.GroupDao.GetMembers(g.Gid)
+	//c := user.ContactResponse{
+	//	Friends: []*user.InfoResponse{},
+	//	Groups: []*GroupResponse{{
+	//		Group:   *g,
+	//		Members: members,
+	//	}},
+	//}
+	//respond(msg.Uid, -1, "api.ActionUserAddFriend", c)
 
 	// create user chat by default
 	uc, err := dao.ChatDao.NewUserChat(cid, msg.Uid, g.Gid, dao.ChatTypeGroup)
@@ -156,19 +155,19 @@ func (m *GroupApi) AddGroupMember(msg *route.RequestInfo, request *AddMemberRequ
 			_ = group.Manager.RemoveMember(request.Gid, member.Uid)
 			continue
 		}
-		ms, err := groupdao.GroupDao.GetMembers(request.Gid)
+		//ms, err := groupdao.GroupDao.GetMembers(request.Gid)
 		if err != nil {
 			return err
 		}
 		//notify update contacts list
-		c := user.ContactResponse{
-			Friends: []*user.InfoResponse{},
-			Groups: []*GroupResponse{{
-				Group:   *g,
-				Members: ms,
-			}},
-		}
-		respond(member.Uid, -1, "api.ActionUserAddFriend", c)
+		//c := user.ContactResponse{
+		//	Friends: []*user.InfoResponse{},
+		//	Groups: []*GroupResponse{{
+		//		Group:   *g,
+		//		Members: ms,
+		//	}},
+		//}
+		//respond(member.Uid, -1, "api.ActionUserAddFriend", c)
 
 		// default add user chat
 		chat, er := dao.ChatDao.NewUserChat(g.ChatId, member.Uid, g.Gid, dao.ChatTypeGroup)
@@ -218,19 +217,19 @@ func (m *GroupApi) JoinGroup(msg *route.RequestInfo, request *JoinGroupRequest) 
 
 	_, err = dao.UserDao.AddContacts(msg.Uid, g.Gid, dao.ContactsTypeGroup, "")
 
-	members, err := groupdao.GroupDao.GetMembers(request.Gid)
-	if err != nil {
-		return err
-	}
+	//members, err := groupdao.GroupDao.GetMembers(request.Gid)
+	//if err != nil {
+	//	return err
+	//}
 
-	c := user.ContactResponse{
-		Friends: []*user.InfoResponse{},
-		Groups: []*GroupResponse{{
-			Group:   *g,
-			Members: members,
-		}},
-	}
-	respond(msg.Uid, -1, "api.ActionUserAddFriend", c)
+	//c := user.ContactResponse{
+	//	Friends: []*user.InfoResponse{},
+	//	Groups: []*GroupResponse{{
+	//		Group:   *g,
+	//		Members: members,
+	//	}},
+	//}
+	//respond(msg.Uid, -1, "api.ActionUserAddFriend", c)
 
 	chat, err := dao.ChatDao.NewUserChat(g.ChatId, msg.Uid, g.Gid, dao.ChatTypeGroup)
 	if err != nil {

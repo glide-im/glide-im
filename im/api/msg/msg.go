@@ -23,6 +23,6 @@ type Interface interface {
 type MsgApi struct {
 }
 
-func (MsgApi) SyncChatMsgBySeq(msg *route.RequestInfo, request *SyncChatMsgReq) error {
+func (*MsgApi) SyncChatMsgBySeq(msg *route.RequestInfo, request *SyncChatMsgReq) error {
 	panic("implement me")
 }
