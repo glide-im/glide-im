@@ -2,12 +2,13 @@ package group
 
 import (
 	"go_im/im/dao"
+	"go_im/im/dao/groupdao"
 	"go_im/pkg/logger"
 )
 
 func LoadAllGroup() map[int64]*Group {
 	res := map[int64]*Group{}
-	groups, err := dao.GroupDao.GetAllGroup()
+	groups, err := groupdao.GroupDao.GetAllGroup()
 	if err != nil {
 		logger.E("Init group error", err)
 		return res
@@ -24,7 +25,7 @@ func LoadAllGroup() map[int64]*Group {
 }
 
 func LoadGroup(gid int64) (*Group, error) {
-	dbGroup, err := dao.GroupDao.GetGroup(gid)
+	dbGroup, err := groupdao.GroupDao.GetGroup(gid)
 	if err != nil {
 		logger.E("load group error", err)
 		return nil, err
@@ -42,7 +43,7 @@ func initGroup(dbGroup *dao.Group) (*Group, error) {
 		if err != nil {
 			return nil, err
 		}
-		err = dao.GroupDao.UpdateGroupChatId(dbGroup.Gid, chat.Cid)
+		err = groupdao.GroupDao.UpdateGroupChatId(dbGroup.Gid, chat.Cid)
 		if err != nil {
 			return nil, err
 		}
@@ -52,7 +53,7 @@ func initGroup(dbGroup *dao.Group) (*Group, error) {
 		//group.msgSequence = 0
 	}
 
-	members, err := dao.GroupDao.GetMembers(dbGroup.Gid)
+	members, err := groupdao.GroupDao.GetMembers(dbGroup.Gid)
 	if err != nil {
 		return nil, err
 	}

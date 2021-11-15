@@ -1,4 +1,4 @@
-package dao
+package groupdao
 
 import "go_im/pkg/db"
 

@@ -52,7 +52,7 @@ func (m *chatDao) UpdateCurrentMessageID(chatID int64, mid int64) error {
 		Table("chat_message_id").
 		Where("cid = ?", chatID).
 		Update(map[string]interface{}{"current_mid": mid})
-	return resolveError(res)
+	return ResolveError(res)
 }
 
 func (m *chatDao) GetUserChatList(uid int64) ([]*UserChat, error) {
@@ -117,7 +117,7 @@ func (m *chatDao) CreateChat(typ int8, from int64, to int64) (*Chat, error) {
 
 func (m *chatDao) NewUserChat(cid int64, uid int64, target int64, typ int8) (*UserChat, error) {
 
-	now := nowTimestamp()
+	now := NowTimestamp()
 	ucid, err := GetUserChatId(uid, cid)
 
 	if err != nil {

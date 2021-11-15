@@ -44,6 +44,6 @@ func (u *Timestamp) Unix() int64 {
 	return time.Time(*u).Unix()
 }
 
-func nowTimestamp() Timestamp {
+func NowTimestamp() Timestamp {
 	return Timestamp(time.Now())
 }

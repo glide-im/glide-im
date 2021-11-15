@@ -158,7 +158,7 @@ func (d *userDao) AddContacts(uid int64, targetId int64, typ int8, remark string
 		TargetId: targetId,
 		Remark:   remark,
 		Type:     typ,
-		AddTime:  nowTimestamp(),
+		AddTime:  NowTimestamp(),
 	}
 	if db.DB.Model(f).Create(f).RowsAffected <= 0 {
 		return nil, errors.New("create friend error")
