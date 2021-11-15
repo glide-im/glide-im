@@ -2,91 +2,91 @@ package api
 
 import (
 	"errors"
+	"go_im/im/api/app"
+	"go_im/im/api/auth"
+	"go_im/im/api/groups"
+	"go_im/im/api/router"
+	"go_im/im/api/test"
+	"go_im/im/api/user"
 	"go_im/im/message"
 	"go_im/pkg/logger"
 )
 
-var MessageHandleFunc func(uid int64, device int64, message *message.Message)
+// ResponseHandleFunc 响应处理函数, api 处理的结果统一通过这个函数返回
+var ResponseHandleFunc func(uid int64, device int64, message *message.Message)
 
-var apiHandler IApiHandler
+var Handler ApiHandler = NewDefaultRouter()
 
-type IApiHandler interface {
+type ApiHandler interface {
 	Handle(uid int64, device int64, message *message.Message)
 }
 
-func SetHandler(api IApiHandler) {
-	apiHandler = api
-}
-
+// Handle 处理一个 api 消息
 func Handle(uid int64, device int64, message *message.Message) {
-	apiHandler.Handle(uid, device, message)
+	Handler.Handle(uid, device, message)
 }
 
-func respond(uid int64, seq int64, action message.Action, data interface{}) {
-	resp := message.NewMessage(seq, action, data)
-	respondMessage(uid, resp)
-}
-
-func respondMessage(uid int64, msg *message.Message) {
-	MessageHandleFunc(uid, 0, msg)
-}
-
+// Routers 默认 api 路由, 将不同 action 交给相应的方法处理
 type Routers struct {
-	*UserApi
-	*GroupApi
-	*AppApi
-	*TestApi
-	router *Router
+	*user.UserApi
+	*groups.GroupApi
+	*auth.AuthApi
+	*app.AppApi
+	*test.TestApi
+	router *route.Router
 }
 
-func NewApiRouter() *Routers {
+func NewDefaultRouter() *Routers {
 	ret := new(Routers)
+	user.ResponseHandleFunc = ResponseHandleFunc
+	groups.ResponseHandleFunc = ResponseHandleFunc
+	auth.ResponseHandleFunc = ResponseHandleFunc
+	app.ResponseHandleFunc = ResponseHandleFunc
+	test.ResponseHandleFunc = ResponseHandleFunc
 	ret.init()
 	return ret
 }
 
 func (a *Routers) init() {
-	rt := NewRouter()
+	rt := route.NewRouter()
 	rt.Add(
-		Group("api",
-			Group("app",
-				Route("echo", a.Echo),
+		route.Group("api",
+			route.Group("app",
+				route.Route("echo", a.Echo),
 			),
-			Group("user",
-				Route("login", a.Login),
-				Route("logout", a.Logout),
-				Route("auth", a.Auth),
-				Route("register", a.Register),
-				Route("online", a.GetOnlineUser),
-				Group("info",
-					Route("get", a.GetUserInfo),
-					Route("me", a.UserInfo),
+			route.Group("user",
+				route.Route("login", a.Login),
+				route.Route("logout", a.Logout),
+				route.Route("auth", a.Auth),
+				route.Route("register", a.Register),
+				route.Route("online", a.GetOnlineUser),
+				route.Group("info",
+					route.Route("get", a.GetUserInfo),
+					route.Route("me", a.UserInfo),
 				),
 			),
-			Group("contacts",
-				Route("get", a.GetAndInitRelationList),
-				Route("put", a.AddFriend),
+			route.Group("contacts",
+				route.Route("get", a.GetAndInitRelationList),
+				route.Route("put", a.AddFriend),
 			),
-			Group("chat",
-				Route("list", a.GetUserChatList),
-				Route("new", a.NewChat),
-				Route("info", a.GetChatInfo),
-				Route("history", a.GetChatHistory),
+			route.Group("chat",
+				route.Route("list", a.GetUserChatList),
+				route.Route("new", a.NewChat),
 			),
-			Group("group",
-				Route("create", a.CreateGroup),
-				Route("info", a.GetGroupInfo),
-				Route("join", a.JoinGroup),
-				Route("exit", a.ExitGroup),
-				Group("member",
-					Route("get", a.GetGroupMember),
-					Route("add", a.AddGroupMember),
-					Route("remove", a.RemoveMember),
+			route.Group("group",
+				route.Route("create", a.CreateGroup),
+				route.Route("info", a.GetGroupInfo),
+				route.Route("join", a.JoinGroup),
+				route.Route("exit", a.ExitGroup),
+				route.Group("member",
+					route.Route("get", a.GetGroupMember),
+					route.Route("add", a.AddGroupMember),
+					route.Route("remove", a.RemoveMember),
 				),
 			),
-			Group("test",
-				Route("login", a.TestLogin),
-				Route("signout", a.TestSignOut),
+			route.Group("test",
+				route.Route("login", a.TestLogin),
+				route.Route("signout", a.TestSignOut),
 			),
 		),
 	)
@@ -139,5 +139,5 @@ func (a *Routers) onError(uid int64, device int64, msg *message.Message, err err
 	logger.D("a.onError: uid=%d, Action=%s, err=%s", uid, msg.Action, err.Error())
 
 	errMsg := message.NewMessage(msg.Seq, message.ActionFailed, err.Error())
-	MessageHandleFunc(uid, device, errMsg)
+	ResponseHandleFunc(uid, device, errMsg)
 }

@@ -21,7 +21,7 @@ func NewClient(options *rpc.ClientOptions) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	api.SetHandler(ret)
+	api.Handler = ret
 	return ret, nil
 }
 
@@ -32,7 +32,7 @@ func NewClientByRouter(srvId string, rtOpts *rpc.ClientOptions) (*Client, error)
 	if err != nil {
 		return nil, err
 	}
-	api.SetHandler(ret)
+	api.Handler = ret
 	return ret, nil
 }
 

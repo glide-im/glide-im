@@ -42,7 +42,7 @@ func (m *manager) AddClient(uid int64, cs client.IClient) {
 
 func (m *manager) ClientConnected(conn conn.Connection) int64 {
 	uid := m.m.ClientConnected(conn)
-	tag := fmt.Sprintf("uid_%d_%d", uid, client.DeviceUnknown)
+	tag := fmt.Sprintf("uid_%d_%d", uid, 0)
 	err := m.router.SetTag("client", tag, m.myAddr)
 	if err != nil {
 		logger.E("set route tag error", err)
@@ -52,7 +52,7 @@ func (m *manager) ClientConnected(conn conn.Connection) int64 {
 }
 
 func (m *manager) ClientSignIn(oldUid int64, uid int64, device int64) {
-	err := m.router.RemoveTag("client", fmt.Sprintf("uid_%d_%d", oldUid, client.DeviceUnknown))
+	err := m.router.RemoveTag("client", fmt.Sprintf("uid_%d_%d", oldUid, 0))
 	if err != nil {
 
 	}

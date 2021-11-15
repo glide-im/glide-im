@@ -26,8 +26,7 @@ func Run() {
 		client.Manager.ClientConnected(conn)
 	})
 
-	api.MessageHandleFunc = client.EnqueueMessageToDevice
-	api.SetHandler(api.NewApiRouter())
+	api.ResponseHandleFunc = client.EnqueueMessageToDevice
 	client.Manager = client.NewClientManager()
 	manager := group.NewGroupManager()
 	group.Manager = manager

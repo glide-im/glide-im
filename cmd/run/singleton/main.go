@@ -6,6 +6,7 @@ import (
 	"go_im/im/conn"
 	"go_im/im/dao"
 	"go_im/im/group"
+	"go_im/im/messaging"
 	"go_im/pkg/db"
 	"time"
 )
@@ -30,8 +31,8 @@ func Run() {
 		client.Manager.ClientConnected(conn)
 	})
 
-	api.MessageHandleFunc = client.EnqueueMessageToDevice
-	api.SetHandler(api.NewApiRouter())
+	messaging.Init()
+	api.ResponseHandleFunc = client.EnqueueMessageToDevice
 	client.Manager = client.NewClientManager()
 	manager := group.NewGroupManager()
 	group.Manager = manager

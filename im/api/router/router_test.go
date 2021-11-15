@@ -1,4 +1,4 @@
-package api
+package route
 
 import (
 	"encoding/json"
@@ -32,6 +32,6 @@ func TestGroup(t *testing.T) {
 	)
 
 	msg := message.NewMessage(-1, "api.user.login", &TestData{Name: "1234"})
-	err := router.Handle(1, msg)
+	err := router.Handle(1, 0, msg)
 	t.Log(err, router)
 }

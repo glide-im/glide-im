@@ -1,87 +1,59 @@
-package api
+package user
 
 import (
 	"errors"
+	"go_im/im/api/groups"
+	"go_im/im/api/router"
 	"go_im/im/client"
 	"go_im/im/dao"
+	"go_im/im/dao/groupdao"
 	"go_im/im/message"
 	"go_im/pkg/logger"
 )
 
+var ResponseHandleFunc func(uid int64, device int64, message *message.Message)
+
+func respond(uid int64, seq int64, action message.Action, data interface{}) {
+	resp := message.NewMessage(seq, action, data)
+	respondMessage(uid, resp)
+}
+
+func respondMessage(uid int64, msg *message.Message) {
+	ResponseHandleFunc(uid, 0, msg)
+}
+
 type UserApi struct{}
 
-func (a *UserApi) Auth(msg *RequestInfo, request *AuthRequest) error {
-
-	var resp = message.NewMessage(msg.Seq, ActionSuccess, "success")
-	uid := dao.UserDao.GetUid(request.Token)
-	if uid > 0 {
-		client.Manager.ClientSignIn(msg.Uid, uid, request.DeviceId)
-		respondMessage(uid, resp)
-		return nil
-	} else {
-		return errors.New("token expired")
-	}
-}
-
-func (a *UserApi) Login(msg *RequestInfo, request *LoginRequest) error {
-
-	if len(request.Account) == 0 || len(request.Password) == 0 {
-		return errors.New("account or password empty")
-	}
-
-	uid, token, err := dao.UserDao.GetUidByLogin(request.Account, request.Password, request.Device)
-	if err != nil {
-		return err
-	}
-
-	m := message.NewMessage(msg.Seq, ActionSuccess, "success")
-	if err = m.SetData(AuthorResponse{Token: token, Uid: uid}); err != nil {
-		return err
-	}
-	client.Manager.ClientSignIn(msg.Uid, uid, request.Device)
-	respondMessage(uid, m)
-	return nil
-}
-
-func (a *UserApi) Logout(info *RequestInfo, r *LogoutRequest) error {
-	err := dao.UserDao.Logout(info.Uid, r.Device, r.Token)
-	if err != nil {
-		return err
-	}
-	client.Manager.ClientLogout(info.Uid, r.Device)
-	return nil
-}
-
 //goland:noinspection GoPreferNilSlice
-func (a *UserApi) GetAndInitRelationList(msg *RequestInfo) error {
+func (a *UserApi) GetAndInitRelationList(msg *route.RequestInfo) error {
 
 	allContacts, err := dao.UserDao.GetAllContacts(msg.Uid)
 	if err != nil {
 		return err
 	}
 
-	friends := []*UserInfoResponse{}
-	groups := []*GroupResponse{}
+	friends := []*InfoResponse{}
+	groups := []*groups.GroupResponse{}
 
 	var uids []int64
 	for _, contacts := range allContacts {
 
 		if contacts.Type == dao.ContactsTypeGroup {
-			g, er := dao.GroupDao.GetGroup(contacts.TargetId)
+			g, er := groupdao.GroupDao.GetGroup(contacts.TargetId)
 			if er != nil {
 				return er
 			}
 			if g == nil {
 				return errors.New("group not exist")
 			}
-			members, err := dao.GroupDao.GetMembers(g.Gid)
+			//members, err := groupdao.GroupDao.GetMembers(g.Gid)
 			if err != nil {
 				return err
 			}
-			groups = append(groups, &GroupResponse{
-				Group:   *g,
-				Members: members,
-			})
+			//groups = append(groups, &groups.GroupResponse{
+			//	Group:   *g,
+			//	Members: members,
+			//})
 		} else if contacts.Type == dao.ContactsTypeUser {
 			uids = append(uids, contacts.TargetId)
 		}
@@ -92,7 +64,7 @@ func (a *UserApi) GetAndInitRelationList(msg *RequestInfo) error {
 			return err
 		}
 		for _, u := range user {
-			friends = append(friends, &UserInfoResponse{
+			friends = append(friends, &InfoResponse{
 				Uid:      u.Uid,
 				Account:  u.Account,
 				Nickname: u.Nickname,
@@ -106,12 +78,12 @@ func (a *UserApi) GetAndInitRelationList(msg *RequestInfo) error {
 		Groups:  groups,
 	}
 
-	resp := message.NewMessage(msg.Seq, ActionSuccess, body)
+	resp := message.NewMessage(msg.Seq, "api.ActionSuccess", body)
 	respondMessage(msg.Uid, resp)
 	return nil
 }
 
-func (a *UserApi) AddFriend(msg *RequestInfo, request *AddContacts) error {
+func (a *UserApi) AddFriend(msg *route.RequestInfo, request *AddContacts) error {
 
 	hasUser, err := dao.UserDao.HasUser(request.Uid)
 	if err != nil {
@@ -152,15 +124,15 @@ func (a *UserApi) AddFriend(msg *RequestInfo, request *AddContacts) error {
 	}
 
 	ccontactResponse := ContactResponse{
-		Friends: []*UserInfoResponse{{
+		Friends: []*InfoResponse{{
 			Uid:      friend.Uid,
 			Nickname: friend.Nickname,
 			Account:  friend.Account,
 			Avatar:   friend.Avatar,
 		}},
-		Groups: []*GroupResponse{},
+		Groups: []*groups.GroupResponse{},
 	}
-	respondMessage(msg.Uid, message.NewMessage(msg.Seq, ActionSuccess, ccontactResponse))
+	respondMessage(msg.Uid, message.NewMessage(msg.Seq, "api.ActionSuccess", ccontactResponse))
 
 	// add to friend
 	_, err = dao.UserDao.AddContacts(request.Uid, msg.Uid, dao.ContactsTypeUser, "")
@@ -169,26 +141,26 @@ func (a *UserApi) AddFriend(msg *RequestInfo, request *AddContacts) error {
 	}
 
 	contactRespFriend := ContactResponse{
-		Friends: []*UserInfoResponse{{
+		Friends: []*InfoResponse{{
 			Uid:      msg.Uid,
 			Nickname: me.Nickname,
 			Account:  me.Account,
 			Avatar:   me.Avatar,
 		}},
-		Groups: []*GroupResponse{},
+		Groups: []*groups.GroupResponse{},
 	}
-	respondMessage(request.Uid, message.NewMessage(-1, ActionUserAddFriend, contactRespFriend))
+	respondMessage(request.Uid, message.NewMessage(-1, "api.ActionUserAddFriend", contactRespFriend))
 
 	return nil
 }
 
-func (a *UserApi) GetUserInfo(msg *RequestInfo, request *UserInfoRequest) error {
+func (a *UserApi) GetUserInfo(msg *route.RequestInfo, request *InfoRequest) error {
 
 	users, err := dao.UserDao.GetUser(request.Uid...)
 	if err != nil {
 		return err
 	}
-	resp := message.NewMessage(msg.Seq, ActionOnlineUser, "success")
+	resp := message.NewMessage(msg.Seq, "api.ActionOnlineUser", "success")
 	type u struct {
 		Uid      int64
 		Account  string
@@ -213,31 +185,7 @@ func (a *UserApi) GetUserInfo(msg *RequestInfo, request *UserInfoRequest) error 
 	return nil
 }
 
-func (a *UserApi) GetChatInfo(msg *RequestInfo, request *ChatInfoRequest) error {
-
-	uc, err := dao.ChatDao.GetUserChatFromChat(request.Cid, msg.Uid)
-	if err != nil {
-		return err
-	}
-	resp := message.NewMessage(msg.Seq, ActionUserChatInfo, uc)
-	respondMessage(msg.Uid, resp)
-	return nil
-}
-
-func (a *UserApi) GetChatHistory(msg *RequestInfo, request *ChatHistoryRequest) error {
-
-	chatMessages, err := dao.ChatDao.GetChatHistory(request.Cid, 20)
-	if err != nil {
-		return err
-	}
-
-	resp := message.NewMessage(msg.Seq, ActionUserChatHistory, chatMessages)
-
-	respondMessage(msg.Uid, resp)
-	return nil
-}
-
-func (a *UserApi) GetOnlineUser(msg *RequestInfo) error {
+func (a *UserApi) GetOnlineUser(msg *route.RequestInfo) error {
 
 	type u struct {
 		Uid      int64
@@ -258,12 +206,12 @@ func (a *UserApi) GetOnlineUser(msg *RequestInfo) error {
 		users = append(users, u{Uid: user.Uid, Account: user.Account, Avatar: user.Avatar, Nickname: user.Nickname})
 	}
 
-	m := message.NewMessage(msg.Seq, ActionOnlineUser, users)
+	m := message.NewMessage(msg.Seq, "api.ActionOnlineUser", users)
 	respondMessage(msg.Uid, m)
 	return nil
 }
 
-func (a *UserApi) NewChat(msg *RequestInfo, request *UserNewChatRequest) error {
+func (a *UserApi) NewChat(msg *route.RequestInfo, request *NewChatRequest) error {
 
 	uid := msg.Uid
 	target := request.Id
@@ -287,14 +235,14 @@ func (a *UserApi) NewChat(msg *RequestInfo, request *UserNewChatRequest) error {
 		if err != nil {
 			return err
 		}
-		resp := message.NewMessage(msg.Seq, ActionSuccess, m2)
+		resp := message.NewMessage(msg.Seq, "api.ActionSuccess", m2)
 		respondMessage(msg.Uid, resp)
 	} else if request.Type == dao.ChatTypeGroup {
 		m, e := dao.ChatDao.NewUserChat(chat.Cid, uid, target, dao.ChatTypeGroup)
 		if e != nil {
 			return e
 		}
-		resp := message.NewMessage(msg.Seq, ActionUserChatInfo, m)
+		resp := message.NewMessage(msg.Seq, "api.ActionUserChatInfo", m)
 		respondMessage(msg.Uid, resp)
 	} else {
 		return errors.New("unknown chat type")
@@ -302,30 +250,18 @@ func (a *UserApi) NewChat(msg *RequestInfo, request *UserNewChatRequest) error {
 	return nil
 }
 
-func (a *UserApi) GetUserChatList(msg *RequestInfo) error {
+func (a *UserApi) GetUserChatList(msg *route.RequestInfo) error {
 
 	list, err := dao.ChatDao.GetUserChatList(msg.Uid)
 	if err != nil {
 		return err
 	}
-	resp := message.NewMessage(msg.Seq, ActionSuccess, list)
+	resp := message.NewMessage(msg.Seq, "api.ActionSuccess", list)
 	respondMessage(msg.Uid, resp)
 	return nil
 }
 
-func (a *UserApi) UserInfo(msg *RequestInfo) error {
+func (a *UserApi) UserInfo(msg *route.RequestInfo) error {
 
 	return nil
-}
-
-func (a *UserApi) Register(msg *RequestInfo, registerEntity *RegisterRequest) error {
-
-	resp := message.NewMessage(msg.Seq, ActionSuccess, "success")
-	err := dao.UserDao.AddUser(registerEntity.Account, registerEntity.Password)
-
-	if err != nil {
-		resp = message.NewMessage(msg.Seq, ActionFailed, err)
-	}
-	respondMessage(msg.Uid, resp)
-	return err
 }
