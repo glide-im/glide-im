@@ -1,0 +1,24 @@
+@startuml
+'https://plantuml.com/use-case-diagram
+
+actor Tom as sender
+actor Bob as receiver
+
+node "Server" as s {
+
+}
+
+database "Database" as db {
+    collections chat_message
+    collections offline_message
+}
+
+chat_message -[hidden]- offline_message
+sender -[hidden]- receiver
+
+sender -> s:sender msg to bob
+
+s -> chat_message: storage message
+s --> offline_message: alt: bob is offline
+s -> receiver: push to bob
+@enduml

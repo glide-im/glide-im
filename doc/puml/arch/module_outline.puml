@@ -1,0 +1,43 @@
+@startmindmap
+'https://plantuml.com/mindmap-diagram
+
+title 模块大纲
+
+* IM
+
+** API
+    *** app
+        ****_ 获取通知列表
+        ****_ 系统相关的接口
+    *** auth
+        ****_ 用户认证相关接口
+    *** groups
+        ****_ 创建退出, 成员管理
+        ****_ 群相关接口
+    *** msg
+        ****_ 按 seq 拉取消息, 历史消息
+        ****_ 消息同步相关接口
+    *** user
+        ****_ 信息, 获取通知列表
+        ****_ 用户相关接口
+    *** http_srv
+        ****_ api http 服务
+    *** router
+        ****_ 长连接消息路由
+        ****_ api 接口 Context
+
+** dao
+    *** appdao
+        ****_ 公用数据库接口
+    *** groupdao
+        ****_ 群操作数据库接口
+    *** msgdao
+        ****_ 消息相关
+
+** client
+    ***_ 客户端连接管理
+    ***_ 客户端连接消息读写
+
+
+
+@endmindmap

@@ -5,6 +5,7 @@ card Chat_Message {
     class chat_message {
         *mid int64
         receiver_seq int64
+        cli_mid string
         sender int64
         receiver int64
         type int
@@ -39,6 +40,7 @@ card Chat_Message {
 card Group_Message {
     class group_full_message {
         *mid int64
+        cli_mid string
         gid int64
         from int64
         seq int64
@@ -51,22 +53,24 @@ card Group_Message {
     class group_message_state {
         gid int64
         last_mid int64
+        last_seq int64
         last_msg_at time
     }
     note left of group_message_state:群消息最新更新状态
 
     group_message_state -[hidden]- group_full_message
 
-    class group_member_msg{
+    class group_member_msg_state{
 
         mb_id int64
         gid int64
         uid int64
+        device string
         last_ack_mid int64
         last_ack_seq int64
     }
 
-    note left of group_member_msg:记录每个用户最后一次确认收到\n群消息的seq及id
+    note left of group_member_msg_state:记录每个用户最后一次确认收到\n群消息的seq及id
 
     class group_msg_seq {
         gid int64
@@ -75,7 +79,7 @@ card Group_Message {
     }
 
     group_message_state::last_mid --> group_full_message::mid
-    group_msg_seq -[hidden]- group_member_msg
+    group_msg_seq -[hidden]- group_member_msg_state
     note left of group_msg_seq:群消息自增序列, 使用号段模式\n每次内存中号段耗尽则取数据库
 }
 

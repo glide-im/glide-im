@@ -1,0 +1,11 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+note as A
+上行消息
+|\t from \t|\t to \t|\t recv_type \t| \t   c_seq  \t| \t   type  \t|  \t  content   \t|  \t   c_time  \t|
+|\t 发送者ID \t|\t 接收者ID\t|\t 接收方类型 \t| \t  客户端seq   \t| \t  消息类型   \t| \t  内容   \t| \t  发送时间   \t|
+
+end note
+
+@enduml
