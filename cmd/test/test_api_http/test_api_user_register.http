@@ -1,0 +1,13 @@
+POST http://localhost:8081/api/auth/register
+Content-Type: application/json
+
+{
+  "Uid": 1,
+  "Device": 0,
+  "Data": {
+    "Account": "abc",
+    "Password": "abc"
+  }
+}
+
+###

@@ -2,7 +2,7 @@ package test
 
 import (
 	"github.com/gorilla/websocket"
-	"go_im/im/api"
+	"go_im/im/api/test"
 	"go_im/im/dao"
 	"go_im/im/dao/uid"
 	"go_im/im/message"
@@ -130,7 +130,7 @@ func serverIM(uid int64) {
 	}()
 
 	time.Sleep(time.Millisecond * 300)
-	login := message.NewMessage(1, "api.test.login", api.TestLoginRequest{
+	login := message.NewMessage(1, "api.test.login", test.TestLoginRequest{
 		Uid:    uid,
 		Device: 2,
 	})

@@ -27,8 +27,8 @@ func Run() {
 	})
 
 	api.ResponseHandleFunc = client.EnqueueMessageToDevice
-	client.Manager = client.NewClientManager()
-	manager := group.NewGroupManager()
+	client.Manager = client.NewDefaultManager()
+	manager := group.NewDefaultManager()
 	group.Manager = manager
 	manager.Init()
 

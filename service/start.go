@@ -85,7 +85,7 @@ func runClientService(t ServerType) {
 		options := defaultSrvOpts
 		options.Port = PortClientSrv
 		server := client.NewServer(&options)
-		mgr := client2.NewClientManager()
+		mgr := client2.NewDefaultManager()
 		wsServer := conn.NewWsServer(nil)
 		wsServer.SetConnHandler(func(conn conn.Connection) {
 			mgr.ClientConnected(conn)
@@ -112,7 +112,7 @@ func runGroupService(t ServerType) {
 		options := defaultSrvOpts
 		options.Port = PortGroupSrv
 		server := group.NewServer(&options)
-		group2.Manager = group2.NewGroupManager()
+		group2.Manager = group2.NewDefaultManager()
 		run(server)
 	} else {
 		clientOpts := defaultCliOpts

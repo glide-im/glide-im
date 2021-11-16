@@ -2,23 +2,12 @@ package groups
 
 import (
 	"errors"
+	"go_im/im/api/apidep"
 	"go_im/im/api/router"
 	"go_im/im/dao"
 	"go_im/im/dao/groupdao"
-	"go_im/im/group"
 	"go_im/im/message"
 )
-
-var ResponseHandleFunc func(uid int64, device int64, message *message.Message)
-
-func respond(uid int64, seq int64, action message.Action, data interface{}) {
-	resp := message.NewMessage(seq, action, data)
-	respondMessage(uid, resp)
-}
-
-func respondMessage(uid int64, msg *message.Message) {
-	ResponseHandleFunc(uid, 0, msg)
-}
 
 type Interface interface {
 }
@@ -26,9 +15,9 @@ type Interface interface {
 type GroupApi struct {
 }
 
-func (m *GroupApi) CreateGroup(msg *route.Context, request *CreateGroupRequest) error {
+func (m *GroupApi) CreateGroup(ctx *route.Context, request *CreateGroupRequest) error {
 
-	g, cid, err := m.createGroup(request.Name, msg.Uid)
+	g, cid, err := m.createGroup(request.Name, ctx.Uid)
 	if err != nil {
 		return err
 	}
@@ -40,19 +29,19 @@ func (m *GroupApi) CreateGroup(msg *route.Context, request *CreateGroupRequest) 
 	//		Members: members,
 	//	}},
 	//}
-	//respond(msg.Uid, -1, "api.ActionUserAddFriend", c)
+	//respond(ctx.Uid, -1, "api.ActionUserAddFriend", c)
 
 	// create user chat by default
-	uc, err := dao.ChatDao.NewUserChat(cid, msg.Uid, g.Gid, dao.ChatTypeGroup)
+	uc, err := dao.ChatDao.NewUserChat(cid, ctx.Uid, g.Gid, dao.ChatTypeGroup)
 	if err != nil {
 		return err
 	}
-	respond(msg.Uid, -1, "", uc)
+	ctx.Response(message.NewMessage(-1, "", uc))
 
 	// add invited member to group
 	if len(request.Member) > 0 {
 		nMsg := &route.Context{
-			Uid: msg.Uid,
+			Uid: ctx.Uid,
 			Seq: -1,
 		}
 		nReq := &AddMemberRequest{
@@ -61,14 +50,14 @@ func (m *GroupApi) CreateGroup(msg *route.Context, request *CreateGroupRequest) 
 		}
 		err = m.AddGroupMember(nMsg, nReq)
 		if err != nil {
-			respond(msg.Uid, -1, "", "add member failed, "+err.Error())
+			ctx.Response(message.NewMessage(-1, "", "add member failed, "+err.Error()))
 		}
 	}
-	respond(msg.Uid, msg.Seq, "api.ActionSuccess", "create group success")
+	ctx.Response(message.NewMessage(ctx.Seq, "", "create success"))
 	return nil
 }
 
-func (m *GroupApi) GetGroupMember(msg *route.Context, request *GetGroupMemberRequest) error {
+func (m *GroupApi) GetGroupMember(ctx *route.Context, request *GetGroupMemberRequest) error {
 
 	members, err := groupdao.GroupDao.GetMembers(request.Gid)
 	if err != nil {
@@ -86,11 +75,11 @@ func (m *GroupApi) GetGroupMember(msg *route.Context, request *GetGroupMemberReq
 		})
 	}
 
-	respond(msg.Uid, msg.Seq, "api.ActionSuccess", ms)
+	ctx.Response(message.NewMessage(ctx.Seq, "", "success"))
 	return nil
 }
 
-func (m *GroupApi) GetGroupInfo(msg *route.Context, request *GroupInfoRequest) error {
+func (m *GroupApi) GetGroupInfo(ctx *route.Context, request *GroupInfoRequest) error {
 
 	var groups []*GroupResponse
 
@@ -106,29 +95,29 @@ func (m *GroupApi) GetGroupInfo(msg *route.Context, request *GroupInfoRequest) e
 		}
 		groups = append(groups, &gr)
 	}
-	respond(msg.Uid, msg.Seq, "api.ActionSuccess", groups)
+	ctx.Response(message.NewMessage(ctx.Seq, "", "create success"))
 	return nil
 }
 
-func (m *GroupApi) RemoveMember(msg *route.Context, request *RemoveMemberRequest) error {
+func (m *GroupApi) RemoveMember(ctx *route.Context, request *RemoveMemberRequest) error {
 
 	for _, uid := range request.Uid {
 		err := groupdao.GroupDao.RemoveMember(request.Gid, uid)
 		if err != nil {
 			return err
 		}
-		_ = group.Manager.RemoveMember(request.Gid, uid)
+		_ = apidep.GroupManager.RemoveMember(request.Gid, uid)
 		notifyResp := message.NewMessage(-1, "api.ActionGroupRemoveMember", "you have been removed from the group xxx by xxx")
-		respondMessage(uid, notifyResp)
+		apidep.ClientManager.EnqueueMessage(uid, 0, notifyResp)
 	}
 
-	resp := message.NewMessage(msg.Seq, "api.ActionSuccess", "remove member success")
+	resp := message.NewMessage(ctx.Seq, "api.ActionSuccess", "remove member success")
 
-	respondMessage(msg.Uid, resp)
+	ctx.Response(resp)
 	return nil
 }
 
-func (m *GroupApi) AddGroupMember(msg *route.Context, request *AddMemberRequest) error {
+func (m *GroupApi) AddGroupMember(ctx *route.Context, request *AddMemberRequest) error {
 
 	g, err := groupdao.GroupDao.GetGroup(request.Gid)
 	if err != nil {
@@ -145,14 +134,14 @@ func (m *GroupApi) AddGroupMember(msg *route.Context, request *AddMemberRequest)
 		Gid:     g.Gid,
 		Members: members,
 	}
-	group.Manager.DispatchNotifyMessage(g.Gid, message.NewMessage(-1, "api.ActionGroupAddMember", groupNotify))
+	apidep.GroupManager.DispatchNotifyMessage(g.Gid, message.NewMessage(-1, "api.ActionGroupAddMember", groupNotify))
 
 	for _, member := range members {
 
 		// add group to member's contacts list
 		_, e := dao.UserDao.AddContacts(member.Uid, g.Gid, dao.ContactsTypeGroup, "")
 		if e != nil {
-			_ = group.Manager.RemoveMember(request.Gid, member.Uid)
+			_ = apidep.GroupManager.RemoveMember(request.Gid, member.Uid)
 			continue
 		}
 		//ms, err := groupdao.GroupDao.GetMembers(request.Gid)
@@ -175,31 +164,31 @@ func (m *GroupApi) AddGroupMember(msg *route.Context, request *AddMemberRequest)
 			continue
 		}
 		// member subscribe group message
-		group.Manager.PutMember(g.Gid, map[int64]int32{member.Uid: 1})
+		apidep.GroupManager.PutMember(g.Gid, map[int64]int32{member.Uid: 1})
 
 		// notify update chat list
-		respond(member.Uid, -1, "api.ActionUserNewChat", chat)
+		ctx.Response(message.NewMessage(-1, "", chat))
 	}
 	return nil
 }
 
-func (m *GroupApi) ExitGroup(msg *route.Context, request *ExitGroupRequest) error {
+func (m *GroupApi) ExitGroup(ctx *route.Context, request *ExitGroupRequest) error {
 
-	err := group.Manager.RemoveMember(request.Gid, msg.Uid)
+	err := apidep.GroupManager.RemoveMember(request.Gid, ctx.Uid)
 	if err != nil {
 		return err
 	}
 
-	err = groupdao.GroupDao.RemoveMember(request.Gid, msg.Uid)
+	err = groupdao.GroupDao.RemoveMember(request.Gid, ctx.Uid)
 	if err != nil {
 		return err
 	}
-	resp := message.NewMessage(msg.Seq, "api.ActionSuccess", "exit group success")
-	respondMessage(msg.Uid, resp)
+	resp := message.NewMessage(ctx.Seq, "api.ActionSuccess", "exit group success")
+	ctx.Response(resp)
 	return err
 }
 
-func (m *GroupApi) JoinGroup(msg *route.Context, request *JoinGroupRequest) error {
+func (m *GroupApi) JoinGroup(ctx *route.Context, request *JoinGroupRequest) error {
 
 	g, err := groupdao.GroupDao.GetGroup(request.Gid)
 	if err != nil {
@@ -210,12 +199,12 @@ func (m *GroupApi) JoinGroup(msg *route.Context, request *JoinGroupRequest) erro
 		return errors.New("group does not exist")
 	}
 
-	_, err = m.addGroupMember(request.Gid, msg.Uid)
+	_, err = m.addGroupMember(request.Gid, ctx.Uid)
 	if err != nil {
 		return err
 	}
 
-	_, err = dao.UserDao.AddContacts(msg.Uid, g.Gid, dao.ContactsTypeGroup, "")
+	_, err = dao.UserDao.AddContacts(ctx.Uid, g.Gid, dao.ContactsTypeGroup, "")
 
 	//members, err := groupdao.GroupDao.GetMembers(request.Gid)
 	//if err != nil {
@@ -229,16 +218,17 @@ func (m *GroupApi) JoinGroup(msg *route.Context, request *JoinGroupRequest) erro
 	//		Members: members,
 	//	}},
 	//}
-	//respond(msg.Uid, -1, "api.ActionUserAddFriend", c)
+	//respond(ctx.Uid, -1, "api.ActionUserAddFriend", c)
 
-	chat, err := dao.ChatDao.NewUserChat(g.ChatId, msg.Uid, g.Gid, dao.ChatTypeGroup)
+	chat, err := dao.ChatDao.NewUserChat(g.ChatId, ctx.Uid, g.Gid, dao.ChatTypeGroup)
 	if err != nil {
-		_ = groupdao.GroupDao.RemoveMember(request.Gid, msg.Uid)
+		_ = groupdao.GroupDao.RemoveMember(request.Gid, ctx.Uid)
 		return err
 	}
-	group.Manager.PutMember(g.Gid, map[int64]int32{msg.Uid: 1})
-	respond(msg.Uid, -1, "api.ActionUserNewChat", chat)
-	respond(msg.Uid, msg.Seq, "api.ActionSuccess", "join group success")
+	apidep.GroupManager.PutMember(g.Gid, map[int64]int32{ctx.Uid: 1})
+
+	apidep.ClientManager.EnqueueMessage(ctx.Uid, ctx.Device, message.NewMessage(-1, "", chat))
+	ctx.Response(message.NewMessage(ctx.Seq, "", "success"))
 	return nil
 }
 
@@ -271,7 +261,7 @@ func (m *GroupApi) createGroup(name string, uid int64) (*dao.Group, int64, error
 		// TODO undo
 		return nil, 0, err
 	}
-	group.Manager.AddGroup(gp.Gid)
+	apidep.GroupManager.AddGroup(gp.Gid)
 	return gp, chat.Cid, nil
 }
 

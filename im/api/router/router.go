@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"go_im/im/api/apidep"
 	"go_im/im/message"
 	"reflect"
 	"strings"
@@ -41,10 +42,6 @@ func (p *path) next() (string, bool) {
 	ret := p.split[p.index]
 	p.index++
 	return ret, true
-}
-
-type Responsive interface {
-	Response(message *message.Message)
 }
 
 type Context struct {
@@ -245,6 +242,9 @@ func (r *Router) Handle(uid int64, device int64, msg *message.Message) error {
 		Seq:    msg.Seq,
 		Device: device,
 		Action: msg.Action,
+		R: func(message *message.Message) {
+			apidep.ClientManager.EnqueueMessage(uid, device, message)
+		},
 	}
 	p := newPath(msg.Action)
 	return r.root.handle(p, ri, msg.Data)

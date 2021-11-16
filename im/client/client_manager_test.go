@@ -27,7 +27,7 @@ func (f *fakeConn) Close() error {
 func TestDefaultManager_ClientConnected(t *testing.T) {
 	db.Init()
 	dao.Init()
-	Manager = NewClientManager()
+	Manager = NewDefaultManager()
 	c := Manager.ClientConnected(&fakeConn{})
 	t.Log(c)
 	time.Sleep(time.Second * 20)

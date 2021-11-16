@@ -2,25 +2,14 @@ package user
 
 import (
 	"errors"
+	"go_im/im/api/apidep"
 	"go_im/im/api/groups"
 	"go_im/im/api/router"
-	"go_im/im/client"
 	"go_im/im/dao"
 	"go_im/im/dao/groupdao"
 	"go_im/im/message"
 	"go_im/pkg/logger"
 )
-
-var ResponseHandleFunc func(uid int64, device int64, message *message.Message)
-
-func respond(uid int64, seq int64, action message.Action, data interface{}) {
-	resp := message.NewMessage(seq, action, data)
-	respondMessage(uid, resp)
-}
-
-func respondMessage(uid int64, msg *message.Message) {
-	ResponseHandleFunc(uid, 0, msg)
-}
 
 type UserApi struct{}
 
@@ -79,7 +68,7 @@ func (a *UserApi) GetAndInitRelationList(msg *route.Context) error {
 	}
 
 	resp := message.NewMessage(msg.Seq, "api.ActionSuccess", body)
-	respondMessage(msg.Uid, resp)
+	msg.Response(resp)
 	return nil
 }
 
@@ -132,7 +121,7 @@ func (a *UserApi) AddFriend(msg *route.Context, request *AddContacts) error {
 		}},
 		Groups: []*groups.GroupResponse{},
 	}
-	respondMessage(msg.Uid, message.NewMessage(msg.Seq, "api.ActionSuccess", ccontactResponse))
+	msg.Response(message.NewMessage(msg.Seq, "api.ActionSuccess", ccontactResponse))
 
 	// add to friend
 	_, err = dao.UserDao.AddContacts(request.Uid, msg.Uid, dao.ContactsTypeUser, "")
@@ -149,7 +138,7 @@ func (a *UserApi) AddFriend(msg *route.Context, request *AddContacts) error {
 		}},
 		Groups: []*groups.GroupResponse{},
 	}
-	respondMessage(request.Uid, message.NewMessage(-1, "api.ActionUserAddFriend", contactRespFriend))
+	msg.Response(message.NewMessage(-1, "api.ActionUserAddFriend", contactRespFriend))
 
 	return nil
 }
@@ -181,7 +170,7 @@ func (a *UserApi) GetUserInfo(msg *route.Context, request *InfoRequest) error {
 		return err
 	}
 
-	respondMessage(msg.Uid, resp)
+	msg.Response(resp)
 	return nil
 }
 
@@ -193,7 +182,7 @@ func (a *UserApi) GetOnlineUser(msg *route.Context) error {
 		Avatar   string
 		Nickname string
 	}
-	allClient := client.Manager.AllClient()
+	allClient := apidep.ClientManager.AllClient()
 	users := make([]u, len(allClient))
 
 	for _, k := range allClient {
@@ -207,7 +196,7 @@ func (a *UserApi) GetOnlineUser(msg *route.Context) error {
 	}
 
 	m := message.NewMessage(msg.Seq, "api.ActionOnlineUser", users)
-	respondMessage(msg.Uid, m)
+	msg.Response(m)
 	return nil
 }
 
@@ -236,28 +225,28 @@ func (a *UserApi) NewChat(msg *route.Context, request *NewChatRequest) error {
 			return err
 		}
 		resp := message.NewMessage(msg.Seq, "api.ActionSuccess", m2)
-		respondMessage(msg.Uid, resp)
+		apidep.ClientManager.EnqueueMessage(msg.Uid, 0, resp)
 	} else if request.Type == dao.ChatTypeGroup {
 		m, e := dao.ChatDao.NewUserChat(chat.Cid, uid, target, dao.ChatTypeGroup)
 		if e != nil {
 			return e
 		}
 		resp := message.NewMessage(msg.Seq, "api.ActionUserChatInfo", m)
-		respondMessage(msg.Uid, resp)
+		apidep.ClientManager.EnqueueMessage(msg.Uid, 0, resp)
 	} else {
 		return errors.New("unknown chat type")
 	}
 	return nil
 }
 
-func (a *UserApi) GetUserChatList(msg *route.Context) error {
+func (a *UserApi) GetUserChatList(ctx *route.Context) error {
 
-	list, err := dao.ChatDao.GetUserChatList(msg.Uid)
+	list, err := dao.ChatDao.GetUserChatList(ctx.Uid)
 	if err != nil {
 		return err
 	}
-	resp := message.NewMessage(msg.Seq, "api.ActionSuccess", list)
-	respondMessage(msg.Uid, resp)
+	resp := message.NewMessage(ctx.Seq, "api.ActionSuccess", list)
+	ctx.Response(resp)
 	return nil
 }
 

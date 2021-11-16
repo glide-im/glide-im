@@ -20,7 +20,7 @@ type manager struct {
 func newManager(etcd []string, myAddr string) (*manager, error) {
 	ret := &manager{}
 	ret.myAddr = myAddr
-	ret.m = client.NewClientManager()
+	ret.m = client.NewDefaultManager()
 	options := &rpc.ClientOptions{
 		Name:        route.ServiceName,
 		EtcdServers: etcd,

@@ -15,7 +15,22 @@ import (
 type CommonParam struct {
 	Uid    int64
 	Device int64
-	Data   string
+	Data   String
+}
+
+type String struct {
+	S string
+}
+
+func (s *String) UnmarshalJSON(bytes []byte) error {
+	s.S = string(bytes)
+	return nil
+}
+
+type CommonResponse struct {
+	Code int
+	Msg  string
+	Data interface{}
 }
 
 type Validatable interface {
@@ -39,14 +54,25 @@ func initRoute() {
 	authApi := auth.AuthApi{}
 	// TODO 2021-11-15 完成其他 api 的 http 服务
 	post("/api/auth/register", authApi.Register)
+	post("/api/auth/logout", authApi.Logout)
 }
 
 func onParamValidateFailed(ctx *gin.Context, err error) {
 	logger.E("validate request param failed %v", err)
+	_ = ctx.BindJSON(CommonResponse{
+		Code: 300,
+		Msg:  "invalid parameter",
+		Data: nil,
+	})
 }
 
 func onParamError(ctx *gin.Context, err error) {
 	logger.E("resolve api param error %v", err)
+	_ = ctx.BindJSON(CommonResponse{
+		Code: 300,
+		Msg:  "parameter parse error",
+		Data: nil,
+	})
 }
 
 func requestParam(ctx *gin.Context) (*route.Context, string) {
@@ -63,7 +89,7 @@ func requestParam(ctx *gin.Context) (*route.Context, string) {
 			ctx.JSON(http.StatusOK, message)
 		},
 	}
-	return info, commonP.Data
+	return info, commonP.Data.S
 }
 
 func deserialize(data string, i interface{}) error {

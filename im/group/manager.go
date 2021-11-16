@@ -5,27 +5,27 @@ import (
 )
 
 // Manager 群相关操作入口
-var Manager IGroupManager
+var Manager IGroupManager = NewDefaultManager()
 
 type IGroupManager interface {
 	// PutMember 给指定添加群成员, mb 为 uid-type, 用户ID-成员类型
-	PutMember(gid int64, mb map[int64]int32)
+	PutMember(gid int64, mb map[int64]int32) error
 
 	// RemoveMember 移除群成员
 	RemoveMember(gid int64, uid ...int64) error
 
 	// AddGroup 添加群, 创建
-	AddGroup(gid int64)
+	AddGroup(gid int64) error
 
 	// RemoveGroup 移除群, 解散
-	RemoveGroup(gid int64)
+	RemoveGroup(gid int64) error
 
 	// ChangeStatus 设置群状态, 禁言等
-	ChangeStatus(gid int64, status int64)
+	ChangeStatus(gid int64, status int64) error
 
 	// DispatchNotifyMessage 发送通知消息
-	DispatchNotifyMessage(gid int64, message *message.Message)
+	DispatchNotifyMessage(gid int64, message *message.Message) error
 
 	// DispatchMessage 发送聊天消息
-	DispatchMessage(gid int64, message *message.GroupMessage)
+	DispatchMessage(gid int64, message *message.GroupMessage) error
 }

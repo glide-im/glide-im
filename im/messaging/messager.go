@@ -16,6 +16,7 @@ var execPool *ants.Pool
 
 func init() {
 	client.MessageHandleFunc = messageHandler
+	api.ResponseHandleFunc = client.EnqueueMessageToDevice
 
 	var err error
 	execPool, err = ants.NewPool(200000,
@@ -41,12 +42,14 @@ func messageHandler(from int64, device int64, msg *message.Message) {
 			dispatchCustomerServiceMsg(from, msg)
 		case message.ActionMessageAck:
 			handleAckMsg(from, msg)
+		case message.ActionHeartbeat:
+			handleHeartbeat(from, device, msg)
 		default:
 			if msg.Action.Contains(message.ActionApi) {
 				api.Handle(from, device, msg)
 			} else {
 				client.EnqueueMessage(from, message.NewMessage(-1, message.ActionNotify, "unknown action"))
-				logger.W("receive a unknown action message")
+				logger.W("receive a unknown action message: " + string(msg.Action))
 			}
 		}
 	})
@@ -54,6 +57,10 @@ func messageHandler(from int64, device int64, msg *message.Message) {
 		client.EnqueueMessage(from, message.NewMessage(-1, message.ActionNotify, "internal server error"))
 		logger.E("async handle message error %v", err)
 	}
+}
+
+func handleHeartbeat(from int64, device int64, msg *message.Message) {
+	// TODO 2021-11-15 处理心跳消息
 }
 
 // dispatchChatMessage 分发用户单聊消息

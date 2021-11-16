@@ -2,22 +2,11 @@ package auth
 
 import (
 	"github.com/pkg/errors"
+	"go_im/im/api/apidep"
 	"go_im/im/api/router"
-	"go_im/im/client"
 	"go_im/im/dao"
 	"go_im/im/message"
 )
-
-var ResponseHandleFunc func(uid int64, device int64, message *message.Message)
-
-func respond(uid int64, seq int64, action message.Action, data interface{}) {
-	resp := message.NewMessage(seq, action, data)
-	respondMessage(uid, resp)
-}
-
-func respondMessage(uid int64, msg *message.Message) {
-	ResponseHandleFunc(uid, 0, msg)
-}
 
 type Interface interface {
 	AuthToken(info *route.Context, req *AuthTokenReq) error
@@ -49,12 +38,13 @@ func (*AuthApi) Register(ctx *route.Context, registerEntity *RegisterRequest) er
 	return err
 }
 
-func (a *AuthApi) Logout(info *route.Context, r *LogoutRequest) error {
-	err := dao.UserDao.Logout(info.Uid, r.Device, r.Token)
+func (a *AuthApi) Logout(ctx *route.Context, r *LogoutRequest) error {
+	err := dao.UserDao.Logout(ctx.Uid, r.Device, r.Token)
 	if err != nil {
 		return err
 	}
-	client.Manager.ClientLogout(info.Uid, r.Device)
+	ctx.Response(message.NewMessage(ctx.Seq, "", ""))
+	apidep.ClientManager.ClientLogout(ctx.Uid, r.Device)
 	return nil
 }
 
@@ -63,8 +53,8 @@ func (a *AuthApi) Auth(ctx *route.Context, request *AuthRequest) error {
 	var resp = message.NewMessage(ctx.Seq, "", "success")
 	uid := dao.UserDao.GetUid(request.Token)
 	if uid > 0 {
-		client.Manager.ClientSignIn(ctx.Uid, uid, request.DeviceId)
-		respondMessage(uid, resp)
+		apidep.ClientManager.ClientSignIn(ctx.Uid, uid, request.DeviceId)
+		ctx.Response(resp)
 		return nil
 	} else {
 		return errors.New("token expired")
@@ -86,7 +76,7 @@ func (a *AuthApi) Login(msg *route.Context, request *LoginRequest) error {
 	if err = m.SetData(AuthorResponse{Token: token, Uid: uid}); err != nil {
 		return err
 	}
-	client.Manager.ClientSignIn(msg.Uid, uid, request.Device)
+	apidep.ClientManager.ClientSignIn(msg.Uid, uid, request.Device)
 	msg.Response(m)
 	return nil
 }

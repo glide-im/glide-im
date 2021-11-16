@@ -36,7 +36,7 @@ func NewClientByRouter(srvId string, rtOpts *rpc.ClientOptions) (*Client, error)
 	return ret, nil
 }
 
-func (c *Client) PutMember(gid int64, mb map[int64]int32) {
+func (c *Client) PutMember(gid int64, mb map[int64]int32) error {
 	req := &pb.PutMemberRequest{
 		Gid:    gid,
 		Member: mb,
@@ -46,6 +46,7 @@ func (c *Client) PutMember(gid int64, mb map[int64]int32) {
 	if err != nil {
 
 	}
+	return nil
 }
 
 func (c *Client) RemoveMember(gid int64, uid ...int64) error {
@@ -61,34 +62,37 @@ func (c *Client) RemoveMember(gid int64, uid ...int64) error {
 	return nil
 }
 
-func (c *Client) ChangeStatus(gid int64, status int64) {
+func (c *Client) ChangeStatus(gid int64, status int64) error {
 	req := &pb.GroupStateRequest{Gid: gid, Status: status}
 	resp := &pb.Response{}
 	err := c.Call(getContext(gid), "ChangeStatus", req, resp)
 	if err != nil {
 
 	}
+	return nil
 }
 
-func (c *Client) AddGroup(gid int64) {
+func (c *Client) AddGroup(gid int64) error {
 	req := &pb.GroupIDRequest{Gid: gid}
 	resp := &pb.Response{}
 	err := c.Call(getContext(gid), "AddGroup", req, resp)
 	if err != nil {
 
 	}
+	return nil
 }
 
-func (c *Client) RemoveGroup(gid int64) {
+func (c *Client) RemoveGroup(gid int64) error {
 	req := &pb.GroupIDRequest{Gid: gid}
 	resp := &pb.Response{}
 	err := c.Call(getContext(gid), "RemoveGroup", req, resp)
 	if err != nil {
 
 	}
+	return nil
 }
 
-func (c *Client) DispatchNotifyMessage(gid int64, message *message.Message) {
+func (c *Client) DispatchNotifyMessage(gid int64, message *message.Message) error {
 	req := &pb.NotifyRequest{
 		Gid:     gid,
 		Message: wrapMessage(message),
@@ -98,9 +102,10 @@ func (c *Client) DispatchNotifyMessage(gid int64, message *message.Message) {
 	if err != nil {
 
 	}
+	return nil
 }
 
-func (c *Client) DispatchMessage(gid int64, message *message.GroupMessage) {
+func (c *Client) DispatchMessage(gid int64, message *message.GroupMessage) error {
 	var req = &pb.DispatchMessageRequest{
 		Gid: gid,
 		Message: &pb.GroupMessage{
@@ -118,6 +123,7 @@ func (c *Client) DispatchMessage(gid int64, message *message.GroupMessage) {
 	if err != nil {
 		logger.E("dispatch group message", err)
 	}
+	return nil
 }
 
 func getContext(gid int64) context.Context {

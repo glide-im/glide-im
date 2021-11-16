@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"go_im/im/api/apidep"
 	"go_im/im/api/app"
 	"go_im/im/api/auth"
 	"go_im/im/api/groups"
@@ -13,16 +14,7 @@ import (
 	"go_im/pkg/logger"
 )
 
-// ResponseHandleFunc 响应处理函数, api 处理的结果统一通过这个函数返回
-var ResponseHandleFunc func(uid int64, device int64, message *message.Message)
-
 var Handler ApiHandler = NewDefaultRouter()
-
-func init() {
-	ResponseHandleFunc = func(uid int64, device int64, message *message.Message) {
-		logger.W("the api handler api.ResponseHandleFunc is not setup")
-	}
-}
 
 type ApiHandler interface {
 	Handle(uid int64, device int64, message *message.Message)
@@ -50,11 +42,6 @@ type Routers struct {
 
 func NewDefaultRouter() *Routers {
 	ret := new(Routers)
-	user.ResponseHandleFunc = ResponseHandleFunc
-	groups.ResponseHandleFunc = ResponseHandleFunc
-	auth.ResponseHandleFunc = ResponseHandleFunc
-	app.ResponseHandleFunc = ResponseHandleFunc
-	test.ResponseHandleFunc = ResponseHandleFunc
 	ret.init()
 	return ret
 }
@@ -107,7 +94,6 @@ func (a *Routers) init() {
 
 func (a *Routers) Handle(uid int64, device int64, message *message.Message) {
 
-	// TODO async
 	err := a.handle(uid, device, message)
 	if err != nil {
 		a.onError(uid, device, message, err)
@@ -151,5 +137,5 @@ func (a *Routers) onError(uid int64, device int64, msg *message.Message, err err
 	logger.D("a.onError: uid=%d, Action=%s, err=%s", uid, msg.Action, err.Error())
 
 	errMsg := message.NewMessage(msg.Seq, message.ActionFailed, err.Error())
-	ResponseHandleFunc(uid, device, errMsg)
+	apidep.ClientManager.EnqueueMessage(uid, device, errMsg)
 }
