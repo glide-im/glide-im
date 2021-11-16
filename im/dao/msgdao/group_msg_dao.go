@@ -11,15 +11,15 @@ func (groupMsgDao) UpdateGroupMsgSeq(gid int64, seq int64) error {
 	panic("implement me")
 }
 
-func (groupMsgDao) GetGroupMessage(mid int64) (*GroupMessageModel, error) {
+func (groupMsgDao) GetGroupMessage(mid int64) (*GroupMessage, error) {
 	panic("implement me")
 }
 
-func (groupMsgDao) GetGroupMessageSeqAfter(gid int64, seqAfter int64) ([]*GroupMessageModel, error) {
+func (groupMsgDao) GetGroupMessageSeqAfter(gid int64, seqAfter int64) ([]*GroupMessage, error) {
 	panic("implement me")
 }
 
-func (groupMsgDao) AddGroupMessage(from, to int64, cliMsgID string, type_ int, content string) (*GroupMessageModel, error) {
+func (groupMsgDao) AddGroupMessage(from, to int64, cliMsgID string, type_ int, content string) (*GroupMessage, error) {
 	panic("implement me")
 }
 
@@ -27,7 +27,7 @@ func (groupMsgDao) UpdateGroupMessageState(gid int64, lastMID int64, lastMsgAg i
 	panic("implement me")
 }
 
-func (groupMsgDao) GetGroupMessageState(gid int64) (*GroupMessageStateModel, error) {
+func (groupMsgDao) GetGroupMessageState(gid int64) (*GroupMessageState, error) {
 	panic("implement me")
 }
 
@@ -35,6 +35,6 @@ func (groupMsgDao) UpdateGroupMemberMsgState(gid int64, uid int64, lastAck int64
 	panic("implement me")
 }
 
-func (groupMsgDao) GetGroupMemberMsgState(gid int64, uid int64) (*GroupMemberMsgStateModel, error) {
+func (groupMsgDao) GetGroupMemberMsgState(gid int64, uid int64) (*GroupMemberMsgState, error) {
 	panic("implement me")
 }
