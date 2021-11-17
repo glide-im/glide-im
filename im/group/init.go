@@ -1,7 +1,6 @@
 package group
 
 import (
-	"go_im/im/dao"
 	"go_im/im/dao/groupdao"
 	"go_im/pkg/logger"
 )
@@ -34,24 +33,9 @@ func LoadGroup(gid int64) (*Group, error) {
 	return group, err
 }
 
-func initGroup(dbGroup *dao.Group) (*Group, error) {
+func initGroup(dbGroup *groupdao.Group) (*Group, error) {
 	group := newGroup(dbGroup.Gid, dbGroup.ChatId)
 	group.mute = dbGroup.Mute
-
-	if dbGroup.ChatId <= 0 {
-		chat, err := dao.ChatDao.CreateChat(dao.ChatTypeGroup, 0, dbGroup.Gid)
-		if err != nil {
-			return nil, err
-		}
-		err = groupdao.GroupDao.UpdateGroupChatId(dbGroup.Gid, chat.Cid)
-		if err != nil {
-			return nil, err
-		}
-		group.cid = chat.Cid
-	} else {
-		// todo restore msg sequence
-		//group.msgSequence = 0
-	}
 
 	members, err := groupdao.GroupDao.GetMembers(dbGroup.Gid)
 	if err != nil {

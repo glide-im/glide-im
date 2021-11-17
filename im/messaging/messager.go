@@ -4,8 +4,6 @@ import (
 	"github.com/panjf2000/ants/v2"
 	"go_im/im/api"
 	"go_im/im/client"
-	"go_im/im/dao"
-	"go_im/im/group"
 	"go_im/im/message"
 	"go_im/im/statistics"
 	"go_im/pkg/logger"
@@ -16,7 +14,6 @@ var execPool *ants.Pool
 
 func init() {
 	client.MessageHandleFunc = messageHandler
-	api.ResponseHandleFunc = client.EnqueueMessageToDevice
 
 	var err error
 	execPool, err = ants.NewPool(200000,
@@ -63,74 +60,15 @@ func handleHeartbeat(from int64, device int64, msg *message.Message) {
 	// TODO 2021-11-15 处理心跳消息
 }
 
-// dispatchChatMessage 分发用户单聊消息
-func dispatchChatMessage(from int64, msg *message.Message) {
-	senderMsg := new(message.SenderChatMessage)
-	if !unwrap(from, msg, senderMsg) {
-		return
-	}
-
-	// 保存到历史记录
-	chatMsg, err := dao.ChatDao.NewChatMessage(senderMsg.Cid, from, senderMsg.Message, senderMsg.MessageType)
-	if err != nil {
-		return
-	}
-
-	// 对方不在线, 下发确认包
-	if !client.Manager.IsOnline(from) {
-		ackMsg := message.AckReceived{
-			Mid:    chatMsg.Mid,
-			CMid:   0,
-			Sender: from,
-		}
-		ackNotify := message.NewMessage(0, message.ActionMessageAck, ackMsg)
-		client.EnqueueMessage(ackMsg.Sender, ackNotify)
-		dispatchOffline(from, msg)
-	} else {
-		dispatchOnline(from, chatMsg, senderMsg)
-	}
-}
-
-// dispatchOffline 接收者不在线, 离线推送
-func dispatchOffline(from int64, message *message.Message) {
-
-}
-
-// dispatchOnline 接收者在线, 直接投递消息
-func dispatchOnline(from int64, chatMsg *dao.ChatMessage, senderMsg *message.SenderChatMessage) {
-
-	receiverMsg := message.ReceiverChatMessage{
-		Mid:         chatMsg.Mid,
-		Cid:         senderMsg.Cid,
-		Sender:      from,
-		MessageType: senderMsg.MessageType,
-		Message:     senderMsg.Message,
-		SendAt:      chatMsg.SendAt.Unix(),
-	}
-
-	dispatchMsg := message.NewMessage(-1, message.ActionChatMessage, receiverMsg)
-	client.EnqueueMessage(senderMsg.TargetId, dispatchMsg)
-}
-
 // handleAckMsg 处理接收者收到消息发回来的确认消息
 func handleAckMsg(from int64, msg *message.Message) {
-	ackMsg := new(message.AckReceived)
+	ackMsg := new(message.AckRequest)
 	if !unwrap(from, msg, ackMsg) {
 		return
 	}
 	ackNotify := message.NewMessage(0, message.ActionMessageAck, ackMsg)
 	// 通知发送者, 对方已收到消息
 	client.EnqueueMessage(ackMsg.Sender, ackNotify)
-}
-
-// dispatchGroupMsg 分发群消息
-func dispatchGroupMsg(from int64, msg *message.Message) {
-	groupMsg := new(message.GroupMessage)
-	if !unwrap(from, msg, groupMsg) {
-		return
-	}
-	groupMsg.Sender = from
-	group.Manager.DispatchMessage(groupMsg.TargetId, groupMsg)
 }
 
 // dispatchCustomerServiceMsg 分发客服消息

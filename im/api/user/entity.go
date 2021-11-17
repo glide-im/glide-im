@@ -1,9 +1,5 @@
 package user
 
-import (
-	"go_im/im/api/groups"
-)
-
 type InfoRequest struct {
 	Uid []int64
 }
@@ -26,7 +22,7 @@ type NewChatRequest struct {
 
 type ContactResponse struct {
 	Friends []*InfoResponse
-	Groups  []*groups.GroupResponse
+	Groups  []interface{}
 }
 type AddContacts struct {
 	Uid    int64

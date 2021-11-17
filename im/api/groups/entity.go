@@ -1,6 +1,8 @@
 package groups
 
-import "go_im/im/dao"
+import (
+	"go_im/im/dao/groupdao"
+)
 
 type GroupInfoRequest struct {
 	Gid []int64
@@ -12,17 +14,17 @@ type CreateGroupRequest struct {
 }
 
 type GroupResponse struct {
-	dao.Group
-	Members []*dao.GroupMember
+	groupdao.Group
+	Members []*groupdao.GroupMember
 }
 
 type GroupAddMemberResponse struct {
 	Gid     int64
-	Members []*dao.GroupMember
+	Members []*groupdao.GroupMember
 }
 
 type AddedGroupResponse struct {
-	Group *dao.Group
+	Group *groupdao.Group
 	UcId  int64
 }
 

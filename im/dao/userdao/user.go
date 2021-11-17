@@ -1,8 +1,9 @@
-package dao
+package userdao
 
 import (
 	"database/sql"
 	"errors"
+	"go_im/im/dao/common"
 	"go_im/im/dao/uid"
 	"go_im/pkg/db"
 	"math/rand"
@@ -94,7 +95,7 @@ func (d *userDao) AddUser(account string, password string) error {
 		return errors.New("account already exist")
 	}
 
-	t := Timestamp(time.Now())
+	t := common.Timestamp(time.Now())
 	u := User{
 		Uid:      uid.GenUid(),
 		Account:  account,
@@ -158,7 +159,7 @@ func (d *userDao) AddContacts(uid int64, targetId int64, typ int8, remark string
 		TargetId: targetId,
 		Remark:   remark,
 		Type:     typ,
-		AddTime:  NowTimestamp(),
+		AddTime:  common.NowTimestamp(),
 	}
 	if db.DB.Model(f).Create(f).RowsAffected <= 0 {
 		return nil, errors.New("create friend error")

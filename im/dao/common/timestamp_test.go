@@ -1,4 +1,4 @@
-package dao
+package common
 
 import (
 	"encoding/json"

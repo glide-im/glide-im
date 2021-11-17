@@ -7,7 +7,7 @@ func (chatMsgDao) GetChatMessage(mid int64) (*ChatMessage, error) {
 	panic("implement me")
 }
 
-func (chatMsgDao) AddChatMessage(from, to int64, cliMsgID string, type_ int, content string) (int64, error) {
+func (chatMsgDao) AddChatMessage(message *ChatMessage) error {
 	panic("implement me")
 }
 

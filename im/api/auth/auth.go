@@ -4,7 +4,7 @@ import (
 	"github.com/pkg/errors"
 	"go_im/im/api/apidep"
 	"go_im/im/api/router"
-	"go_im/im/dao"
+	"go_im/im/dao/userdao"
 	"go_im/im/message"
 )
 
@@ -29,7 +29,7 @@ func (*AuthApi) SignIn(info *route.Context, req interface{}) error {
 func (*AuthApi) Register(ctx *route.Context, registerEntity *RegisterRequest) error {
 
 	resp := message.NewMessage(ctx.Seq, "", "success")
-	err := dao.UserDao.AddUser(registerEntity.Account, registerEntity.Password)
+	err := userdao.UserDao.AddUser(registerEntity.Account, registerEntity.Password)
 
 	if err != nil {
 		resp = message.NewMessage(ctx.Seq, "", err)
@@ -39,7 +39,7 @@ func (*AuthApi) Register(ctx *route.Context, registerEntity *RegisterRequest) er
 }
 
 func (a *AuthApi) Logout(ctx *route.Context, r *LogoutRequest) error {
-	err := dao.UserDao.Logout(ctx.Uid, r.Device, r.Token)
+	err := userdao.UserDao.Logout(ctx.Uid, r.Device, r.Token)
 	if err != nil {
 		return err
 	}
@@ -51,7 +51,7 @@ func (a *AuthApi) Logout(ctx *route.Context, r *LogoutRequest) error {
 func (a *AuthApi) Auth(ctx *route.Context, request *AuthRequest) error {
 
 	var resp = message.NewMessage(ctx.Seq, "", "success")
-	uid := dao.UserDao.GetUid(request.Token)
+	uid := userdao.UserDao.GetUid(request.Token)
 	if uid > 0 {
 		apidep.ClientManager.ClientSignIn(ctx.Uid, uid, request.DeviceId)
 		ctx.Response(resp)
@@ -67,7 +67,7 @@ func (a *AuthApi) Login(msg *route.Context, request *LoginRequest) error {
 		return errors.New("account or password empty")
 	}
 
-	uid, token, err := dao.UserDao.GetUidByLogin(request.Account, request.Password, request.Device)
+	uid, token, err := userdao.UserDao.GetUidByLogin(request.Account, request.Password, request.Device)
 	if err != nil {
 		return err
 	}

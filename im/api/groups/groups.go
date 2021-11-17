@@ -4,8 +4,8 @@ import (
 	"errors"
 	"go_im/im/api/apidep"
 	"go_im/im/api/router"
-	"go_im/im/dao"
 	"go_im/im/dao/groupdao"
+	"go_im/im/dao/userdao"
 	"go_im/im/message"
 )
 
@@ -17,7 +17,7 @@ type GroupApi struct {
 
 func (m *GroupApi) CreateGroup(ctx *route.Context, request *CreateGroupRequest) error {
 
-	g, cid, err := m.createGroup(request.Name, ctx.Uid)
+	g, err := m.createGroup(request.Name, ctx.Uid)
 	if err != nil {
 		return err
 	}
@@ -32,11 +32,9 @@ func (m *GroupApi) CreateGroup(ctx *route.Context, request *CreateGroupRequest) 
 	//respond(ctx.Uid, -1, "api.ActionUserAddFriend", c)
 
 	// create user chat by default
-	uc, err := dao.ChatDao.NewUserChat(cid, ctx.Uid, g.Gid, dao.ChatTypeGroup)
 	if err != nil {
 		return err
 	}
-	ctx.Response(message.NewMessage(-1, "", uc))
 
 	// add invited member to group
 	if len(request.Member) > 0 {
@@ -134,12 +132,17 @@ func (m *GroupApi) AddGroupMember(ctx *route.Context, request *AddMemberRequest)
 		Gid:     g.Gid,
 		Members: members,
 	}
-	apidep.GroupManager.DispatchNotifyMessage(g.Gid, message.NewMessage(-1, "api.ActionGroupAddMember", groupNotify))
+	n := message.NewMessage(-1, "api.ActionGroupAddMember", groupNotify)
+	err = apidep.GroupManager.DispatchNotifyMessage(g.Gid, n)
+
+	if err != nil {
+
+	}
 
 	for _, member := range members {
 
 		// add group to member's contacts list
-		_, e := dao.UserDao.AddContacts(member.Uid, g.Gid, dao.ContactsTypeGroup, "")
+		_, e := userdao.UserDao.AddContacts(member.Uid, g.Gid, userdao.ContactsTypeGroup, "")
 		if e != nil {
 			_ = apidep.GroupManager.RemoveMember(request.Gid, member.Uid)
 			continue
@@ -158,16 +161,7 @@ func (m *GroupApi) AddGroupMember(ctx *route.Context, request *AddMemberRequest)
 		//}
 		//respond(member.Uid, -1, "api.ActionUserAddFriend", c)
 
-		// default add user chat
-		chat, er := dao.ChatDao.NewUserChat(g.ChatId, member.Uid, g.Gid, dao.ChatTypeGroup)
-		if er != nil {
-			continue
-		}
-		// member subscribe group message
 		apidep.GroupManager.PutMember(g.Gid, map[int64]int32{member.Uid: 1})
-
-		// notify update chat list
-		ctx.Response(message.NewMessage(-1, "", chat))
 	}
 	return nil
 }
@@ -204,7 +198,7 @@ func (m *GroupApi) JoinGroup(ctx *route.Context, request *JoinGroupRequest) erro
 		return err
 	}
 
-	_, err = dao.UserDao.AddContacts(ctx.Uid, g.Gid, dao.ContactsTypeGroup, "")
+	_, err = userdao.UserDao.AddContacts(ctx.Uid, g.Gid, userdao.ContactsTypeGroup, "")
 
 	//members, err := groupdao.GroupDao.GetMembers(request.Gid)
 	//if err != nil {
@@ -220,52 +214,34 @@ func (m *GroupApi) JoinGroup(ctx *route.Context, request *JoinGroupRequest) erro
 	//}
 	//respond(ctx.Uid, -1, "api.ActionUserAddFriend", c)
 
-	chat, err := dao.ChatDao.NewUserChat(g.ChatId, ctx.Uid, g.Gid, dao.ChatTypeGroup)
-	if err != nil {
-		_ = groupdao.GroupDao.RemoveMember(request.Gid, ctx.Uid)
-		return err
-	}
 	apidep.GroupManager.PutMember(g.Gid, map[int64]int32{ctx.Uid: 1})
 
-	apidep.ClientManager.EnqueueMessage(ctx.Uid, ctx.Device, message.NewMessage(-1, "", chat))
 	ctx.Response(message.NewMessage(ctx.Seq, "", "success"))
 	return nil
 }
 
-func (m *GroupApi) createGroup(name string, uid int64) (*dao.Group, int64, error) {
+func (m *GroupApi) createGroup(name string, uid int64) (*groupdao.Group, error) {
 
 	gp, err := groupdao.GroupDao.CreateGroup(name, uid)
 	if err != nil {
-		return nil, 0, err
-	}
-	// create group chat
-	chat, err := dao.ChatDao.CreateChat(dao.ChatTypeGroup, 0, gp.Gid)
-	if err != nil {
-		// TODO undo
-		return nil, 0, err
-	}
-
-	gp.ChatId = chat.Cid
-	err = groupdao.GroupDao.UpdateGroupChatId(gp.Gid, chat.Cid)
-	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
 	_, err = groupdao.GroupDao.AddMember(gp.Gid, groupdao.GroupMemberAdmin, uid)
 	if err != nil {
 		// TODO undo create group
-		return nil, 0, err
+		return nil, err
 	}
-	_, err = dao.UserDao.AddContacts(uid, gp.Gid, dao.ContactsTypeGroup, "")
+	_, err = userdao.UserDao.AddContacts(uid, gp.Gid, userdao.ContactsTypeGroup, "")
 	if err != nil {
 		// TODO undo
-		return nil, 0, err
+		return nil, err
 	}
 	apidep.GroupManager.AddGroup(gp.Gid)
-	return gp, chat.Cid, nil
+	return gp, nil
 }
 
-func (m *GroupApi) addGroupMember(gid int64, uid ...int64) ([]*dao.GroupMember, error) {
+func (m *GroupApi) addGroupMember(gid int64, uid ...int64) ([]*groupdao.GroupMember, error) {
 
 	memberUid := make([]int64, 0, len(uid))
 	members, _ := groupdao.GroupDao.GetMember(gid, uid...)
@@ -285,7 +261,7 @@ func (m *GroupApi) addGroupMember(gid int64, uid ...int64) ([]*dao.GroupMember, 
 	}
 
 	// TODO query user info and notify group members, optimize query time
-	exist, err2 := dao.UserDao.HasUser(memberUid...)
+	exist, err2 := userdao.UserDao.HasUser(memberUid...)
 	if err2 != nil {
 		return nil, err2
 	}

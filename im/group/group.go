@@ -3,7 +3,6 @@ package group
 import (
 	"go_im/im/client"
 	"go_im/im/comm"
-	"go_im/im/dao"
 	"go_im/im/message"
 	"go_im/pkg/logger"
 	"strconv"
@@ -56,27 +55,8 @@ func (g *Group) EnqueueMessage(msg *message.GroupMessage) {
 	}
 
 	seq := atomic.LoadInt64(&g.msgSequence)
-	mid := dao.GetNextMessageId(g.cid)
-
-	chatMessage := dao.ChatMessage{
-		Mid:         mid,
-		Cid:         g.cid,
-		Seq:         seq,
-		Sender:      msg.Sender,
-		SendAt:      dao.Timestamp(time.Now()),
-		Message:     msg.Message,
-		MessageType: msg.MessageType,
-		At:          "",
-	}
-	err := dao.ChatDao.NewGroupMessage(chatMessage)
-
-	if err != nil {
-		logger.E("dispatch group message", err)
-		return
-	}
 
 	rMsg := message.ReceiverChatMessage{
-		Mid:         mid,
 		Cid:         g.cid,
 		AlignTag:    g.startup,
 		Seq:         seq,

@@ -1,4 +1,4 @@
-package dao
+package common
 
 import (
 	"database/sql/driver"

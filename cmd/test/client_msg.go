@@ -3,7 +3,6 @@ package test
 import (
 	"github.com/gorilla/websocket"
 	"go_im/im/api/test"
-	"go_im/im/dao"
 	"go_im/im/dao/uid"
 	"go_im/im/message"
 	"go_im/pkg/db"
@@ -141,19 +140,17 @@ func serverIM(uid int64) {
 }
 
 func startMsg(uid int64, count int, conn *websocket.Conn) {
-	c := cids[uid]
-	ucId := ucIds[uid]
 	to := msgTo[uid]
 
 	for i := 0; i < count; i++ {
 		sleepRndMilleSec(60, 100)
-		m := &message.SenderChatMessage{
-			Cid:         c,
-			UcId:        ucId,
-			TargetId:    to,
-			MessageType: 0,
-			Message:     " hello-world hello-world hello-world hello-world hello-world",
-			SendAt:      time.Now().Unix(),
+		m := &message.UpChatMessage{
+			Mid:     1,
+			CSeq:    1,
+			To:      to,
+			Type:    1,
+			Content: "123,123,123,123,123,123,123,123,123",
+			CTime:   time.Now().Unix(),
 		}
 		msg := message.NewMessage(0, message.ActionChatMessage, m)
 		s, _ := msg.Serialize()
@@ -174,8 +171,6 @@ func initUsers(userCount int) {
 	}
 	wg := sync.WaitGroup{}
 	m1 := sync.Mutex{}
-	m2 := sync.Mutex{}
-	m3 := sync.Mutex{}
 
 	for i := 0; i < userCount; i++ {
 		wg.Add(1)
@@ -186,22 +181,6 @@ func initUsers(userCount int) {
 			m1.Lock()
 			msgTo[from] = to
 			m1.Unlock()
-
-			chat, err := dao.ChatDao.CreateChat(dao.ChatTypeUser, from, to)
-			if err != nil {
-				panic(err)
-			}
-			m2.Lock()
-			cids[from] = chat.Cid
-			m2.Unlock()
-
-			userChat, err := dao.ChatDao.NewUserChat(chat.Cid, from, to, dao.ChatTypeUser)
-			if err != nil {
-				panic(err)
-			}
-			m3.Lock()
-			ucIds[from] = userChat.UcId
-			m3.Unlock()
 			wg.Done()
 		}()
 	}

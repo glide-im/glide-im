@@ -1,22 +1,20 @@
 package dao
 
 import (
+	"go_im/im/dao/groupdao"
+	"go_im/im/dao/msgdao"
 	"go_im/im/dao/uid"
+	"go_im/im/dao/userdao"
 	"go_im/pkg/db"
 )
 
 func Init() {
 
 	tables := []interface{}{
-		User{},
-		Contacts{},
-		Chat{},
-		ChatMessage{},
-		UserChat{},
-		Group{},
-		GroupMember{},
-		GroupMessage{},
-		ChatMessageID{},
+		msgdao.ChatMessage{},
+		groupdao.Group{},
+		groupdao.GroupMember{},
+		groupdao.GroupMessage{},
 	}
 
 	for _, tb := range tables {
@@ -25,7 +23,6 @@ func Init() {
 		}
 	}
 
-	InitUserDao()
-	InitMessageDao()
+	userdao.InitUserDao()
 	uid.Init()
 }

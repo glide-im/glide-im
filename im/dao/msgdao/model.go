@@ -13,7 +13,7 @@ type ChatMessage struct {
 	// To 接收者ID
 	To int64
 	// Type 消息类型
-	Type int64
+	Type int
 	// SendAt 发送时间
 	SendAt int64
 	// Content 消息内容

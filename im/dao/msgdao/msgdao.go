@@ -28,7 +28,7 @@ type GroupMsgDao interface {
 
 type ChatMsgDao interface {
 	GetChatMessage(mid int64) (*ChatMessage, error)
-	AddChatMessage(from, to int64, cliMsgID string, type_ int, content string) (int64, error)
+	AddChatMessage(message *ChatMessage) error
 
 	GetChatMessageSeqAfter(uid int64, seqAfter int64) ([]*ChatMessage, error)
 	GetChatMessageSeqSpan(uid int64, seq int64) (int, error)
@@ -114,8 +114,8 @@ func GetGroupMemberMsgState(gid int64, uid int64) (*GroupMemberMsgState, error) 
 func GetChatMessage(mid int64) (*ChatMessage, error) {
 	return instance.GetChatMessage(mid)
 }
-func AddChatMessage(from, to int64, cliMsgID string, type_ int, content string) (int64, error) {
-	return instance.AddChatMessage(from, to, cliMsgID, type_, content)
+func AddChatMessage(message *ChatMessage) error {
+	return instance.AddChatMessage(message)
 }
 func GetChatMessageSeqAfter(uid int64, seqAfter int64) ([]*ChatMessage, error) {
 	return instance.GetChatMessageSeqAfter(uid, seqAfter)
