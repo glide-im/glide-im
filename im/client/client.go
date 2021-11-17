@@ -183,7 +183,7 @@ STOP:
 // handleError 处理上下行消息过程中的错误, 如果是致命错误, 则返回 true
 func (c *Client) handleError(err error) bool {
 	statistics.SError(err)
-	logger.E("handle message error", err.Error())
+	logger.E("handle message error: %s", err.Error())
 	if atomic.LoadInt64(&c.id) > 0 {
 		Manager.ClientLogout(atomic.LoadInt64(&c.id), c.device)
 	}

@@ -42,9 +42,9 @@ func newGroup(gid int64, cid int64) *Group {
 	return ret
 }
 
-func (g *Group) EnqueueMessage(msg *message.GroupMessage) {
+func (g *Group) EnqueueMessage(msg *message.UpChatMessage) {
 
-	flag, exist := g.members[msg.Sender]
+	flag, exist := g.members[msg.From_]
 	if !exist {
 		logger.W("a non-group member send message")
 		return
@@ -53,17 +53,14 @@ func (g *Group) EnqueueMessage(msg *message.GroupMessage) {
 		logger.W("a muted group member send message")
 		return
 	}
-
 	seq := atomic.LoadInt64(&g.msgSequence)
-
-	rMsg := message.ReceiverChatMessage{
-		Cid:         g.cid,
-		AlignTag:    g.startup,
-		Seq:         seq,
-		Sender:      msg.Sender,
-		MessageType: msg.MessageType,
-		Message:     msg.Message,
-		SendAt:      msg.SendAt,
+	rMsg := &message.DownChatMessage{
+		Mid:     msg.Mid,
+		CSeq:    seq,
+		From:    msg.From_,
+		To:      msg.To,
+		Content: msg.Content,
+		CTime:   msg.CTime,
 	}
 
 	resp := message.NewMessage(-1, message.ActionGroupMessage, rMsg)

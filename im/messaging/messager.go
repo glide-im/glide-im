@@ -12,7 +12,7 @@ import (
 // execPool 100 capacity goroutine pool, 假设每个消息处理需要10ms, 一个协程则每秒能处理100条消息
 var execPool *ants.Pool
 
-func init() {
+func Init() {
 	client.MessageHandleFunc = messageHandler
 
 	var err error

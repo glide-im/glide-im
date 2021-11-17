@@ -77,7 +77,7 @@ func (m *DefaultManager) DispatchNotifyMessage(gid int64, message *message.Messa
 	return nil
 }
 
-func (m *DefaultManager) DispatchMessage(gid int64, msg *message.GroupMessage) error {
+func (m *DefaultManager) DispatchMessage(gid int64, msg *message.UpChatMessage) error {
 	logger.D("GroupManager.HandleMessage: %v", msg)
 
 	g := m.groups[gid]

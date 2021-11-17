@@ -4,7 +4,6 @@
 card Chat_Message {
     class chat_message {
         *mid int64
-        receiver_seq int64
         cli_mid string
         sender int64
         receiver int64
@@ -14,28 +13,13 @@ card Chat_Message {
     }
     note top of offline_message:离线消息表, \n用户不在线则保存一份到这张表\n用户上线后拉取成功后移除消息
 
-    class user_global_message_seq{
-        uid string
-        seq int64
-    }
-    note right of user_global_message_seq::seq
-        每次保存用户消息(群和单聊消息)都自增一次,
-        并且将最新的seq放入消息
-    end note
-
     class offline_message {
         *mid int64
         uid int64
         seq int64
     }
-
-
-    chat_message::receiver_seq --> user_global_message_seq::seq
     note top of chat_message: 单聊消息记录全量保存
 
-    note left of chat_message::seq
-    接收者连续递增消息 seq
-    end note
 }
 card Group_Message {
     class group_full_message {

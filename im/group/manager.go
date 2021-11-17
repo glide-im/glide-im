@@ -27,5 +27,5 @@ type IGroupManager interface {
 	DispatchNotifyMessage(gid int64, message *message.Message) error
 
 	// DispatchMessage 发送聊天消息
-	DispatchMessage(gid int64, message *message.GroupMessage) error
+	DispatchMessage(gid int64, message *message.UpChatMessage) error
 }

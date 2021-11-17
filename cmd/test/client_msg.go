@@ -16,8 +16,6 @@ import (
 
 var uids []int64
 var msgTo = map[int64]int64{}
-var ucIds = map[int64]int64{}
-var cids = map[int64]int64{}
 
 var rLock = sync.RWMutex{}
 var conns = map[int64]*websocket.Conn{}
@@ -195,8 +193,6 @@ func initUserNoDB(count int) {
 		from := uids[i]
 		to := uids[rand.Int63n(int64(count))]
 		msgTo[from] = to
-		cids[from] = 1
-		ucIds[from] = 1
 	}
 }
 

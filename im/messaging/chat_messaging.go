@@ -4,6 +4,8 @@ import (
 	"go_im/im/client"
 	"go_im/im/dao/msgdao"
 	"go_im/im/message"
+	"go_im/pkg/logger"
+	"strconv"
 )
 
 // dispatchChatMessage 分发用户单聊消息
@@ -13,21 +15,25 @@ func dispatchChatMessage(from int64, m *message.Message) {
 		return
 	}
 
+	lg := from
+	sm := msg.To
+	if lg < sm {
+		lg, sm = sm, lg
+	}
 	dbMsg := msgdao.ChatMessage{
 		MID:        msg.Mid,
-		ReceiveSeq: 0,
-		CliSeq:     msg.CSeq,
 		From:       from,
 		To:         msg.To,
 		Type:       msg.Type,
 		SendAt:     msg.CTime,
 		Content:    msg.Content,
+		CliSeq:     msg.CSeq,
+		SessionTag: strconv.FormatInt(lg, 10) + "_" + strconv.FormatInt(sm, 10),
 	}
-
-	// 保存到历史记录
-	err := msgdao.AddChatMessage(&dbMsg)
-
+	// 保存消息
+	_, err := msgdao.AddChatMessage(&dbMsg)
 	if err != nil {
+		logger.E("save chat message error %v", err)
 		return
 	}
 
@@ -36,6 +42,10 @@ func dispatchChatMessage(from int64, m *message.Message) {
 		ackMsg := message.AckNotify{Mid: msg.Mid}
 		ackNotify := message.NewMessage(0, message.ActionMessageAck, ackMsg)
 		client.EnqueueMessage(from, ackNotify)
+		err = msgdao.AddOfflineMessage(msg.To, msg.Mid)
+		if err != nil {
+			logger.E("save offline message error %v", err)
+		}
 		dispatchOffline(from, m)
 	} else {
 		dispatchOnline(from, msg)
@@ -53,7 +63,6 @@ func dispatchOnline(from int64, msg *message.UpChatMessage) {
 	receiverMsg := message.DownChatMessage{
 		Mid:     msg.Mid,
 		CSeq:    msg.CSeq,
-		GSeq:    0,
 		From:    from,
 		To:      msg.To,
 		Content: msg.Content,
@@ -62,8 +71,4 @@ func dispatchOnline(from int64, msg *message.UpChatMessage) {
 
 	dispatchMsg := message.NewMessage(-1, message.ActionChatMessage, receiverMsg)
 	client.EnqueueMessage(msg.To, dispatchMsg)
-}
-
-func saveMsg2Db() {
-
 }

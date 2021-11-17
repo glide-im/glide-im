@@ -20,10 +20,8 @@ type UpChatMessage struct {
 
 // DownChatMessage 表示服务端分发给接受者的聊天消息
 type DownChatMessage struct {
-	Mid  int64
-	CSeq int64
-	// GSeq 用户全局消息 Seq
-	GSeq    int64
+	Mid     int64
+	CSeq    int64
 	From    int64
 	To      int64
 	Content string

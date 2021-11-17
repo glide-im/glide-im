@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/wcharczuk/go-chart"
+	"go_im/im/messaging"
 	"go_im/im/statistics"
 	"go_im/pkg/db"
 	"go_im/pkg/logger"
@@ -17,6 +18,7 @@ var cTestPoints = 1
 func RunAnalysisServer() {
 
 	db.Init()
+	messaging.Init()
 
 	done := make(chan struct{})
 

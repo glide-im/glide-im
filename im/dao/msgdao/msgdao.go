@@ -28,12 +28,12 @@ type GroupMsgDao interface {
 
 type ChatMsgDao interface {
 	GetChatMessage(mid int64) (*ChatMessage, error)
-	AddChatMessage(message *ChatMessage) error
+	AddOrUpdateChatMessage(message *ChatMessage) (bool, error)
 
 	GetChatMessageSeqAfter(uid int64, seqAfter int64) ([]*ChatMessage, error)
 	GetChatMessageSeqSpan(uid int64, seq int64) (int, error)
 
-	AddOfflineMessage(uid int64, mid int64, seq int64) error
+	AddOfflineMessage(uid int64, mid int64) error
 	GetOfflineMessage(uid int64) ([]*OfflineMessage, error)
 	DelOfflineMessage(uid int64, mid []int64) error
 }
@@ -114,8 +114,8 @@ func GetGroupMemberMsgState(gid int64, uid int64) (*GroupMemberMsgState, error) 
 func GetChatMessage(mid int64) (*ChatMessage, error) {
 	return instance.GetChatMessage(mid)
 }
-func AddChatMessage(message *ChatMessage) error {
-	return instance.AddChatMessage(message)
+func AddChatMessage(message *ChatMessage) (bool, error) {
+	return instance.AddOrUpdateChatMessage(message)
 }
 func GetChatMessageSeqAfter(uid int64, seqAfter int64) ([]*ChatMessage, error) {
 	return instance.GetChatMessageSeqAfter(uid, seqAfter)
@@ -123,8 +123,8 @@ func GetChatMessageSeqAfter(uid int64, seqAfter int64) ([]*ChatMessage, error) {
 func GetChatMessageSeqSpan(uid int64, seq int64) (int, error) {
 	return instance.GetChatMessageSeqSpan(uid, seq)
 }
-func AddOfflineMessage(uid int64, mid int64, seq int64) error {
-	return instance.AddOfflineMessage(uid, mid, seq)
+func AddOfflineMessage(uid int64, mid int64) error {
+	return instance.AddOfflineMessage(uid, mid)
 }
 func GetOfflineMessage(uid int64) ([]*OfflineMessage, error) {
 	return instance.GetOfflineMessage(uid)

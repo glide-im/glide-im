@@ -1,7 +1,6 @@
 package test
 
 import (
-	"go_im/im/api"
 	"go_im/im/client"
 	"go_im/im/conn"
 	"go_im/im/dao"
@@ -26,7 +25,6 @@ func Run() {
 		client.Manager.ClientConnected(conn)
 	})
 
-	api.ResponseHandleFunc = client.EnqueueMessageToDevice
 	client.Manager = client.NewDefaultManager()
 	manager := group.NewDefaultManager()
 	group.Manager = manager
