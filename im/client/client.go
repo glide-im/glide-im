@@ -90,11 +90,11 @@ func (c *Client) Closed() bool {
 
 // EnqueueMessage 放入下行消息队列
 func (c *Client) EnqueueMessage(message *message.Message) {
-	if c.closed.Get() {
+	if c.Closed() {
 		return
 	}
 	logger.I("EnqueueMessage(id=%d, %s): %v", c.id, message.Action, message)
-	if message.Seq <= 0 {
+	if message.Seq < 0 {
 		// 服务端主动发送的消息使用服务端的序列号
 		message.Seq = c.getNextSeq()
 	}
@@ -116,7 +116,6 @@ func (c *Client) readMessage() {
 		if err != nil {
 			logger.E("read message error", err)
 		}
-		done <- struct{}{}
 	}()
 
 	for {
@@ -126,7 +125,10 @@ func (c *Client) readMessage() {
 		case <-c.hb.C:
 			// TODO 处理心跳超时
 			logger.W("heartbeat timout")
-		case msg := <-readChan:
+		case msg, ok := <-readChan:
+			if !ok {
+				goto STOP
+			}
 			if msg.err != nil {
 				if c.Closed() || c.handleError(msg.err) {
 					// 连接断开或致命错误中断读消息
@@ -142,7 +144,7 @@ func (c *Client) readMessage() {
 		}
 	}
 STOP:
-	done <- struct{}{}
+	close(done)
 }
 
 // writeMessage 开始向 Connection 中写入消息队列中的消息
@@ -201,7 +203,7 @@ func (c *Client) Exit() {
 
 	close(c.readClose)
 	close(c.writeClose)
-	close(c.messages)
+	//close(c.messages)
 	_ = c.conn.Close()
 	statistics.SConnExit()
 }

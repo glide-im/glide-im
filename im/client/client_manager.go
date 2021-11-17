@@ -146,7 +146,11 @@ func (c *DefaultManager) EnqueueMessage(uid int64, device int64, msg *message.Me
 }
 
 func (c *DefaultManager) IsOnline(uid int64) bool {
-	return c.clients.get(uid).size() > 0
+	ds := c.clients.get(uid)
+	if ds == nil {
+		return false
+	}
+	return ds.size() > 0
 }
 
 func (c *DefaultManager) IsDeviceOnline(uid, device int64) bool {

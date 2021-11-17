@@ -54,18 +54,26 @@ func (d *defaultReader) ReadCh(conn conn.Connection) (<-chan *readerRes, chan<- 
 	go func() {
 		for {
 			select {
-			case <-done:
-				goto DONE
+			case _, ok := <-done:
+				if !ok {
+					goto DONE
+				} else {
+					goto CLOSE
+				}
 			default:
 				m, err := d.Read(conn)
 				res := recyclePool.Get().(*readerRes)
+				if err != nil {
+					goto DONE
+				}
 				res.err = err
 				res.m = m
 				c <- res
 			}
 		}
-	DONE:
+	CLOSE:
 		close(done)
+	DONE:
 		close(c)
 	}()
 	return c, done

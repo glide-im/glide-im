@@ -8,6 +8,7 @@ import (
 	"go_im/config"
 	"go_im/pkg/logger"
 	"runtime"
+	"time"
 )
 
 var (
@@ -22,9 +23,9 @@ func Init() {
 	var err error
 	DB, err = gorm.Open("mysql", url)
 
-	//DB.DB().SetMaxOpenConns(10000)
-	//DB.DB().SetMaxIdleConns(1000)
-	//DB.DB().SetConnMaxIdleTime(time.Minute * 5)
+	DB.DB().SetMaxOpenConns(10000)
+	DB.DB().SetMaxIdleConns(1000)
+	DB.DB().SetConnMaxIdleTime(time.Minute * 5)
 
 	if err != nil {
 		panic(err)

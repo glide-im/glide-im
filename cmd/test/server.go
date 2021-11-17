@@ -16,8 +16,8 @@ func Run() {
 	var server conn.Server
 
 	op := &conn.WsServerOptions{
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		ReadTimeout:  10 * time.Minute,
+		WriteTimeout: 10 * time.Minute,
 	}
 	server = conn.NewWsServer(op)
 

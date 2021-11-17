@@ -20,19 +20,12 @@ func (a *AtomicBool) Set(v bool) {
 	var v2 int32 = 0
 	if v {
 		v2 = 1
-	} else {
-		v2 = 0
 	}
 	atomic.StoreInt32(&a.value, v2)
 }
 
 func (a *AtomicBool) Get() bool {
-	v := atomic.LoadInt32(&a.value)
-	ret := true
-	if v <= 0 {
-		ret = false
-	}
-	return ret
+	return atomic.LoadInt32(&a.value) > 0
 }
 
 type AtomicInt64 int64

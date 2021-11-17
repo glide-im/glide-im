@@ -12,7 +12,7 @@ func (chatMsgDao) GetChatMessage(mid int64) (*ChatMessage, error) {
 func (chatMsgDao) AddOrUpdateChatMessage(message *ChatMessage) (bool, error) {
 
 	c := 0
-	err := db.DB.Model(message).Where("m_id = ?", message.MID).Count(&c).Error
+	err := db.DB.Table("im_chat_message").Where("m_id = ?", message.MID).Count(&c).Error
 	if err != nil {
 		return false, err
 	}

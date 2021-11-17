@@ -82,6 +82,7 @@ func dispatchCustomerServiceMsg(from int64, msg *message.Message) {
 }
 
 func onHandleMessagePanic(i interface{}) {
+	statistics.SError(i.(error))
 	logger.E("handler message panic, %v", i)
 }
 
