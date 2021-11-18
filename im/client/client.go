@@ -19,6 +19,13 @@ var tw = timingwheel.NewTimingWheel(time.Millisecond*500, 3, 20)
 // HeartbeatDuration 心跳间隔, 默认5分钟
 const HeartbeatDuration = time.Minute * 5
 
+const (
+	stateInit = iota
+	stateRunning
+	stateClosing
+	stateClosed
+)
+
 // IClient 表示一个客户端, 用于管理连接状态, 连接 id, 消息收发
 type IClient interface {
 
@@ -47,8 +54,8 @@ type Client struct {
 	// device 设备标识
 	device    int64
 	connectAt time.Time
-	// closed 连接是否关闭
-	closed *comm.AtomicBool
+	// state client 状态
+	state int32
 
 	// messages 带缓冲的下行消息管道, 缓冲大小40
 	messages chan *message.Message
@@ -67,9 +74,9 @@ type Client struct {
 func newClient(conn conn.Connection) *Client {
 	client := new(Client)
 	client.conn = conn
-	client.closed = comm.NewAtomicBool(false)
+	client.state = stateRunning
 	// 大小为 40 的缓冲管道, 防止短时间消息过多如果网络连接 output 不及时会造成程序阻塞, 可以适当调整
-	client.messages = make(chan *message.Message, 40)
+	client.messages = make(chan *message.Message, 60)
 	client.connectAt = time.Now()
 	client.readClose = make(chan struct{})
 	client.writeClose = make(chan struct{})
@@ -85,26 +92,36 @@ func (c *Client) SetID(id int64, device int64) {
 }
 
 func (c *Client) Closed() bool {
-	return c.closed.Get()
+	return atomic.LoadInt32(&c.state) == stateClosed
 }
 
 // EnqueueMessage 放入下行消息队列
 func (c *Client) EnqueueMessage(message *message.Message) {
-	if c.Closed() {
-		return
-	}
-	logger.I("EnqueueMessage(id=%d, %s): %v", c.id, message.Action, message)
-	if message.Seq < 0 {
-		// 服务端主动发送的消息使用服务端的序列号
-		message.Seq = c.getNextSeq()
-	}
-	select {
-	case c.messages <- message:
-	default:
-		// TODO 客户端弱网消息下行速度过慢导致缓冲溢出
-		// 消息 chan 缓冲溢出, 这条消息将被丢弃
-		logger.E("message chan is full, id=%d", c.id)
-	}
+	go func() {
+		defer func() {
+			e := recover()
+			if e != nil {
+				logger.E("panic: %v", e)
+			}
+		}()
+		s := atomic.LoadInt32(&c.state)
+		if s == stateClosed || s == stateClosing {
+			logger.D("client has exited, enqueue message failed")
+			return
+		}
+		//logger.I("EnqueueMessage(id=%d, %s): %v", c.id, message.Action, message)
+		if message.Seq < 0 {
+			// 服务端主动发送的消息使用服务端的序列号
+			message.Seq = c.getNextSeq()
+		}
+		select {
+		case c.messages <- message:
+		default:
+			// TODO 客户端弱网消息下行速度过慢导致缓冲溢出
+			// 消息 chan 缓冲溢出, 这条消息将被丢弃
+			logger.E("message chan is full, id=%d", c.id)
+		}
+	}()
 }
 
 // readMessage 开始从 Connection 中读取消息
@@ -180,6 +197,9 @@ func (c *Client) writeMessage() {
 		}
 	}
 STOP:
+	atomic.StoreInt32(&c.state, stateClosed)
+	close(c.messages)
+	_ = c.conn.Close()
 }
 
 // handleError 处理上下行消息过程中的错误, 如果是致命错误, 则返回 true
@@ -195,16 +215,14 @@ func (c *Client) handleError(err error) bool {
 // Exit 退出客户端
 func (c *Client) Exit() {
 	// TODO 先关闭下行消息队列写入, 真正退出前先将下行队列然后所有消息写完
-	if c.closed.Get() {
+	s := atomic.LoadInt32(&c.state)
+	if s == stateClosed || s == stateClosing {
 		return
 	}
-	c.closed.Set(true)
-	atomic.StoreInt64(&c.id, 0)
+	atomic.StoreInt32(&c.state, stateClosing)
 
 	close(c.readClose)
 	close(c.writeClose)
-	//close(c.messages)
-	_ = c.conn.Close()
 	statistics.SConnExit()
 }
 

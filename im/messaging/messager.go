@@ -16,10 +16,10 @@ func Init() {
 	client.MessageHandleFunc = messageHandler
 
 	var err error
-	execPool, err = ants.NewPool(200000,
+	execPool, err = ants.NewPool(100_0000,
 		ants.WithNonblocking(true),
 		ants.WithPanicHandler(onHandleMessagePanic),
-		//ants.WithPreAlloc(true),
+		ants.WithPreAlloc(true),
 	)
 	if err != nil {
 		panic(err)
@@ -51,6 +51,14 @@ func messageHandler(from int64, device int64, msg *message.Message) {
 		}
 	})
 	if err != nil {
+		if err == ants.ErrPoolOverload {
+			logger.E("Messaging.MessageHandler goroutine pool is overload")
+			return
+		}
+		if err == ants.ErrPoolClosed {
+			logger.E("Messaging.MessageHandler goroutine pool is closed")
+			return
+		}
 		client.EnqueueMessage(from, message.NewMessage(-1, message.ActionNotify, "internal server error"))
 		logger.E("async handle message error %v", err)
 	}
