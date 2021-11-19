@@ -65,6 +65,7 @@ func dispatchOnline(from int64, msg *message.UpChatMessage) {
 		CSeq:    msg.CSeq,
 		From:    from,
 		To:      msg.To,
+		Type:    msg.Type,
 		Content: msg.Content,
 		CTime:   msg.CTime,
 	}

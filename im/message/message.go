@@ -24,8 +24,21 @@ type DownChatMessage struct {
 	CSeq    int64
 	From    int64
 	To      int64
+	Type    int
 	Content string
 	CTime   int64
+}
+
+// DownGroupMessage 下行群消息
+type DownGroupMessage struct {
+	Mid int64
+	// MsgSeq 群消息 Seq
+	MsgSeq  int64
+	Gid     int64
+	Type    int
+	From    int64
+	Content string
+	SendAt  int64
 }
 
 // CustomerServiceMessage 表示客服消息
