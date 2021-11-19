@@ -1,0 +1,27 @@
+POST http://localhost:8081/api/auth/register
+Content-Type: application/json
+
+{
+  "Uid": 0,
+  "Device": 0,
+  "Data": {
+    "Account": "abc",
+    "Password": "abc"
+  }
+}
+
+###
+
+POST http://localhost:8081/api/auth/login
+Content-Type: application/json
+
+{
+  "Uid": 0,
+  "Device": 0,
+  "Data": {
+    "Device": 1,
+    "Account": "abc",
+    "Password": "abc"
+  }
+}
+

@@ -3,6 +3,7 @@ package auth
 import (
 	"github.com/pkg/errors"
 	"go_im/im/api/apidep"
+	"go_im/im/api/comm"
 	"go_im/im/api/router"
 	"go_im/im/dao/userdao"
 	"go_im/im/message"
@@ -10,9 +11,9 @@ import (
 
 type Interface interface {
 	AuthToken(info *route.Context, req *AuthTokenReq) error
-	SignIn(info *route.Context, req interface{}) error
+	SignIn(info *route.Context, req *SignInRequest) error
 	Logout(info *route.Context) error
-	Register(info *route.Context, req interface{}) error
+	Register(info *route.Context, req *RegisterRequest) error
 }
 
 type AuthApi struct {
@@ -22,19 +23,32 @@ func (*AuthApi) AuthToken(info *route.Context, req *AuthTokenReq) error {
 	panic("implement me")
 }
 
-func (*AuthApi) SignIn(info *route.Context, req interface{}) error {
-	panic("implement me")
+func (*AuthApi) SignIn(ctx *route.Context, request *SignInRequest) error {
+	if len(request.Account) == 0 || len(request.Password) == 0 {
+		return errors.New("account or password empty")
+	}
+
+	uid, token, err := userdao.UserDao.GetUidByLogin(request.Account, request.Password, request.Device)
+	if err != nil {
+		return err
+	}
+
+	m := message.NewMessage(ctx.Seq, "", "success")
+	if err = m.SetData(AuthorResponse{Token: token, Uid: uid}); err != nil {
+		return err
+	}
+	apidep.ClientManager.ClientSignIn(ctx.Uid, uid, request.Device)
+	ctx.Response(m)
+	return nil
 }
 
 func (*AuthApi) Register(ctx *route.Context, registerEntity *RegisterRequest) error {
 
-	resp := message.NewMessage(ctx.Seq, "", "success")
 	err := userdao.UserDao.AddUser(registerEntity.Account, registerEntity.Password)
-
 	if err != nil {
-		resp = message.NewMessage(ctx.Seq, "", err)
+		return err
 	}
-	ctx.Response(resp)
+	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, "success"))
 	return err
 }
 
@@ -59,24 +73,4 @@ func (a *AuthApi) Auth(ctx *route.Context, request *AuthRequest) error {
 	} else {
 		return errors.New("token expired")
 	}
-}
-
-func (a *AuthApi) Login(msg *route.Context, request *LoginRequest) error {
-
-	if len(request.Account) == 0 || len(request.Password) == 0 {
-		return errors.New("account or password empty")
-	}
-
-	uid, token, err := userdao.UserDao.GetUidByLogin(request.Account, request.Password, request.Device)
-	if err != nil {
-		return err
-	}
-
-	m := message.NewMessage(msg.Seq, "", "success")
-	if err = m.SetData(AuthorResponse{Token: token, Uid: uid}); err != nil {
-		return err
-	}
-	apidep.ClientManager.ClientSignIn(msg.Uid, uid, request.Device)
-	msg.Response(m)
-	return nil
 }

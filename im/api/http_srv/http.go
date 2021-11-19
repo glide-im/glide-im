@@ -2,9 +2,10 @@ package http_srv
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"go_im/im/api/auth"
+	"go_im/im/api/comm"
 	"go_im/im/api/router"
 	"go_im/im/message"
 	"go_im/pkg/logger"
@@ -18,12 +19,10 @@ type CommonParam struct {
 	Data   String
 }
 
-type String struct {
-	S string
-}
+type String string
 
 func (s *String) UnmarshalJSON(bytes []byte) error {
-	s.S = string(bytes)
+	*s = String(bytes)
 	return nil
 }
 
@@ -39,6 +38,7 @@ type Validatable interface {
 
 var g *gin.Engine
 var typeRequestInfo = reflect.TypeOf((*route.Context)(nil))
+var typeError = reflect.TypeOf((*error)(nil)).Elem()
 
 func Run(addr string, port int) error {
 
@@ -48,13 +48,6 @@ func Run(addr string, port int) error {
 
 	ad := fmt.Sprintf("%s:%d", addr, port)
 	return g.Run(ad)
-}
-
-func initRoute() {
-	authApi := auth.AuthApi{}
-	// TODO 2021-11-15 完成其他 api 的 http 服务
-	post("/api/auth/register", authApi.Register)
-	post("/api/auth/logout", authApi.Logout)
 }
 
 func onParamValidateFailed(ctx *gin.Context, err error) {
@@ -75,6 +68,32 @@ func onParamError(ctx *gin.Context, err error) {
 	})
 }
 
+func onHandlerFuncErr(ctx *gin.Context, err error) {
+	errBiz, ok := err.(*comm.ErrApiBiz)
+	if ok {
+		ctx.JSON(http.StatusOK, CommonResponse{
+			Code: errBiz.Code,
+			Msg:  errBiz.Error(),
+			Data: nil,
+		})
+		return
+	}
+	errUnexpected, ok := err.(*comm.ErrUnexpected)
+	if ok {
+		ctx.JSON(http.StatusOK, CommonResponse{
+			Code: 400,
+			Msg:  errUnexpected.Error(),
+			Data: nil,
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, CommonResponse{
+		Code: 500,
+		Msg:  err.Error(),
+		Data: nil,
+	})
+}
+
 func requestParam(ctx *gin.Context) (*route.Context, string) {
 	commonP := &CommonParam{}
 	e := ctx.ShouldBindJSON(commonP)
@@ -89,7 +108,7 @@ func requestParam(ctx *gin.Context) (*route.Context, string) {
 			ctx.JSON(http.StatusOK, message)
 		},
 	}
-	return info, commonP.Data.S
+	return info, string(commonP.Data)
 }
 
 func deserialize(data string, i interface{}) error {
@@ -101,11 +120,14 @@ func post(path string, fn interface{}) {
 	handleFunc, paramType, hasParam, validate := reflectHandleFunc(path, fn)
 
 	g.POST(path, func(context *gin.Context) {
+		reqInfo, data := requestParam(context)
+		if reqInfo == nil {
+			onParamError(context, errors.New("invalid param"))
+			return
+		}
+
+		var handlerParam []reflect.Value
 		if hasParam {
-			reqInfo, data := requestParam(context)
-			if reqInfo == nil {
-				return
-			}
 			param := reflect.New(paramType).Interface()
 			if validate {
 				v := param.(Validatable)
@@ -115,19 +137,20 @@ func post(path string, fn interface{}) {
 					return
 				}
 			} else {
-				if hasParam {
-					err := deserialize(data, param)
-					if err != nil {
-						onParamError(context, err)
-						return
-					}
-				} else {
-					handleFunc.Call(valOf(reqInfo))
+				err := deserialize(data, param)
+				if err != nil {
+					onParamError(context, err)
 					return
 				}
 			}
-			p := reflect.ValueOf(param).Interface()
-			handleFunc.Call(valOf(reqInfo, p))
+			handlerParam = valOf(reqInfo, param)
+		} else {
+			handlerParam = valOf(reqInfo)
+		}
+		errV := handleFunc.Call(handlerParam)[0]
+		err := errV.Interface().(error)
+		if err != nil {
+			onHandlerFuncErr(context, err)
 		}
 	})
 }
@@ -153,6 +176,9 @@ func reflectHandleFunc(path string, handleFunc interface{}) (reflect.Value, refl
 		panic("route handleFunc bad arguments, path: " + path)
 	}
 
+	if typeHandleFunc.NumOut() != 1 || !typeHandleFunc.Out(0).Implements(typeError) {
+		panic("route handler must return an error param, path: " + path)
+	}
 	shouldValidate := false
 	var typeParam reflect.Type
 	// reflect request param

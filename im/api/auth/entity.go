@@ -5,7 +5,7 @@ type AuthTokenReq struct {
 	Device int64
 }
 
-type LoginRequest struct {
+type SignInRequest struct {
 	Device   int64
 	Account  string
 	Password string

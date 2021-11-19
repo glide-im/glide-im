@@ -54,7 +54,7 @@ func (a *Routers) init() {
 				route.Route("echo", a.Echo),
 			),
 			route.Group("user",
-				route.Route("login", a.Login),
+				route.Route("login", a.SignIn),
 				route.Route("logout", a.Logout),
 				route.Route("auth", a.Auth),
 				route.Route("register", a.Register),

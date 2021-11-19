@@ -31,7 +31,7 @@ func TestName(t *testing.T) {
 	cp := CommonParam{
 		Uid:    1,
 		Device: 1,
-		Data:   string(j),
+		Data:   String(j),
 	}
 	cj, _ := json.Marshal(cp)
 

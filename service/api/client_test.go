@@ -24,7 +24,7 @@ func TestNewClient(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	client.Handle(0, message.NewMessage(1, "api.app.echo", ""))
+	client.Handle(0, 0, message.NewMessage(1, "api.app.echo", ""))
 	time.Sleep(time.Second * 3)
 }
 
