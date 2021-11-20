@@ -34,7 +34,7 @@ func LoadGroup(gid int64) (*Group, error) {
 }
 
 func initGroup(dbGroup *groupdao.Group) (*Group, error) {
-	group := newGroup(dbGroup.Gid, dbGroup.ChatId)
+	group := newGroup(dbGroup.Gid)
 	group.mute = dbGroup.Mute
 
 	members, err := groupdao.GroupDao.GetMembers(dbGroup.Gid)
@@ -43,7 +43,7 @@ func initGroup(dbGroup *groupdao.Group) (*Group, error) {
 	}
 
 	for _, member := range members {
-		group.PutMember(member.Uid, member.Flag)
+		group.PutMember(member.Uid, newMemberInfo())
 	}
 	return group, nil
 }

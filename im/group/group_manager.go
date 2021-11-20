@@ -5,6 +5,7 @@ import (
 	"go_im/im/comm"
 	"go_im/im/message"
 	"go_im/pkg/logger"
+	"time"
 )
 
 // Manager 群相关操作入口
@@ -32,10 +33,14 @@ const (
 type MemberUpdate struct {
 	Uid  int64
 	Flag int64
+
+	Extra interface{}
 }
 
 type Update struct {
 	Flag int64
+
+	Extra interface{}
 }
 
 type IGroupManager interface {
@@ -51,6 +56,8 @@ type IGroupManager interface {
 	// DispatchMessage 发送聊天消息
 	DispatchMessage(gid int64, message *message.UpChatMessage) error
 }
+
+// TODO 2021-11-20 大群小群优化
 
 type DefaultManager struct {
 	mu     *comm.Mutex
@@ -90,7 +97,9 @@ func (m *DefaultManager) UpdateMember(gid int64, update []MemberUpdate) error {
 func (m *DefaultManager) UpdateGroup(gid int64, update Update) error {
 
 	if update.Flag == FlagGroupCreate {
+		m.mu.Lock()
 		m.groups[gid] = newGroup(gid)
+		m.mu.Unlock()
 		return nil
 	}
 	m.mu.Lock()
@@ -106,18 +115,20 @@ func (m *DefaultManager) UpdateGroup(gid int64, update Update) error {
 		g.mute = false
 	case FlagGroupDissolve:
 		g.dissolved = true
+		tw.After(time.Second * 10).Callback(func() {
+			m.mu.Lock()
+			delete(m.groups, gid)
+			m.mu.Unlock()
+		})
 	}
 	return nil
 }
 
-func (m *DefaultManager) DispatchNotifyMessage(gid int64, message *message.Message) error {
+func (m *DefaultManager) DispatchNotifyMessage(gid int64, msg *message.Message) error {
 	m.mu.Lock()
 	g := m.groups[gid]
 	m.mu.Unlock()
-	if g != nil {
-		g.SendMessage(message)
-	}
-	return nil
+	return g.EnqueueNotify(&message.GroupNotify{})
 }
 
 func (m *DefaultManager) DispatchMessage(gid int64, msg *message.UpChatMessage) error {
@@ -126,14 +137,13 @@ func (m *DefaultManager) DispatchMessage(gid int64, msg *message.UpChatMessage) 
 	g, ok := m.groups[gid]
 	m.mu.Unlock()
 	if !ok {
-		return nil
+		return errors.New("group not exist")
 	}
 	if g.mute {
-		return nil
+		return errors.New("group is muted")
 	}
 	if g.dissolved {
-		return nil
+		return errors.New("group is dissolved")
 	}
-	g.EnqueueMessage(msg)
-	return nil
+	return g.EnqueueMessage(msg)
 }
