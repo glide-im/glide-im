@@ -16,7 +16,8 @@ type Task struct {
 	s      *slot
 	at     time.Time
 
-	C chan struct{}
+	fn func()
+	C  chan struct{}
 }
 
 func (s *Task) TTL() int64 {
@@ -31,8 +32,15 @@ func (s *Task) call() {
 	}
 	Executor(func() {
 		s.Cancel()
+		if s.fn != nil {
+			s.fn()
+		}
 		s.C <- struct{}{}
 	})
+}
+
+func (s *Task) Callback(f func()) {
+	s.fn = f
 }
 
 func (s *Task) Cancel() {
