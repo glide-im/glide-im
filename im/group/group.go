@@ -13,14 +13,6 @@ import (
 	"time"
 )
 
-const (
-	FlagShiftCanSend    = 1
-	FlagShiftCanReceive = 2
-	FlagShiftIsManager  = 3
-
-	FlagDefault = 1 << FlagShiftCanSend
-)
-
 type memberInfo struct {
 	online    bool
 	muted     bool
@@ -66,9 +58,9 @@ type Group struct {
 	dissolved bool
 
 	// messages 群消息队列
-	messages chan *message.UpChatMessage
+	messages chan *message.DownGroupMessage
 	// notify 群通知队列
-	notify chan *message.DownGroupMessage
+	notify chan *message.GroupNotify
 
 	queued int32
 
@@ -85,29 +77,74 @@ func newGroup(gid int64) *Group {
 	ret.mu = comm.NewMutex()
 	ret.members = map[int64]memberInfo{}
 	ret.startup = strconv.FormatInt(time.Now().Unix(), 10)
-	ret.messages = make(chan *message.UpChatMessage, 100)
+	ret.messages = make(chan *message.DownGroupMessage, 100)
+	ret.notify = make(chan *message.GroupNotify, 10)
 	ret.checkActive = tw.After(time.Minute * 30)
 	ret.msgSequence = 1
 	ret.gid = gid
 	return ret
 }
 
-func (g *Group) EnqueueMessage(msg *message.UpChatMessage) {
+func (g *Group) EnqueueNotify(msg *message.GroupNotify) error {
+	select {
+	case g.notify <- msg:
+		atomic.AddInt32(&g.queued, 1)
+	default:
+		return errors.New("notify message queue is full")
+	}
+	g.checkMsgQueue()
+	return nil
+}
 
-	atomic.AddInt32(&g.queued, 1)
-	if atomic.LoadInt32(&g.queued) > 1 {
-		select {
-		case g.messages <- msg:
-		default:
-			logger.E("too many messages,the group message queue is full")
-		}
-		return
+func (g *Group) EnqueueMessage(msg *message.UpChatMessage) error {
+
+	g.mu.Lock()
+	mf, exist := g.members[msg.From_]
+	g.mu.Unlock()
+
+	if !exist {
+		return errors.New("not a group member")
+	}
+	if mf.muted {
+		return errors.New("a muted group member send message")
+	}
+	dMsg := &message.DownGroupMessage{
+		Mid:     msg.Mid,
+		MsgSeq:  atomic.AddInt64(&g.msgSequence, 1),
+		From:    msg.From_,
+		Type:    msg.Type,
+		Content: msg.Content,
+		SendAt:  msg.CTime,
 	}
 
+	select {
+	case g.messages <- dMsg:
+		atomic.AddInt32(&g.queued, 1)
+	default:
+		return errors.New("too many messages,the group message queue is full")
+	}
+	g.checkMsgQueue()
+	return nil
+}
+
+func (g *Group) checkMsgQueue() {
+	if atomic.LoadInt32(&g.queued) > 0 {
+		return
+	}
 	err := queueExec.Submit(
 		func() {
+			logger.D("run a message queue reader goroutine")
 			for {
 				select {
+				case m := <-g.notify:
+					atomic.StoreInt32(&g.queued, -1)
+					switch m.Type {
+					case 1:
+					case 2:
+					case 3:
+					}
+					// 优先派送群通知消息
+					continue
 				case <-g.checkActive.C:
 					if g.lastMsgAt.Add(time.Minute*30).After(time.Now()) && atomic.LoadInt32(&g.queued) == 0 {
 						// 超过三十分钟没有发消息了, 停止消息下行任务
@@ -116,27 +153,30 @@ func (g *Group) EnqueueMessage(msg *message.UpChatMessage) {
 						g.checkActive = tw.After(time.Minute * 30)
 					}
 				case m := <-g.messages:
-					g.handleMessage(m)
 					atomic.StoreInt32(&g.queued, -1)
 					g.lastMsgAt = time.Now()
+					g.SendMessage(m.From, message.NewMessage(-1, message.ActionGroupMessage, m))
 				}
 			}
 		REST:
-		})
+			logger.D("message queue read goroutine exit")
+		},
+	)
 	if err == ants.ErrPoolOverload {
 		logger.E("group message queue handle goroutine pool is overload")
 	}
 }
 
-func (g *Group) SendMessage(message *message.Message) {
+func (g *Group) SendMessage(from int64, message *message.Message) {
 	logger.D("Group.SendMessage: %s", message)
-
+	g.mu.Lock()
 	for uid, mf := range g.members {
-		if !mf.online {
+		if !mf.online || uid == from {
 			continue
 		}
 		client.EnqueueMessage(uid, message)
 	}
+	g.mu.Unlock()
 }
 
 func (g *Group) updateMember(u MemberUpdate) error {
@@ -178,33 +218,4 @@ func (g *Group) HasMember(uid int64) bool {
 	defer g.mu.LockUtilReturn()()
 	_, exist := g.members[uid]
 	return exist
-}
-
-func (g *Group) handleMessage(msg *message.UpChatMessage) {
-	g.mu.Lock()
-	mf, exist := g.members[msg.From_]
-	g.mu.Unlock()
-
-	if !exist {
-		logger.W("a non-group member send message")
-		return
-	}
-	if mf.muted {
-		logger.W("a muted group member send message")
-		return
-	}
-	seq := atomic.LoadInt64(&g.msgSequence)
-	rMsg := &message.DownGroupMessage{
-		Mid:     msg.Mid,
-		MsgSeq:  seq,
-		From:    msg.From_,
-		Type:    msg.Type,
-		Content: msg.Content,
-		SendAt:  msg.CTime,
-	}
-
-	resp := message.NewMessage(-1, message.ActionGroupMessage, rMsg)
-
-	g.SendMessage(resp)
-	atomic.AddInt64(&g.msgSequence, 1)
 }

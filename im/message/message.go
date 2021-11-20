@@ -73,3 +73,8 @@ type AckReceive struct {
 type AckNotify struct {
 	Mid int64
 }
+
+type GroupNotify struct {
+	Gid  int64
+	Type int64
+}
