@@ -3,7 +3,6 @@ package group
 import (
 	"errors"
 	"github.com/panjf2000/ants/v2"
-	"go_im/im/client"
 	"go_im/im/comm"
 	"go_im/im/message"
 	"go_im/pkg/logger"
@@ -20,8 +19,8 @@ type memberInfo struct {
 	deletedAt int64
 }
 
-func newMemberInfo() memberInfo {
-	return memberInfo{
+func newMemberInfo() *memberInfo {
+	return &memberInfo{
 		online:    false,
 		muted:     false,
 		admin:     false,
@@ -31,6 +30,8 @@ func newMemberInfo() memberInfo {
 
 var tw = timingwheel.NewTimingWheel(time.Second, 3, 20)
 var queueExec *ants.Pool
+
+const messageQueueSleep = time.Second * 3
 
 func init() {
 	var e error
@@ -62,24 +63,26 @@ type Group struct {
 	// notify 群通知队列
 	notify chan *message.GroupNotify
 
-	queued int32
+	queueRunning int32
+	queued       int32
 
 	// checkActive 定时检查群活跃情况
 	checkActive *timingwheel.Task
 
 	lastMsgAt time.Time
 	mu        *comm.Mutex
-	members   map[int64]memberInfo
+	members   map[int64]*memberInfo
 }
 
 func newGroup(gid int64) *Group {
 	ret := new(Group)
 	ret.mu = comm.NewMutex()
-	ret.members = map[int64]memberInfo{}
+	ret.members = map[int64]*memberInfo{}
 	ret.startup = strconv.FormatInt(time.Now().Unix(), 10)
 	ret.messages = make(chan *message.DownGroupMessage, 100)
 	ret.notify = make(chan *message.GroupNotify, 10)
-	ret.checkActive = tw.After(time.Minute * 30)
+	ret.checkActive = tw.After(messageQueueSleep)
+	ret.queueRunning = 0
 	ret.msgSequence = 1
 	ret.gid = gid
 	return ret
@@ -92,7 +95,9 @@ func (g *Group) EnqueueNotify(msg *message.GroupNotify) error {
 	default:
 		return errors.New("notify message queue is full")
 	}
-	g.checkMsgQueue()
+	if err := g.checkMsgQueue(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -123,16 +128,22 @@ func (g *Group) EnqueueMessage(msg *message.UpChatMessage) error {
 	default:
 		return errors.New("too many messages,the group message queue is full")
 	}
-	g.checkMsgQueue()
+	if err := g.checkMsgQueue(); err != nil {
+		if err == ants.ErrPoolOverload {
+			logger.E("group message queue handle goroutine pool is overload")
+		}
+		return err
+	}
 	return nil
 }
 
-func (g *Group) checkMsgQueue() {
-	if atomic.LoadInt32(&g.queued) > 0 {
-		return
+func (g *Group) checkMsgQueue() error {
+	if atomic.LoadInt32(&g.queueRunning) == 1 {
+		return nil
 	}
 	err := queueExec.Submit(
 		func() {
+			atomic.StoreInt32(&g.queueRunning, 1)
 			logger.D("run a message queue reader goroutine")
 			for {
 				select {
@@ -146,35 +157,42 @@ func (g *Group) checkMsgQueue() {
 					// 优先派送群通知消息
 					continue
 				case <-g.checkActive.C:
-					if g.lastMsgAt.Add(time.Minute*30).After(time.Now()) && atomic.LoadInt32(&g.queued) == 0 {
+					if g.lastMsgAt.Add(messageQueueSleep).Before(time.Now()) {
+						q := atomic.LoadInt32(&g.queued)
+						if q != 0 {
+							logger.W("group message queue blocked, size=" + strconv.FormatInt(int64(q), 10))
+							return
+						}
 						// 超过三十分钟没有发消息了, 停止消息下行任务
 						goto REST
 					} else {
-						g.checkActive = tw.After(time.Minute * 30)
+						g.checkActive = tw.After(messageQueueSleep)
 					}
 				case m := <-g.messages:
-					atomic.StoreInt32(&g.queued, -1)
+					atomic.AddInt32(&g.queued, -1)
 					g.lastMsgAt = time.Now()
 					g.SendMessage(m.From, message.NewMessage(-1, message.ActionGroupMessage, m))
 				}
 			}
 		REST:
 			logger.D("message queue read goroutine exit")
+			atomic.StoreInt32(&g.queueRunning, 0)
 		},
 	)
-	if err == ants.ErrPoolOverload {
-		logger.E("group message queue handle goroutine pool is overload")
+	if err != nil {
+		atomic.StoreInt32(&g.queueRunning, 0)
 	}
+	return err
 }
 
 func (g *Group) SendMessage(from int64, message *message.Message) {
-	logger.D("Group.SendMessage: %s", message)
+	// logger.D("Group.SendMessage: %s", message)
 	g.mu.Lock()
 	for uid, mf := range g.members {
 		if !mf.online || uid == from {
 			continue
 		}
-		client.EnqueueMessage(uid, message)
+		EnqueueMessage.EnqueueMessage(uid, 0, message)
 	}
 	g.mu.Unlock()
 }
@@ -204,7 +222,7 @@ func (g *Group) updateMember(u MemberUpdate) error {
 	return nil
 }
 
-func (g *Group) PutMember(member int64, s memberInfo) {
+func (g *Group) PutMember(member int64, s *memberInfo) {
 	defer g.mu.LockUtilReturn()()
 	g.members[member] = s
 }

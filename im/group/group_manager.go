@@ -4,12 +4,17 @@ import (
 	"errors"
 	"go_im/im/comm"
 	"go_im/im/message"
-	"go_im/pkg/logger"
 	"time"
 )
 
 // Manager 群相关操作入口
 var Manager IGroupManager = NewDefaultManager()
+
+type EnqueueMessageInterface interface {
+	EnqueueMessage(uid int64, device int64, message *message.Message)
+}
+
+var EnqueueMessage EnqueueMessageInterface
 
 const (
 	_ = iota
@@ -132,7 +137,7 @@ func (m *DefaultManager) DispatchNotifyMessage(gid int64, msg *message.Message) 
 }
 
 func (m *DefaultManager) DispatchMessage(gid int64, msg *message.UpChatMessage) error {
-	logger.D("GroupManager.HandleMessage: %v", msg)
+	//logger.D("GroupManager.HandleMessage: %v", msg)
 	m.mu.Lock()
 	g, ok := m.groups[gid]
 	m.mu.Unlock()
