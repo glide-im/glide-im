@@ -7,15 +7,21 @@ import (
 )
 
 const (
-	ActionMessage      Action = "message"
-	ActionGroupMessage        = "message.group"
-	ActionChatMessage         = "message.chat"
-	ActionCSMessage           = "message.cs"
-	ActionMessageAck          = "message.ack"
-	ActionApi                 = "api"
-	ActionHeartbeat           = "heartbeat"
-	ActionNotify              = "notify"
-	ActionFailed              = "failed"
+	ActionMessage           Action = "message"
+	ActionGroupMessage             = "message.group"
+	ActionChatMessage              = "message.chat"
+	ActionChatMessageRetry         = "message.chat.retry"
+	ActionChatMessageResend        = "message.chat.resend"
+	ActionCSMessage                = "message.cs"
+
+	ActionAckRequest = "ack.request"
+	ActionAckMessage = "ack.message"
+	ActionAckNotify  = "ack.notify"
+
+	ActionApi       = "api"
+	ActionHeartbeat = "heartbeat"
+	ActionNotify    = "notify"
+	ActionFailed    = "failed"
 )
 
 type Action string
@@ -25,7 +31,7 @@ func (a *Action) Contains(action Action) bool {
 }
 
 type Message struct {
-	Ver    int64 `json:"ver"`
+	Ver    int64
 	Seq    int64
 	Action Action
 	Data   string

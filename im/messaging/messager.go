@@ -33,14 +33,18 @@ func messageHandler(from int64, device int64, msg *message.Message) {
 		switch msg.Action {
 		case message.ActionChatMessage:
 			dispatchChatMessage(from, msg)
+		case message.ActionChatMessageRetry:
+			dispatchChatMessage(from, msg)
+		case message.ActionChatMessageResend:
+			dispatchChatMessage(from, msg)
 		case message.ActionGroupMessage:
 			dispatchGroupMsg(from, msg)
 		case message.ActionCSMessage:
 			dispatchCustomerServiceMsg(from, msg)
-		case message.ActionMessageAck:
-			handleAckMsg(from, msg)
 		case message.ActionHeartbeat:
 			handleHeartbeat(from, device, msg)
+		case message.ActionAckRequest:
+			handleAckRequest(from, msg)
 		default:
 			if msg.Action.Contains(message.ActionApi) {
 				api.Handle(from, device, msg)
@@ -68,15 +72,15 @@ func handleHeartbeat(from int64, device int64, msg *message.Message) {
 	// TODO 2021-11-15 处理心跳消息
 }
 
-// handleAckMsg 处理接收者收到消息发回来的确认消息
-func handleAckMsg(from int64, msg *message.Message) {
+// handleAckRequest 处理接收者收到消息发回来的确认消息
+func handleAckRequest(from int64, msg *message.Message) {
 	ackMsg := new(message.AckRequest)
 	if !unwrap(from, msg, ackMsg) {
 		return
 	}
-	ackNotify := message.NewMessage(0, message.ActionMessageAck, ackMsg)
+	ackNotify := message.NewMessage(0, message.ActionAckMessage, ackMsg)
 	// 通知发送者, 对方已收到消息
-	client.EnqueueMessage(ackMsg.Sender, ackNotify)
+	client.EnqueueMessage(ackMsg.From, ackNotify)
 }
 
 // dispatchCustomerServiceMsg 分发客服消息

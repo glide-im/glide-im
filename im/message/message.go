@@ -59,13 +59,13 @@ type CustomerServiceMessage struct {
 
 // AckRequest 接收者回复给服务端确认收到消息
 type AckRequest struct {
-	Seq    int64
-	Mid    int64
-	Sender int64
+	Seq  int64
+	Mid  int64
+	From int64
 }
 
-// AckReceive 服务端通知发送者的服务端收到消息
-type AckReceive struct {
+// AckMessage 服务端通知发送者的服务端收到消息
+type AckMessage struct {
 	Mid int64
 }
 
