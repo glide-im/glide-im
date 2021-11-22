@@ -32,8 +32,8 @@ type DownChatMessage struct {
 // DownGroupMessage 下行群消息
 type DownGroupMessage struct {
 	Mid int64
-	// MsgSeq 群消息 Seq
-	MsgSeq  int64
+	// Seq 群消息 Seq
+	Seq     int64
 	Gid     int64
 	Type    int
 	From    int64
@@ -64,9 +64,16 @@ type AckRequest struct {
 	From int64
 }
 
+type AckGroupMessage struct {
+	Gid int64
+	Mid int64
+	Seq int64
+}
+
 // AckMessage 服务端通知发送者的服务端收到消息
 type AckMessage struct {
 	Mid int64
+	Seq int64
 }
 
 // AckNotify 服务端下发给发送者的消息送达通知

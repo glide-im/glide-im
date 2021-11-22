@@ -2,6 +2,7 @@ package group
 
 import (
 	"errors"
+	"go_im/im/client"
 	"go_im/im/comm"
 	"go_im/im/message"
 	"time"
@@ -150,5 +151,15 @@ func (m *DefaultManager) DispatchMessage(gid int64, msg *message.UpChatMessage) 
 	if g.dissolved {
 		return errors.New("group is dissolved")
 	}
-	return g.EnqueueMessage(msg)
+	seq, err := g.EnqueueMessage(msg)
+
+	if err != nil {
+		return err
+	} else {
+		// notify sender, group message send successful
+		ack := message.NewMessage(0, message.ActionAckMessage, message.AckMessage{Mid: msg.Mid, Seq: seq})
+		client.EnqueueMessage(msg.From_, ack)
+	}
+
+	return nil
 }

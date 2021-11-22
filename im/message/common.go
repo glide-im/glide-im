@@ -13,10 +13,12 @@ const (
 	ActionChatMessageRetry         = "message.chat.retry"
 	ActionChatMessageResend        = "message.chat.resend"
 	ActionCSMessage                = "message.cs"
+	ActionMessageFailed            = "message.failed.send"
 
-	ActionAckRequest = "ack.request"
-	ActionAckMessage = "ack.message"
-	ActionAckNotify  = "ack.notify"
+	ActionAckRequest  = "ack.request"
+	ActionAckGroupMsg = "ack.group.msg"
+	ActionAckMessage  = "ack.message"
+	ActionAckNotify   = "ack.notify"
 
 	ActionApi       = "api"
 	ActionHeartbeat = "heartbeat"

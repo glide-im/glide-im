@@ -48,7 +48,7 @@ type GroupMessage struct {
 	To int64
 	// From 发送者 ID
 	From    int64
-	Type    int64
+	Type    int
 	SendAt  int64
 	Content string
 }

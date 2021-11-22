@@ -45,6 +45,8 @@ func messageHandler(from int64, device int64, msg *message.Message) {
 			handleHeartbeat(from, device, msg)
 		case message.ActionAckRequest:
 			handleAckRequest(from, msg)
+		case message.ActionAckGroupMsg:
+			handleAckGroupMsgRequest(from, msg)
 		default:
 			if msg.Action.Contains(message.ActionApi) {
 				api.Handle(from, device, msg)
@@ -78,7 +80,7 @@ func handleAckRequest(from int64, msg *message.Message) {
 	if !unwrap(from, msg, ackMsg) {
 		return
 	}
-	ackNotify := message.NewMessage(0, message.ActionAckMessage, ackMsg)
+	ackNotify := message.NewMessage(0, message.ActionAckNotify, ackMsg)
 	// 通知发送者, 对方已收到消息
 	client.EnqueueMessage(ackMsg.From, ackNotify)
 }

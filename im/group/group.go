@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/panjf2000/ants/v2"
 	"go_im/im/comm"
+	"go_im/im/dao/msgdao"
 	"go_im/im/message"
 	"go_im/pkg/logger"
 	"go_im/pkg/timingwheel"
@@ -31,7 +32,7 @@ func newMemberInfo() *memberInfo {
 var tw = timingwheel.NewTimingWheel(time.Second, 3, 20)
 var queueExec *ants.Pool
 
-const messageQueueSleep = time.Second * 3
+const messageQueueSleep = time.Second * 10
 
 func init() {
 	var e error
@@ -95,46 +96,66 @@ func (g *Group) EnqueueNotify(msg *message.GroupNotify) error {
 	default:
 		return errors.New("notify message queue is full")
 	}
-	if err := g.checkMsgQueue(); err != nil {
-		return err
-	}
-	return nil
+	return g.checkMsgQueue()
 }
 
-func (g *Group) EnqueueMessage(msg *message.UpChatMessage) error {
+func (g *Group) EnqueueMessage(msg *message.UpChatMessage) (int64, error) {
 
 	g.mu.Lock()
 	mf, exist := g.members[msg.From_]
 	g.mu.Unlock()
 
 	if !exist {
-		return errors.New("not a group member")
+		return 0, errors.New("not a group member")
 	}
 	if mf.muted {
-		return errors.New("a muted group member send message")
+		return 0, errors.New("a muted group member send message")
 	}
+	seq := atomic.AddInt64(&g.msgSequence, 1)
+	err := msgdao.AddGroupMessage(&msgdao.GroupMessage{
+		MID:     msg.Mid,
+		Seq:     seq,
+		To:      g.gid,
+		From:    msg.From_,
+		Type:    msg.Type,
+		SendAt:  msg.CTime,
+		Content: msg.Content,
+	})
+	if err != nil {
+		atomic.AddInt64(&g.msgSequence, -1)
+		return 0, err
+	}
+	err = msgdao.UpdateGroupMessageState(g.gid, 1, 1, 1)
+	if err != nil {
+		logger.E("Group.EnqueueMessage update group message state error, %v", err)
+		return 0, err
+	}
+
 	dMsg := &message.DownGroupMessage{
 		Mid:     msg.Mid,
-		MsgSeq:  atomic.AddInt64(&g.msgSequence, 1),
+		Seq:     seq,
 		From:    msg.From_,
 		Type:    msg.Type,
 		Content: msg.Content,
 		SendAt:  msg.CTime,
+	}
+	if err != nil {
+		return 0, err
 	}
 
 	select {
 	case g.messages <- dMsg:
 		atomic.AddInt32(&g.queued, 1)
 	default:
-		return errors.New("too many messages,the group message queue is full")
+		return 0, errors.New("too many messages,the group message queue is full")
 	}
 	if err := g.checkMsgQueue(); err != nil {
 		if err == ants.ErrPoolOverload {
 			logger.E("group message queue handle goroutine pool is overload")
 		}
-		return err
+		return 0, err
 	}
-	return nil
+	return seq, nil
 }
 
 func (g *Group) checkMsgQueue() error {
@@ -145,18 +166,22 @@ func (g *Group) checkMsgQueue() error {
 		func() {
 			atomic.StoreInt32(&g.queueRunning, 1)
 			logger.D("run a message queue reader goroutine")
+			g.checkActive = tw.After(messageQueueSleep)
 			for {
 				select {
 				case m := <-g.notify:
-					atomic.StoreInt32(&g.queued, -1)
+					g.lastMsgAt = time.Now()
+					atomic.AddInt32(&g.queued, -1)
 					switch m.Type {
 					case 1:
+						g.SendMessage(0, message.NewMessage(0, message.ActionNotify, ""))
 					case 2:
 					case 3:
 					}
 					// 优先派送群通知消息
 					continue
 				case <-g.checkActive.C:
+					g.checkActive.Cancel()
 					if g.lastMsgAt.Add(messageQueueSleep).Before(time.Now()) {
 						q := atomic.LoadInt32(&g.queued)
 						if q != 0 {

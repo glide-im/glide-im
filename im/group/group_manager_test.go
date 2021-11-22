@@ -102,10 +102,18 @@ func TestDefaultManager_DispatchMessage2(t *testing.T) {
 		t.Error(err)
 	}
 
-	time.Sleep(time.Second * 6)
+	time.Sleep(time.Second * 2)
 
 	err = Manager.DispatchMessage(1, msg)
 	if err != nil {
 		t.Error(err)
 	}
+
+	time.Sleep(time.Second * 2)
+
+	err = Manager.DispatchMessage(1, msg)
+	if err != nil {
+		t.Error(err)
+	}
+	time.Sleep(time.Second * 3)
 }

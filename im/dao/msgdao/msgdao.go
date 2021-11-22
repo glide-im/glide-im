@@ -13,12 +13,13 @@ func init() {
 
 type GroupMsgDao interface {
 	GetGroupMsgSeq(gid int64) (int64, error)
-	UpdateGroupMsgSeq(gid int64, seq int64) error
+	UpdateGroupMsgSeq(gid int64) error
+	CreateGroupMsgSeq(gid int64, step int64) error
 
 	GetGroupMessage(mid int64) (*GroupMessage, error)
 	GetGroupMessageSeqAfter(gid int64, seqAfter int64) ([]*GroupMessage, error)
 
-	AddGroupMessage(from, to int64, cliMsgID string, type_ int, content string) (*GroupMessage, error)
+	AddGroupMessage(message *GroupMessage) error
 	UpdateGroupMessageState(gid int64, lastMID int64, lastMsgAg int64, lastMsgSeq int64) error
 	GetGroupMessageState(gid int64) (*GroupMessageState, error)
 
@@ -84,17 +85,21 @@ func GetMessageID() (int64, error) {
 func GetGroupMsgSeq(gid int64) (int64, error) {
 	return instance.GetGroupMsgSeq(gid)
 }
-func UpdateGroupMsgSeq(gid int64, seq int64) error {
-	return instance.UpdateGroupMsgSeq(gid, seq)
+func UpdateGroupMsgSeq(gid int64) error {
+	return instance.UpdateGroupMsgSeq(gid)
 }
+func CreateGroupMsgSeq(gid int64, step int64) error {
+	return instance.CreateGroupMsgSeq(gid, step)
+}
+
 func GetGroupMessage(mid int64) (*GroupMessage, error) {
 	return instance.GetGroupMessage(mid)
 }
 func GetGroupMessageSeqAfter(gid int64, seqAfter int64) ([]*GroupMessage, error) {
 	return instance.GetGroupMessageSeqAfter(gid, seqAfter)
 }
-func AddGroupMessage(from, to int64, cliMsgID string, type_ int, content string) (*GroupMessage, error) {
-	return instance.AddGroupMessage(from, to, cliMsgID, type_, content)
+func AddGroupMessage(message *GroupMessage) error {
+	return instance.AddGroupMessage(message)
 }
 func UpdateGroupMessageState(gid int64, lastMID int64, lastMsgAg int64, lastMsgSeq int64) error {
 	return instance.UpdateGroupMessageState(gid, lastMID, lastMsgAg, lastMsgSeq)
