@@ -142,7 +142,7 @@ func (m *GroupApi) AddGroupMember(ctx *route.Context, request *AddMemberRequest)
 	for _, member := range members {
 
 		// add group to member's contacts list
-		_, e := userdao.UserDao.AddContacts(member.Uid, g.Gid, userdao.ContactsTypeGroup, "")
+		_, e := userdao.UserDao2.AddContacts(member.Uid, g.Gid, userdao.ContactsTypeGroup, "")
 		if e != nil {
 			_ = apidep.GroupManager.RemoveMember(request.Gid, member.Uid)
 			continue
@@ -198,7 +198,7 @@ func (m *GroupApi) JoinGroup(ctx *route.Context, request *JoinGroupRequest) erro
 		return err
 	}
 
-	_, err = userdao.UserDao.AddContacts(ctx.Uid, g.Gid, userdao.ContactsTypeGroup, "")
+	_, err = userdao.UserDao2.AddContacts(ctx.Uid, g.Gid, userdao.ContactsTypeGroup, "")
 
 	//members, err := groupdao.GroupDao2.GetMembers(request.Gid)
 	//if err != nil {
@@ -232,7 +232,7 @@ func (m *GroupApi) createGroup(name string, uid int64) (*groupdao.Group, error) 
 		// TODO undo create group
 		return nil, err
 	}
-	_, err = userdao.UserDao.AddContacts(uid, gp.Gid, userdao.ContactsTypeGroup, "")
+	_, err = userdao.UserDao2.AddContacts(uid, gp.Gid, userdao.ContactsTypeGroup, "")
 	if err != nil {
 		// TODO undo
 		return nil, err
@@ -265,7 +265,7 @@ func (m *GroupApi) addGroupMember(gid int64, uid ...int64) ([]*groupdao.GroupMem
 	}
 
 	// TODO query user info and notify group members, optimize query time
-	exist, err2 := userdao.UserDao.HasUser(memberUid...)
+	exist, err2 := userdao.UserDao2.HasUser(memberUid...)
 	if err2 != nil {
 		return nil, err2
 	}

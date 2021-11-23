@@ -8,5 +8,4 @@ import (
 func TestInit(t *testing.T) {
 
 	db.Init()
-	db.DB.CreateTable(&User{})
 }

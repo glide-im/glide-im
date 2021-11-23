@@ -1,9 +1,5 @@
 package userdao
 
-import (
-	"go_im/im/dao/common"
-)
-
 type User struct {
 	Uid      int64  `gorm:"primaryKey"`
 	Account  string `gorm:"unique"`
@@ -11,15 +7,18 @@ type User struct {
 	Password string
 	Avatar   string
 
-	CreateAt common.Timestamp `gorm:"type:datetime"`
-	UpdateAt common.Timestamp `gorm:"type:datetime"`
+	CreateAt int64
 }
 
 type Contacts struct {
-	Fid      int64 `gorm:"primaryKey"`
-	Owner    int64
-	TargetId int64
-	Remark   string
-	Type     int8
-	AddTime  common.Timestamp `gorm:"type:datetime"`
+	Fid    string `gorm:"primaryKey"`
+	Uid    int64
+	Id     int64
+	Remark string
+	Type   int8
+}
+
+type LoginState struct {
+	Device int64
+	Token  string
 }

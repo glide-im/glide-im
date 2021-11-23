@@ -3,14 +3,12 @@ package userdao
 import (
 	"database/sql"
 	"errors"
-	"go_im/im/dao/common"
 	"go_im/im/dao/uid"
 	"go_im/pkg/db"
 	"math/rand"
-	"time"
 )
 
-var UserDao *userDao
+var UserDao2 *userDao
 
 const userTokenLen = 10
 
@@ -47,7 +45,7 @@ type userDao struct {
 }
 
 func InitUserDao() {
-	UserDao = &userDao{
+	UserDao2 = &userDao{
 		mySqlConf: mySqlConf{},
 	}
 }
@@ -95,15 +93,12 @@ func (d *userDao) AddUser(account string, password string) error {
 		return errors.New("account already exist")
 	}
 
-	t := common.Timestamp(time.Now())
 	u := User{
 		Uid:      uid.GenUid(),
 		Account:  account,
 		Password: password,
 		Nickname: nickName[rand.Intn(14)],
 		Avatar:   avatars[rand.Intn(17)],
-		CreateAt: t,
-		UpdateAt: t,
 	}
 
 	if db.DB.Model(&u).Create(&u).RowsAffected > 0 {
@@ -155,11 +150,10 @@ func (d *userDao) HasContacts(owner int64, targetId int64, typ int8) (bool, erro
 func (d *userDao) AddContacts(uid int64, targetId int64, typ int8, remark string) (*Contacts, error) {
 
 	f := &Contacts{
-		Owner:    uid,
-		TargetId: targetId,
-		Remark:   remark,
-		Type:     typ,
-		AddTime:  common.NowTimestamp(),
+		Uid:    uid,
+		Id:     targetId,
+		Remark: remark,
+		Type:   typ,
 	}
 	if db.DB.Model(f).Create(f).RowsAffected <= 0 {
 		return nil, errors.New("create friend error")

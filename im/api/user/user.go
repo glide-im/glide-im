@@ -15,7 +15,7 @@ type UserApi struct{}
 //goland:noinspection GoPreferNilSlice
 func (a *UserApi) GetContactList(msg *route.Context) error {
 
-	allContacts, err := userdao.UserDao.GetAllContacts(msg.Uid)
+	allContacts, err := userdao.UserDao2.GetAllContacts(msg.Uid)
 	if err != nil {
 		return err
 	}
@@ -27,7 +27,7 @@ func (a *UserApi) GetContactList(msg *route.Context) error {
 	for _, contacts := range allContacts {
 
 		if contacts.Type == userdao.ContactsTypeGroup {
-			g, er := groupdao.GroupDao2.GetGroup(contacts.TargetId)
+			g, er := groupdao.GroupDao2.GetGroup(contacts.Id)
 			if er != nil {
 				return er
 			}
@@ -43,11 +43,11 @@ func (a *UserApi) GetContactList(msg *route.Context) error {
 			//	Members: members,
 			//})
 		} else if contacts.Type == userdao.ContactsTypeUser {
-			uids = append(uids, contacts.TargetId)
+			uids = append(uids, contacts.Id)
 		}
 	}
 	if len(uids) > 0 {
-		user, err := userdao.UserDao.GetUser(uids...)
+		user, err := userdao.UserDao2.GetUser(uids...)
 		if err != nil {
 			return err
 		}
@@ -73,7 +73,7 @@ func (a *UserApi) GetContactList(msg *route.Context) error {
 
 func (a *UserApi) AddContact(msg *route.Context, request *AddContacts) error {
 
-	hasUser, err := userdao.UserDao.HasUser(request.Uid)
+	hasUser, err := userdao.UserDao2.HasUser(request.Uid)
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func (a *UserApi) AddContact(msg *route.Context, request *AddContacts) error {
 		return errors.New("user not exist")
 	}
 
-	hasContacts, err := userdao.UserDao.HasContacts(msg.Uid, request.Uid, userdao.ContactsTypeUser)
+	hasContacts, err := userdao.UserDao2.HasContacts(msg.Uid, request.Uid, userdao.ContactsTypeUser)
 	if err != nil {
 		return err
 	}
@@ -91,12 +91,12 @@ func (a *UserApi) AddContact(msg *route.Context, request *AddContacts) error {
 	}
 
 	// add to self
-	_, err = userdao.UserDao.AddContacts(msg.Uid, request.Uid, userdao.ContactsTypeUser, request.Remark)
+	_, err = userdao.UserDao2.AddContacts(msg.Uid, request.Uid, userdao.ContactsTypeUser, request.Remark)
 	if err != nil {
 		return err
 	}
 
-	userInfos, err := userdao.UserDao.GetUser(msg.Uid, request.Uid)
+	userInfos, err := userdao.UserDao2.GetUser(msg.Uid, request.Uid)
 	var me *userdao.User
 	var friend *userdao.User
 
@@ -123,7 +123,7 @@ func (a *UserApi) AddContact(msg *route.Context, request *AddContacts) error {
 	msg.Response(message.NewMessage(msg.Seq, "api.ActionSuccess", ccontactResponse))
 
 	// add to friend
-	_, err = userdao.UserDao.AddContacts(request.Uid, msg.Uid, userdao.ContactsTypeUser, "")
+	_, err = userdao.UserDao2.AddContacts(request.Uid, msg.Uid, userdao.ContactsTypeUser, "")
 	if err != nil {
 		return err
 	}
@@ -144,7 +144,7 @@ func (a *UserApi) AddContact(msg *route.Context, request *AddContacts) error {
 
 func (a *UserApi) GetUserInfo(msg *route.Context, request *InfoRequest) error {
 
-	users, err := userdao.UserDao.GetUser(request.Uid...)
+	users, err := userdao.UserDao2.GetUser(request.Uid...)
 	if err != nil {
 		return err
 	}
@@ -185,7 +185,7 @@ func (a *UserApi) GetOnlineUser(msg *route.Context) error {
 	users := make([]u, len(allClient))
 
 	for _, k := range allClient {
-		us, err := userdao.UserDao.GetUser(k)
+		us, err := userdao.UserDao2.GetUser(k)
 		if err != nil || len(us) == 0 {
 			logger.D("get online uid=%d error, error=%v", k, err)
 			continue

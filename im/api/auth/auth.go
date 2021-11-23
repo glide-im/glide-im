@@ -28,7 +28,7 @@ func (*AuthApi) SignIn(ctx *route.Context, request *SignInRequest) error {
 		return errors.New("account or password empty")
 	}
 
-	uid, token, err := userdao.UserDao.GetUidByLogin(request.Account, request.Password, request.Device)
+	uid, token, err := userdao.UserDao2.GetUidByLogin(request.Account, request.Password, request.Device)
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func (*AuthApi) SignIn(ctx *route.Context, request *SignInRequest) error {
 
 func (*AuthApi) Register(ctx *route.Context, registerEntity *RegisterRequest) error {
 
-	err := userdao.UserDao.AddUser(registerEntity.Account, registerEntity.Password)
+	err := userdao.UserDao2.AddUser(registerEntity.Account, registerEntity.Password)
 	if err != nil {
 		return err
 	}
@@ -53,7 +53,7 @@ func (*AuthApi) Register(ctx *route.Context, registerEntity *RegisterRequest) er
 }
 
 func (a *AuthApi) Logout(ctx *route.Context, r *LogoutRequest) error {
-	err := userdao.UserDao.Logout(ctx.Uid, r.Device, r.Token)
+	err := userdao.UserDao2.Logout(ctx.Uid, r.Device, r.Token)
 	if err != nil {
 		return err
 	}
@@ -65,7 +65,7 @@ func (a *AuthApi) Logout(ctx *route.Context, r *LogoutRequest) error {
 func (a *AuthApi) Auth(ctx *route.Context, request *AuthRequest) error {
 
 	var resp = message.NewMessage(ctx.Seq, "", "success")
-	uid := userdao.UserDao.GetUid(request.Token)
+	uid := userdao.UserDao2.GetUid(request.Token)
 	if uid > 0 {
 		apidep.ClientManager.ClientSignIn(ctx.Uid, uid, request.DeviceId)
 		ctx.Response(resp)
