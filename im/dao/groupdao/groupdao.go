@@ -1,1 +1,30 @@
 package groupdao
+
+var Dao = GroupDao{
+	GroupMemberDao: GroupMemberDaoImpl{},
+	GroupInfoDao:   &GroupInfoDaoImpl{},
+}
+
+type GroupInfoDao interface {
+	CreateGroup(name string, flag int) (*GroupModel, error)
+	UpdateGroupName(gid int64, name string) error
+	UpdateGroupAvatar(gid int64, avatar string) error
+	UpdateGroupMute(gid int64, mute bool) error
+	GetGroupMute(gid int64) (bool, error)
+	UpdateGroupFlag(gid int64, flag int) error
+	GetGroupFlag(gid int64) (int, error)
+}
+
+type GroupMemberDao interface {
+	GetMembers(gid int64) ([]*GroupMemberModel, error)
+	AddMember(gid int64, uid int64, defaultFlag int64) error
+	RemoveMember(gid int64, uid int64) error
+	UpdateMemberFlag(gid int64, uid int64, flag int) error
+	GetMemberFlag(gid int64, uid int64) (int64, error)
+	GetMember(gid int64, uid int64) (*GroupMemberModel, error)
+}
+
+type GroupDao struct {
+	GroupInfoDao
+	GroupMemberDao
+}

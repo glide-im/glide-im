@@ -2,13 +2,32 @@ package common
 
 import (
 	"errors"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
+var ErrNoneUpdated = errors.New("no record updated, RowsAffected=0")
+
 func ResolveError(db *gorm.DB) error {
-	if db.RowsAffected == 0 {
-		return errors.New("update failed, no such record")
+	if db.Error != nil {
+		return db.Error
 	}
+	if db.RowsAffected == 0 {
+		return errors.New("RowsAffected=0")
+	}
+	return nil
+}
+
+func MustUpdate(db *gorm.DB) error {
+	if db.Error != nil {
+		return db.Error
+	}
+	if db.RowsAffected == 0 {
+		return ErrNoneUpdated
+	}
+	return nil
+}
+
+func ResolveUpdateErr(db *gorm.DB) error {
 	if db.Error != nil {
 		return db.Error
 	}

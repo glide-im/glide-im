@@ -2,8 +2,26 @@ package groupdao
 
 import "go_im/im/dao/common"
 
+type GroupModel struct {
+	Gid      int64 `gorm:"primaryKey"`
+	Name     string
+	Avatar   string
+	Mute     bool
+	Flag     int
+	CreateAt int64
+}
+
+type GroupMemberModel struct {
+	MbID   string `gorm:"primaryKey"`
+	Gid    int64
+	Uid    int64
+	Flag   int64
+	Type   int64
+	Remark string
+}
+
 type Group struct {
-	Gid      int64 `gorm:"primary_key"`
+	Gid      int64 `gorm:"primaryKey"`
 	Name     string
 	Avatar   string
 	Owner    int64
@@ -14,7 +32,7 @@ type Group struct {
 }
 
 type GroupMember struct {
-	Id     int64 `gorm:"primary_key"`
+	Id     int64 `gorm:"primaryKey"`
 	Gid    int64
 	Uid    int64
 	Mute   int64
@@ -24,7 +42,7 @@ type GroupMember struct {
 }
 
 type GroupMessage struct {
-	GmId        int64 `gorm:"primary_key"`
+	GmId        int64 `gorm:"primaryKey"`
 	Cid         int64
 	SenderUid   int64
 	SendAt      common.Timestamp `gorm:"type:datetime"`
@@ -34,7 +52,7 @@ type GroupMessage struct {
 }
 
 type GroupNotify struct {
-	Id     int64 `gorm:"primary_key"`
+	Id     int64 `gorm:"primaryKey"`
 	Gid    int64
 	Uid    int64
 	Remark string

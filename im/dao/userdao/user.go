@@ -62,10 +62,10 @@ func (d *userDao) HasUser(uid ...int64) (bool, error) {
 		}
 		query = query.Or("uid = ?", id)
 	}
-	rows := -1
+	var rows int64
 	err := query.Count(&rows).Error
 
-	return rows == len(uid), err
+	return rows == int64(len(uid)), err
 }
 
 func (d *userDao) Logout(uid, device int64, token string) error {
@@ -89,7 +89,7 @@ func (d *userDao) GetUser(uid ...int64) ([]*User, error) {
 
 func (d *userDao) AddUser(account string, password string) error {
 
-	var count int
+	var count int64
 	db.DB.Table(d.getUserTableName()).Where("account = ?", account).Select("uid").Count(&count)
 	if count > 0 {
 		return errors.New("account already exist")
@@ -147,7 +147,7 @@ func (d *userDao) GetAllContacts(uid int64) ([]*Contacts, error) {
 }
 
 func (d *userDao) HasContacts(owner int64, targetId int64, typ int8) (bool, error) {
-	row := 0
+	var row int64
 	err := db.DB.Table("im_contacts").Where("target_id = ? and owner = ? and type = ?", targetId, owner, typ).Count(&row).Error
 	return row > 0, err
 }

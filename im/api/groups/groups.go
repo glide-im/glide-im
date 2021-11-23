@@ -57,7 +57,7 @@ func (m *GroupApi) CreateGroup(ctx *route.Context, request *CreateGroupRequest) 
 
 func (m *GroupApi) GetGroupMember(ctx *route.Context, request *GetGroupMemberRequest) error {
 
-	members, err := groupdao.GroupDao.GetMembers(request.Gid)
+	members, err := groupdao.GroupDao2.GetMembers(request.Gid)
 	if err != nil {
 		return err
 	}
@@ -82,11 +82,11 @@ func (m *GroupApi) GetGroupInfo(ctx *route.Context, request *GroupInfoRequest) e
 	var groups []*GroupResponse
 
 	for _, gid := range request.Gid {
-		group1, e := groupdao.GroupDao.GetGroup(gid)
+		group1, e := groupdao.GroupDao2.GetGroup(gid)
 		if e != nil {
 			return e
 		}
-		ms, _ := groupdao.GroupDao.GetMembers(gid)
+		ms, _ := groupdao.GroupDao2.GetMembers(gid)
 		gr := GroupResponse{
 			Group:   *group1,
 			Members: ms,
@@ -100,7 +100,7 @@ func (m *GroupApi) GetGroupInfo(ctx *route.Context, request *GroupInfoRequest) e
 func (m *GroupApi) RemoveMember(ctx *route.Context, request *RemoveMemberRequest) error {
 
 	for _, uid := range request.Uid {
-		err := groupdao.GroupDao.RemoveMember(request.Gid, uid)
+		err := groupdao.GroupDao2.RemoveMember(request.Gid, uid)
 		if err != nil {
 			return err
 		}
@@ -117,7 +117,7 @@ func (m *GroupApi) RemoveMember(ctx *route.Context, request *RemoveMemberRequest
 
 func (m *GroupApi) AddGroupMember(ctx *route.Context, request *AddMemberRequest) error {
 
-	g, err := groupdao.GroupDao.GetGroup(request.Gid)
+	g, err := groupdao.GroupDao2.GetGroup(request.Gid)
 	if err != nil {
 		return err
 	}
@@ -147,7 +147,7 @@ func (m *GroupApi) AddGroupMember(ctx *route.Context, request *AddMemberRequest)
 			_ = apidep.GroupManager.RemoveMember(request.Gid, member.Uid)
 			continue
 		}
-		//ms, err := groupdao.GroupDao.GetMembers(request.Gid)
+		//ms, err := groupdao.GroupDao2.GetMembers(request.Gid)
 		if err != nil {
 			return err
 		}
@@ -173,7 +173,7 @@ func (m *GroupApi) ExitGroup(ctx *route.Context, request *ExitGroupRequest) erro
 		return err
 	}
 
-	err = groupdao.GroupDao.RemoveMember(request.Gid, ctx.Uid)
+	err = groupdao.GroupDao2.RemoveMember(request.Gid, ctx.Uid)
 	if err != nil {
 		return err
 	}
@@ -184,7 +184,7 @@ func (m *GroupApi) ExitGroup(ctx *route.Context, request *ExitGroupRequest) erro
 
 func (m *GroupApi) JoinGroup(ctx *route.Context, request *JoinGroupRequest) error {
 
-	g, err := groupdao.GroupDao.GetGroup(request.Gid)
+	g, err := groupdao.GroupDao2.GetGroup(request.Gid)
 	if err != nil {
 		return err
 	}
@@ -200,7 +200,7 @@ func (m *GroupApi) JoinGroup(ctx *route.Context, request *JoinGroupRequest) erro
 
 	_, err = userdao.UserDao.AddContacts(ctx.Uid, g.Gid, userdao.ContactsTypeGroup, "")
 
-	//members, err := groupdao.GroupDao.GetMembers(request.Gid)
+	//members, err := groupdao.GroupDao2.GetMembers(request.Gid)
 	//if err != nil {
 	//	return err
 	//}
@@ -222,12 +222,12 @@ func (m *GroupApi) JoinGroup(ctx *route.Context, request *JoinGroupRequest) erro
 
 func (m *GroupApi) createGroup(name string, uid int64) (*groupdao.Group, error) {
 
-	gp, err := groupdao.GroupDao.CreateGroup(name, uid)
+	gp, err := groupdao.GroupDao2.CreateGroup(name, uid)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = groupdao.GroupDao.AddMember(gp.Gid, groupdao.GroupMemberAdmin, uid)
+	_, err = groupdao.GroupDao2.AddMember(gp.Gid, groupdao.GroupMemberAdmin, uid)
 	if err != nil {
 		// TODO undo create group
 		return nil, err
@@ -237,14 +237,18 @@ func (m *GroupApi) createGroup(name string, uid int64) (*groupdao.Group, error) 
 		// TODO undo
 		return nil, err
 	}
-	apidep.GroupManager.AddGroup(gp.Gid)
+
+	err = apidep.GroupManager.CreateGroup(gp.Gid)
+	if err != nil {
+		return nil, err
+	}
 	return gp, nil
 }
 
 func (m *GroupApi) addGroupMember(gid int64, uid ...int64) ([]*groupdao.GroupMember, error) {
 
 	memberUid := make([]int64, 0, len(uid))
-	members, _ := groupdao.GroupDao.GetMember(gid, uid...)
+	members, _ := groupdao.GroupDao2.GetMember(gid, uid...)
 	existsMember := map[int64]interface{}{}
 	for _, i := range members {
 		existsMember[i.Uid] = nil
@@ -269,7 +273,7 @@ func (m *GroupApi) addGroupMember(gid int64, uid ...int64) ([]*groupdao.GroupMem
 		return nil, errors.New("user does not exist")
 	}
 
-	members, err := groupdao.GroupDao.AddMember(gid, groupdao.GroupMemberUser, memberUid...)
+	members, err := groupdao.GroupDao2.AddMember(gid, groupdao.GroupMemberUser, memberUid...)
 	if err != nil {
 		return nil, err
 	}

@@ -125,7 +125,7 @@ func (g *Group) EnqueueMessage(msg *message.UpChatMessage) (int64, error) {
 		atomic.AddInt64(&g.msgSequence, -1)
 		return 0, err
 	}
-	err = msgdao.UpdateGroupMessageState(g.gid, 1, 1, 1)
+	err = msgdao.UpdateGroupMessageState(g.gid, msg.Mid, time.Now().Unix(), seq)
 	if err != nil {
 		logger.E("Group.EnqueueMessage update group message state error, %v", err)
 		return 0, err

@@ -5,7 +5,7 @@ import (
 )
 
 type User struct {
-	Uid      int64  `gorm:"primary_key"`
+	Uid      int64  `gorm:"primaryKey"`
 	Account  string `gorm:"unique"`
 	Nickname string
 	Password string
@@ -16,7 +16,7 @@ type User struct {
 }
 
 type Contacts struct {
-	Fid      int64 `gorm:"primary_key"`
+	Fid      int64 `gorm:"primaryKey"`
 	Owner    int64
 	TargetId int64
 	Remark   string

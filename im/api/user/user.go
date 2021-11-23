@@ -27,14 +27,14 @@ func (a *UserApi) GetContactList(msg *route.Context) error {
 	for _, contacts := range allContacts {
 
 		if contacts.Type == userdao.ContactsTypeGroup {
-			g, er := groupdao.GroupDao.GetGroup(contacts.TargetId)
+			g, er := groupdao.GroupDao2.GetGroup(contacts.TargetId)
 			if er != nil {
 				return er
 			}
 			if g == nil {
 				return errors.New("group not exist")
 			}
-			//members, err := groupdao.GroupDao.GetMembers(g.Gid)
+			//members, err := groupdao.GroupDao2.GetMembers(g.Gid)
 			if err != nil {
 				return err
 			}

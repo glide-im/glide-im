@@ -15,7 +15,7 @@ type EnqueueMessageInterface interface {
 	EnqueueMessage(uid int64, device int64, message *message.Message)
 }
 
-var EnqueueMessage EnqueueMessageInterface
+var EnqueueMessage EnqueueMessageInterface = client.Manager
 
 const (
 	_ = iota

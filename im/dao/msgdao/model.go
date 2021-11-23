@@ -3,7 +3,7 @@ package msgdao
 // ChatMessage 一对一聊天全量消息
 type ChatMessage struct {
 	// MID 消息 ID
-	MID int64 `gorm:"primary_key"`
+	MID int64 `gorm:"primaryKey"`
 	// SessionTag 会话标识由发送者与接收者ID拼接成, ID大的放前面
 	SessionTag string
 	// CliSeq 发送者消息 seq
@@ -34,14 +34,14 @@ type Session struct {
 
 // OfflineMessage 用户不在线, 离线消息
 type OfflineMessage struct {
-	ID  int64 `gorm:"primary_key"`
+	ID  int64 `gorm:"primaryKey"`
 	MID int64
 	UID int64
 }
 
 // GroupMessage 全量群消息
 type GroupMessage struct {
-	MID int64 `gorm:"primary_key"`
+	MID int64 `gorm:"primaryKey"`
 	// Seq 群消息 seq
 	Seq int64
 	// To 群 ID
@@ -55,9 +55,9 @@ type GroupMessage struct {
 
 // GroupMemberMsgState 群成员确认收到消息记录, 用于计算离线消息的同步量
 type GroupMemberMsgState struct {
-	// MbID 群成员ID, GID+UID 拼接成
-	MbID string `gorm:"primary_key"`
-	GID  int64
+	// MbID 群成员ID, Gid+UID 拼接成
+	MbID string `gorm:"primaryKey"`
+	Gid  int64
 	UID  int64
 	// LastAckMID 最后一次确认收到的消息 id
 	LastAckMID int64
@@ -67,7 +67,7 @@ type GroupMemberMsgState struct {
 
 // GroupMessageState 群消息最新状态 ID 及 seq
 type GroupMessageState struct {
-	GID int64 `gorm:"primary_key"`
+	Gid int64 `gorm:"primaryKey"`
 	// LastMID 最后一条消息的ID
 	LastMID int64
 	// LastSeq	最后一条消息的 seq
@@ -78,7 +78,7 @@ type GroupMessageState struct {
 
 // GroupMsgSeq 群消息 seq 状态
 type GroupMsgSeq struct {
-	GID int64 `gorm:"primary_key"`
+	Gid int64 `gorm:"primaryKey"`
 	// Seq 当前群消息 seq
 	Seq int64
 	// Step 增长步长

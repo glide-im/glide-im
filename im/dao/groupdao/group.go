@@ -12,7 +12,7 @@ const (
 	GroupMemberAdmin = 2
 )
 
-var GroupDao = new(groupDao)
+var GroupDao2 = new(groupDao)
 
 type groupDao struct{}
 
@@ -39,14 +39,6 @@ func (d *groupDao) CreateGroup(name string, owner int64) (*Group, error) {
 	}
 
 	return &g, nil
-}
-
-func (d *groupDao) UpdateGroupChatId(gid int64, cid int64) error {
-	res := db.DB.
-		Table("im_group").
-		Where("gid = ?", gid).
-		Update(map[string]interface{}{"chat_id": cid})
-	return common.ResolveError(res)
 }
 
 func (d *groupDao) GetMember(gid int64, uid ...int64) ([]*GroupMember, error) {
@@ -81,12 +73,6 @@ func (d *groupDao) RemoveMember(gid int64, uid int64) error {
 	}
 
 	return nil
-}
-
-func (d *groupDao) HasMember(gid int64, uid int64) (bool, error) {
-	row := 0
-	err := db.DB.Table("im_group_member").Where("gid = ? and uid = ?", gid, uid).Count(&row).Error
-	return row > 0, err
 }
 
 func (d *groupDao) AddMember(gid int64, typ int32, uid ...int64) ([]*GroupMember, error) {

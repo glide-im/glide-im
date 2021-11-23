@@ -13,16 +13,17 @@ func init() {
 
 type GroupMsgDao interface {
 	GetGroupMsgSeq(gid int64) (int64, error)
-	UpdateGroupMsgSeq(gid int64) error
+	UpdateGroupMsgSeq(gid int64, seq int64) error
 	CreateGroupMsgSeq(gid int64, step int64) error
 
 	GetGroupMessage(mid int64) (*GroupMessage, error)
 	GetGroupMessageSeqAfter(gid int64, seqAfter int64) ([]*GroupMessage, error)
 
 	AddGroupMessage(message *GroupMessage) error
-	UpdateGroupMessageState(gid int64, lastMID int64, lastMsgAg int64, lastMsgSeq int64) error
+	UpdateGroupMessageState(gid int64, lastMID int64, lastMsgAt int64, lastMsgSeq int64) error
 	GetGroupMessageState(gid int64) (*GroupMessageState, error)
 
+	CreateGroupMemberMsgState(gid int64, uid int64) error
 	UpdateGroupMemberMsgState(gid int64, uid int64, lastAck int64, lastAckSeq int64) error
 	GetGroupMemberMsgState(gid int64, uid int64) (*GroupMemberMsgState, error)
 }
@@ -31,8 +32,8 @@ type ChatMsgDao interface {
 	GetChatMessage(mid int64) (*ChatMessage, error)
 	AddOrUpdateChatMessage(message *ChatMessage) (bool, error)
 
-	GetChatMessageSeqAfter(uid int64, seqAfter int64) ([]*ChatMessage, error)
-	GetChatMessageSeqSpan(uid int64, seq int64) (int, error)
+	GetChatMessageMidAfter(form, to int64, midAfter int64) ([]*ChatMessage, error)
+	GetChatMessageMidSpan(from, to int64, midStart, midEnd int64) ([]*ChatMessage, error)
 
 	AddOfflineMessage(uid int64, mid int64) error
 	GetOfflineMessage(uid int64) ([]*OfflineMessage, error)
@@ -85,8 +86,8 @@ func GetMessageID() (int64, error) {
 func GetGroupMsgSeq(gid int64) (int64, error) {
 	return instance.GetGroupMsgSeq(gid)
 }
-func UpdateGroupMsgSeq(gid int64) error {
-	return instance.UpdateGroupMsgSeq(gid)
+func UpdateGroupMsgSeq(gid int64, seq int64) error {
+	return instance.UpdateGroupMsgSeq(gid, seq)
 }
 func CreateGroupMsgSeq(gid int64, step int64) error {
 	return instance.CreateGroupMsgSeq(gid, step)
@@ -101,8 +102,8 @@ func GetGroupMessageSeqAfter(gid int64, seqAfter int64) ([]*GroupMessage, error)
 func AddGroupMessage(message *GroupMessage) error {
 	return instance.AddGroupMessage(message)
 }
-func UpdateGroupMessageState(gid int64, lastMID int64, lastMsgAg int64, lastMsgSeq int64) error {
-	return instance.UpdateGroupMessageState(gid, lastMID, lastMsgAg, lastMsgSeq)
+func UpdateGroupMessageState(gid int64, lastMID int64, lastMsgAt int64, lastMsgSeq int64) error {
+	return instance.UpdateGroupMessageState(gid, lastMID, lastMsgAt, lastMsgSeq)
 }
 func GetGroupMessageState(gid int64) (*GroupMessageState, error) {
 	return instance.GetGroupMessageState(gid)
@@ -122,11 +123,11 @@ func GetChatMessage(mid int64) (*ChatMessage, error) {
 func AddChatMessage(message *ChatMessage) (bool, error) {
 	return instance.AddOrUpdateChatMessage(message)
 }
-func GetChatMessageSeqAfter(uid int64, seqAfter int64) ([]*ChatMessage, error) {
-	return instance.GetChatMessageSeqAfter(uid, seqAfter)
+func GetChatMessageMidAfter(from int64, to int64, midAfter int64) ([]*ChatMessage, error) {
+	return instance.GetChatMessageMidAfter(from, to, midAfter)
 }
-func GetChatMessageSeqSpan(uid int64, seq int64) (int, error) {
-	return instance.GetChatMessageSeqSpan(uid, seq)
+func GetChatMessageMidSpan(from, to int64, midStart, midEnd int64) ([]*ChatMessage, error) {
+	return instance.GetChatMessageMidSpan(from, to, midStart, midEnd)
 }
 func AddOfflineMessage(uid int64, mid int64) error {
 	return instance.AddOfflineMessage(uid, mid)

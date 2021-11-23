@@ -1,7 +1,9 @@
 package group
 
 import (
+	"go_im/im/dao"
 	"go_im/im/message"
+	"go_im/pkg/db"
 	"go_im/pkg/logger"
 	"sync/atomic"
 	"testing"
@@ -85,6 +87,8 @@ func TestDefaultManager_DispatchMessage(t *testing.T) {
 
 func TestDefaultManager_DispatchMessage2(t *testing.T) {
 
+	db.Init()
+	dao.Init()
 	initMock()
 	initUserMock(1, 1, 2, 3, 4)
 
@@ -97,6 +101,7 @@ func TestDefaultManager_DispatchMessage2(t *testing.T) {
 		Content: "HelloWorld",
 		CTime:   time.Now().Unix(),
 	}
+	msg.Mid = 2
 	err := Manager.DispatchMessage(1, msg)
 	if err != nil {
 		t.Error(err)
@@ -104,6 +109,7 @@ func TestDefaultManager_DispatchMessage2(t *testing.T) {
 
 	time.Sleep(time.Second * 2)
 
+	msg.Mid = 3
 	err = Manager.DispatchMessage(1, msg)
 	if err != nil {
 		t.Error(err)
@@ -111,6 +117,7 @@ func TestDefaultManager_DispatchMessage2(t *testing.T) {
 
 	time.Sleep(time.Second * 2)
 
+	msg.Mid = 4
 	err = Manager.DispatchMessage(1, msg)
 	if err != nil {
 		t.Error(err)
