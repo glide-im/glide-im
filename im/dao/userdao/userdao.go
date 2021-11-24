@@ -1,5 +1,7 @@
 package userdao
 
+import "time"
+
 var Dao = UserDao{
 	UserInfoDaoInterface: UserInfoDao,
 	ContactsDaoInterface: ContactsDao,
@@ -7,7 +9,10 @@ var Dao = UserDao{
 
 type Cache interface {
 	GetUserLoginState(uid int64) ([]*LoginState, error)
-	AuthToken(token string) (int64, error)
+	DelUserToken(uid int64, device int64) error
+	DelAllToken(uid int64) error
+	GetTokenUid(token string) (int64, error)
+	SetUserToken(uid int64, token int64, device int64, expiredAt time.Duration) error
 }
 
 type UserInfoDaoInterface interface {
