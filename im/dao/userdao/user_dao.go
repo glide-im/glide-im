@@ -43,6 +43,18 @@ func (d *UserInfoDaoImpl) UpdatePassword(uid int64, password string) error {
 	return d.update(uid, "password", password)
 }
 
+func (d *UserInfoDaoImpl) GetUidInfoByLogin(account string, password string) (int64, error) {
+	var uid int64
+	query := db.DB.Model(&User{}).
+		Where("account = ? AND password = ?", account, password).
+		Select("uid").
+		Find(&uid)
+	if err := common.ResolveError(query); err != nil {
+		return 0, err
+	}
+	return uid, nil
+}
+
 func (d *UserInfoDaoImpl) GetPassword(uid int64) (string, error) {
 	var password string
 	query := db.DB.Model(&User{}).Where("uid = ?", uid).Select("password").Find(&password)

@@ -3,16 +3,19 @@ package userdao
 import "time"
 
 var Dao = UserDao{
+	Cache:                UserCacheDao{},
 	UserInfoDaoInterface: UserInfoDao,
 	ContactsDaoInterface: ContactsDao,
 }
 
 type Cache interface {
-	GetUserLoginState(uid int64) ([]*LoginState, error)
-	DelUserToken(uid int64, device int64) error
+	GetUserSignState(uid int64) ([]*LoginState, error)
+	IsUserSignIn(uid int64, device int64) (bool, error)
+	DelAuthToken(uid int64, device int64) error
+	DelToken(token string) error
 	DelAllToken(uid int64) error
-	GetTokenUid(token string) (int64, error)
-	SetUserToken(uid int64, token int64, device int64, expiredAt time.Duration) error
+	GetTokenInfo(token string) (int64, int64, error)
+	SetSignInToken(uid int64, device int64, token string, expiredAt time.Duration) error
 }
 
 type UserInfoDaoInterface interface {
@@ -25,6 +28,7 @@ type UserInfoDaoInterface interface {
 	UpdatePassword(uid int64, password string) error
 	GetPassword(uid int64) (string, error)
 
+	GetUidInfoByLogin(account string, password string) (int64, error)
 	GetUserInfo(uid int64) (*User, error)
 	GetUserSimpleInfo(uid ...int64) ([]*User, error)
 }

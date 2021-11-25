@@ -1,11 +1,8 @@
 package userdao
 
 import (
-	"database/sql"
 	"errors"
-	"go_im/im/dao/uid"
 	"go_im/pkg/db"
-	"math/rand"
 )
 
 var UserDao2 *userDao
@@ -66,10 +63,6 @@ func (d *userDao) HasUser(uid ...int64) (bool, error) {
 	return rows == int64(len(uid)), err
 }
 
-func (d *userDao) Logout(uid, device int64, token string) error {
-	return delAuthToken(token)
-}
-
 func (d *userDao) GetUser(uid ...int64) ([]*User, error) {
 
 	var u []*User
@@ -83,55 +76,6 @@ func (d *userDao) GetUser(uid ...int64) ([]*User, error) {
 	}
 
 	return u, query.Find(&u).Error
-}
-
-func (d *userDao) AddUser(account string, password string) error {
-
-	var count int64
-	db.DB.Table(d.getUserTableName()).Where("account = ?", account).Select("uid").Count(&count)
-	if count > 0 {
-		return errors.New("account already exist")
-	}
-
-	u := User{
-		Uid:      uid.GenUid(),
-		Account:  account,
-		Password: password,
-		Nickname: nickName[rand.Intn(14)],
-		Avatar:   avatars[rand.Intn(17)],
-	}
-
-	if db.DB.Model(&u).Create(&u).RowsAffected > 0 {
-		return nil
-	} else {
-		return errors.New("create account failed")
-	}
-}
-
-// GetUidByLogin
-//
-// return uid,token,error
-func (d *userDao) GetUidByLogin(account string, password string, device int64) (int64, string, error) {
-
-	where := db.DB.Table(d.getUserTableName()).Where("account = ? and password = ?", account, password)
-	row := where.Select("uid").Row()
-
-	var uid int64
-	if err := row.Scan(&uid); err != nil {
-		if err == sql.ErrNoRows {
-			return -1, "", errors.New("account does not exist")
-		}
-		return -1, "", err
-	}
-	token := genToken(userTokenLen)
-	if err := setAuthToken(uid, token, device); err != nil {
-		return 0, "", err
-	}
-	return uid, token, nil
-}
-
-func (d *userDao) GetUid(token string) int64 {
-	return authToken(token)
 }
 
 func (d *userDao) GetAllContacts(uid int64) ([]*Contacts, error) {

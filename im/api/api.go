@@ -56,7 +56,7 @@ func (a *Routers) init() {
 			route.Group("user",
 				route.Route("login", a.SignIn),
 				route.Route("logout", a.Logout),
-				route.Route("auth", a.Auth),
+				route.Route("auth", a.AuthToken),
 				route.Route("register", a.Register),
 				route.Route("online", a.GetOnlineUser),
 				route.Group("info",

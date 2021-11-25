@@ -1,6 +1,6 @@
 package auth
 
-type AuthTokenReq struct {
+type AuthTokenRequest struct {
 	Token  string
 	Device int64
 }
@@ -12,14 +12,6 @@ type SignInRequest struct {
 }
 
 type LogoutRequest struct {
-	Device  int64
-	Account string
-	Token   string
-}
-
-type AuthRequest struct {
-	Token    string
-	DeviceId int64
 }
 
 type RegisterRequest struct {
@@ -27,8 +19,8 @@ type RegisterRequest struct {
 	Password string
 }
 
-// AuthorResponse login or register result
-type AuthorResponse struct {
+// AuthResponse login or register result
+type AuthResponse struct {
 	Token string
 	Uid   int64
 }

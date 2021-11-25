@@ -5,8 +5,8 @@ type ErrApiBiz struct {
 	msg  string
 }
 
-func NewApiBizError(code int, msg string) ErrApiBiz {
-	return ErrApiBiz{
+func NewApiBizError(code int, msg string) *ErrApiBiz {
+	return &ErrApiBiz{
 		Code: code,
 		msg:  msg,
 	}
@@ -21,8 +21,8 @@ type ErrUnexpected struct {
 	e   error
 }
 
-func NewUnexpectedErr(msg string, origin error) ErrUnexpected {
-	return ErrUnexpected{
+func NewUnexpectedErr(msg string, origin error) *ErrUnexpected {
+	return &ErrUnexpected{
 		msg: msg,
 		e:   origin,
 	}
