@@ -49,8 +49,11 @@ func (d *UserInfoDaoImpl) GetUidInfoByLogin(account string, password string) (in
 		Where("account = ? AND password = ?", account, password).
 		Select("uid").
 		Find(&uid)
-	if err := common.ResolveError(query); err != nil {
-		return 0, err
+	if query.Error != nil {
+		return 0, query.Error
+	}
+	if query.RowsAffected == 0 {
+		return 0, common.ErrNoRecordFound
 	}
 	return uid, nil
 }

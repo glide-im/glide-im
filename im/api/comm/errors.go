@@ -1,5 +1,7 @@
 package comm
 
+import "strconv"
+
 type ErrApiBiz struct {
 	Code int
 	msg  string
@@ -13,21 +15,31 @@ func NewApiBizError(code int, msg string) *ErrApiBiz {
 }
 
 func (e *ErrApiBiz) Error() string {
-	return e.msg
+	return strconv.FormatInt(int64(e.Code), 10) + "," + e.msg
 }
 
 type ErrUnexpected struct {
-	msg string
-	e   error
+	Code int
+	msg  string
+	e    error
 }
 
 func NewUnexpectedErr(msg string, origin error) *ErrUnexpected {
 	return &ErrUnexpected{
-		msg: msg,
-		e:   origin,
+		Code: 1000,
+		msg:  msg,
+		e:    origin,
+	}
+}
+
+func NewDbErr(origin error) *ErrUnexpected {
+	return &ErrUnexpected{
+		Code: 1001,
+		msg:  "internal server error",
+		e:    origin,
 	}
 }
 
 func (u *ErrUnexpected) Error() string {
-	return u.e.Error()
+	return strconv.FormatInt(int64(u.Code), 10) + "," + u.msg
 }

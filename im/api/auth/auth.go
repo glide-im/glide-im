@@ -5,6 +5,7 @@ import (
 	"go_im/im/api/apidep"
 	"go_im/im/api/comm"
 	"go_im/im/api/router"
+	"go_im/im/dao/common"
 	"go_im/im/dao/userdao"
 	"go_im/im/message"
 	"go_im/pkg/logger"
@@ -68,7 +69,10 @@ func (*AuthApi) SignIn(ctx *route.Context, request *SignInRequest) error {
 	}
 	uid, err := userdao.Dao.GetUidInfoByLogin(request.Account, request.Password)
 	if err != nil {
-		return err
+		if err == common.ErrNoRecordFound {
+			return comm.NewApiBizError(1001, "check your account and password")
+		}
+		return comm.NewDbErr(err)
 	}
 	if uid == 0 {
 		return comm.NewApiBizError(1001, "check your account and password")
@@ -87,7 +91,7 @@ func (*AuthApi) SignIn(ctx *route.Context, request *SignInRequest) error {
 	token := genToken(32)
 	err = userdao.Dao.SetSignInToken(uid, request.Device, token, time.Hour*24*7)
 	if err != nil {
-		return comm.NewUnexpectedErr("login failed cause internal server error", err)
+		return comm.NewDbErr(err)
 	}
 	resp := message.NewMessage(ctx.Seq, comm.ActionSuccess, AuthResponse{Token: token, Uid: uid})
 	apidep.ClientManager.ClientSignIn(ctx.Uid, uid, request.Device)
@@ -104,7 +108,7 @@ func (*AuthApi) Register(ctx *route.Context, req *RegisterRequest) error {
 	}
 	err := userdao.UserInfoDao.AddUser(u)
 	if err != nil {
-		return comm.NewUnexpectedErr("register failed cause internal server error", err)
+		return comm.NewDbErr(err)
 	}
 	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, ""))
 	return err
@@ -113,7 +117,7 @@ func (*AuthApi) Register(ctx *route.Context, req *RegisterRequest) error {
 func (a *AuthApi) Logout(ctx *route.Context, r *LogoutRequest) error {
 	err := userdao.Dao.DelAuthToken(ctx.Uid, ctx.Device)
 	if err != nil {
-		return comm.NewUnexpectedErr("logout failed due to internal server error", err)
+		return comm.NewDbErr(err)
 	}
 	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, ""))
 	apidep.ClientManager.ClientLogout(ctx.Uid, ctx.Device)

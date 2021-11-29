@@ -5,6 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
+var ErrNoRecordFound = errors.New("no record found")
 var ErrNoneUpdated = errors.New("no record updated, RowsAffected=0")
 
 func ResolveError(db *gorm.DB) error {

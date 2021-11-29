@@ -36,7 +36,7 @@ func logErr(t *testing.T, err error) {
 
 func TestAuthApi_AuthToken(t *testing.T) {
 	err := authApi.AuthToken(getContext(2, 0), &AuthTokenRequest{
-		Token:  "FvdfPKJn3GbfPaRxAS0MlFnsOUrsnlx9",
+		Token:  "RN9fXQtAoplDCX8uSiajitgFgCZlrcpX",
 		Device: 1,
 	})
 	logErr(t, err)
@@ -52,8 +52,8 @@ func TestAuthApi_Register(t *testing.T) {
 
 func TestAuthApi_SignIn(t *testing.T) {
 	err := authApi.SignIn(getContext(2, 0), &SignInRequest{
-		Account:  "bb",
-		Password: "bb",
+		Account:  "aa",
+		Password: "1234567",
 		Device:   1,
 	})
 	logErr(t, err)
