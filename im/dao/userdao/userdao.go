@@ -29,11 +29,12 @@ type UserInfoDaoInterface interface {
 	GetPassword(uid int64) (string, error)
 
 	GetUidInfoByLogin(account string, password string) (int64, error)
-	GetUserInfo(uid int64) (*User, error)
+	GetUser(uid int64) (*User, error)
 	GetUserSimpleInfo(uid ...int64) ([]*User, error)
 }
 
 type ContactsDaoInterface interface {
+	HasContacts(uid int64, id int64, type_ int8) (bool, error)
 	AddContacts(uid int64, id int64, type_ int8) error
 	DelContacts(uid int64, id int64, type_ int8) error
 	GetContacts(uid int64) ([]*Contacts, error)

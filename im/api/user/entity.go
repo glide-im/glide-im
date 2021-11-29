@@ -15,16 +15,36 @@ type InfoListResponse struct {
 	UserInfo []*InfoResponse
 }
 
-type NewChatRequest struct {
-	Id   int64
+type UpdateProfileRequest struct {
+}
+
+type NewContactResponse struct {
+	Uid  int64
 	Type int8
 }
 
 type ContactResponse struct {
-	Friends []*InfoResponse
-	Groups  []interface{}
+	Id     int64
+	Type   int8
+	Remark string
 }
+
 type AddContacts struct {
 	Uid    int64
 	Remark string
+}
+
+type DeleteContactsRequest struct {
+	Uid []int64
+}
+
+type UpdateRemarkRequest struct {
+	Uid    int64
+	Remark string
+}
+
+type ContactApproval struct {
+	Uid     int64
+	Agree   bool
+	Comment string
 }

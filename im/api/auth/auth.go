@@ -84,7 +84,7 @@ func (*AuthApi) SignIn(ctx *route.Context, request *SignInRequest) error {
 			logger.E("del user token failed %v", err)
 		}
 		notify := message.NewMessage(0, message.ActionNotify, "your account has sign in on another device")
-		apidep.ClientManager.EnqueueMessage(uid, request.Device, notify)
+		apidep.SendMessage(uid, request.Device, notify)
 		apidep.ClientManager.ClientLogout(uid, request.Device)
 	}
 

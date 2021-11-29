@@ -39,6 +39,6 @@ func TestUserInfoDaoImpl_GetUserSimpleInfo(t *testing.T) {
 }
 
 func TestUserInfoDaoImpl_GetUserInfo(t *testing.T) {
-	info, err := UserInfoDao.GetUserInfo(543603)
+	info, err := UserInfoDao.GetUser(543603)
 	t.Log(info, err)
 }

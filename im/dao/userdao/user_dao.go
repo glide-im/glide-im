@@ -67,7 +67,7 @@ func (d *UserInfoDaoImpl) GetPassword(uid int64) (string, error) {
 	return password, nil
 }
 
-func (d *UserInfoDaoImpl) GetUserInfo(uid int64) (*User, error) {
+func (d *UserInfoDaoImpl) GetUser(uid int64) (*User, error) {
 	user := &User{}
 	query := db.DB.Model(user).Where("uid = ?", uid).Find(user)
 	if err := common.ResolveError(query); err != nil {
@@ -78,8 +78,8 @@ func (d *UserInfoDaoImpl) GetUserInfo(uid int64) (*User, error) {
 
 func (d *UserInfoDaoImpl) GetUserSimpleInfo(uid ...int64) ([]*User, error) {
 	var us []*User
-	query := db.DB.Model(&User{}).Where("uid IN (?)", uid).Find(&us)
-	if err := common.ResolveError(query); err != nil {
+	query := db.DB.Model(&User{}).Where("uid IN (?)", uid).Select("uid, account, nickname, avatar").Find(&us)
+	if err := common.ResolveFindErr(query); err != nil {
 		return nil, err
 	}
 	return us, nil

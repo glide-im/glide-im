@@ -133,5 +133,5 @@ func (a *Routers) onError(uid int64, device int64, msg *message.Message, err err
 	logger.D("a.onError: uid=%d, Action=%s, err=%s", uid, msg.Action, err.Error())
 
 	errMsg := message.NewMessage(msg.Seq, message.ActionFailed, err.Error())
-	apidep.ClientManager.EnqueueMessage(uid, device, errMsg)
+	apidep.SendMessageIfOnline(uid, device, errMsg)
 }

@@ -18,6 +18,16 @@ func ResolveError(db *gorm.DB) error {
 	return nil
 }
 
+func ResolveFindErr(db *gorm.DB) error {
+	if db.Error != nil {
+		return db.Error
+	}
+	if db.RowsAffected == 0 {
+		return ErrNoRecordFound
+	}
+	return nil
+}
+
 func MustUpdate(db *gorm.DB) error {
 	if db.Error != nil {
 		return db.Error

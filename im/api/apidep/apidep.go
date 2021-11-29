@@ -12,6 +12,14 @@ var ClientManager ClientManagerInterface = client.Manager
 // GroupManager 群相关接口
 var GroupManager GroupManagerInterface = &groupInterface{}
 
+func SendMessage(uid int64, device int64, m *message.Message) {
+
+}
+
+func SendMessageIfOnline(uid int64, device int64, m *message.Message) {
+
+}
+
 type ClientManagerInterface interface {
 	ClientSignIn(oldUid int64, uid int64, device int64)
 	ClientLogout(uid int64, device int64)
@@ -22,6 +30,8 @@ type ClientManagerInterface interface {
 }
 
 type GroupManagerInterface interface {
+	MemberOnline(gid int64, uid int64) error
+	MemberOffline(gid int64, uid int64) error
 	PutMember(gid int64, mb map[int64]int32) error
 	RemoveMember(gid int64, uid ...int64) error
 	CreateGroup(gid int64) error
@@ -31,6 +41,28 @@ type GroupManagerInterface interface {
 }
 
 type groupInterface struct{}
+
+func (g *groupInterface) MemberOnline(gid int64, uid int64) error {
+	u := []group.MemberUpdate{
+		{
+			Uid:   uid,
+			Flag:  group.FlagMemberOnline,
+			Extra: nil,
+		},
+	}
+	return group.Manager.UpdateMember(gid, u)
+}
+
+func (g *groupInterface) MemberOffline(gid int64, uid int64) error {
+	u := []group.MemberUpdate{
+		{
+			Uid:   uid,
+			Flag:  group.FlagMemberOffline,
+			Extra: nil,
+		},
+	}
+	return group.Manager.UpdateMember(gid, u)
+}
 
 func (g *groupInterface) PutMember(gid int64, mb map[int64]int32) error {
 

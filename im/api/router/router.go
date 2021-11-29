@@ -243,7 +243,7 @@ func (r *Router) Handle(uid int64, device int64, msg *message.Message) error {
 		Device: device,
 		Action: msg.Action,
 		R: func(message *message.Message) {
-			apidep.ClientManager.EnqueueMessage(uid, device, message)
+			apidep.SendMessageIfOnline(uid, device, message)
 		},
 	}
 	p := newPath(msg.Action)

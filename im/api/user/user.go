@@ -1,10 +1,9 @@
 package user
 
 import (
-	"errors"
 	"go_im/im/api/apidep"
+	"go_im/im/api/comm"
 	"go_im/im/api/router"
-	"go_im/im/dao/groupdao"
 	"go_im/im/dao/userdao"
 	"go_im/im/message"
 	"go_im/pkg/logger"
@@ -12,164 +11,32 @@ import (
 
 type UserApi struct{}
 
-//goland:noinspection GoPreferNilSlice
-func (a *UserApi) GetContactList(msg *route.Context) error {
-
-	allContacts, err := userdao.UserDao2.GetAllContacts(msg.Uid)
-	if err != nil {
-		return err
-	}
-
-	friends := []*InfoResponse{}
-	groups := []interface{}{}
-
-	var uids []int64
-	for _, contacts := range allContacts {
-
-		if contacts.Type == userdao.ContactsTypeGroup {
-			g, er := groupdao.GroupDao2.GetGroup(contacts.Id)
-			if er != nil {
-				return er
-			}
-			if g == nil {
-				return errors.New("group not exist")
-			}
-			//members, err := groupdao.GroupDao2.GetMembers(g.Gid)
-			if err != nil {
-				return err
-			}
-			//groups = append(groups, &groups.GroupResponse{
-			//	Group:   *g,
-			//	Members: members,
-			//})
-		} else if contacts.Type == userdao.ContactsTypeUser {
-			uids = append(uids, contacts.Id)
-		}
-	}
-	if len(uids) > 0 {
-		user, err := userdao.UserDao2.GetUser(uids...)
-		if err != nil {
-			return err
-		}
-		for _, u := range user {
-			friends = append(friends, &InfoResponse{
-				Uid:      u.Uid,
-				Account:  u.Account,
-				Nickname: u.Nickname,
-				Avatar:   u.Avatar,
-			})
-		}
-	}
-
-	body := ContactResponse{
-		Friends: friends,
-		Groups:  groups,
-	}
-
-	resp := message.NewMessage(msg.Seq, "api.ActionSuccess", body)
-	msg.Response(resp)
+func (a *UserApi) GetUserProfile(msg *route.Context) error {
+	// TODO 2021-11-29 我的详细信息
 	return nil
 }
 
-func (a *UserApi) AddContact(msg *route.Context, request *AddContacts) error {
-
-	hasUser, err := userdao.UserDao2.HasUser(request.Uid)
-	if err != nil {
-		return err
-	}
-	if !hasUser {
-		return errors.New("user not exist")
-	}
-
-	hasContacts, err := userdao.UserDao2.HasContacts(msg.Uid, request.Uid, userdao.ContactsTypeUser)
-	if err != nil {
-		return err
-	}
-
-	if hasContacts {
-		return errors.New("already added contacts")
-	}
-
-	// add to self
-	_, err = userdao.UserDao2.AddContacts(msg.Uid, request.Uid, userdao.ContactsTypeUser, request.Remark)
-	if err != nil {
-		return err
-	}
-
-	userInfos, err := userdao.UserDao2.GetUser(msg.Uid, request.Uid)
-	var me *userdao.User
-	var friend *userdao.User
-
-	if userInfos[0].Uid == msg.Uid {
-		me = userInfos[0]
-		friend = userInfos[1]
-	} else {
-		me = userInfos[1]
-		friend = userInfos[0]
-	}
-	if err != nil {
-		return err
-	}
-
-	ccontactResponse := ContactResponse{
-		Friends: []*InfoResponse{{
-			Uid:      friend.Uid,
-			Nickname: friend.Nickname,
-			Account:  friend.Account,
-			Avatar:   friend.Avatar,
-		}},
-		Groups: []interface{}{},
-	}
-	msg.Response(message.NewMessage(msg.Seq, "api.ActionSuccess", ccontactResponse))
-
-	// add to friend
-	_, err = userdao.UserDao2.AddContacts(request.Uid, msg.Uid, userdao.ContactsTypeUser, "")
-	if err != nil {
-		return err
-	}
-
-	contactRespFriend := ContactResponse{
-		Friends: []*InfoResponse{{
-			Uid:      msg.Uid,
-			Nickname: me.Nickname,
-			Account:  me.Account,
-			Avatar:   me.Avatar,
-		}},
-		Groups: []interface{}{},
-	}
-	msg.Response(message.NewMessage(-1, "api.ActionUserAddFriend", contactRespFriend))
-
+func (a *UserApi) UpdateUserProfile(msg *route.Context, request *UpdateProfileRequest) error {
+	// TODO 2021-11-29 更新我的信息
 	return nil
 }
 
-func (a *UserApi) GetUserInfo(msg *route.Context, request *InfoRequest) error {
-
-	users, err := userdao.UserDao2.GetUser(request.Uid...)
+func (a *UserApi) GetUserInfo(ctx *route.Context, request *InfoRequest) error {
+	info, err := userdao.UserInfoDao.GetUserSimpleInfo(request.Uid...)
 	if err != nil {
-		return err
+		return comm.NewDbErr(err)
 	}
-	resp := message.NewMessage(msg.Seq, "api.ActionOnlineUser", "success")
-	type u struct {
-		Uid      int64
-		Account  string
-		Avatar   string
-		Nickname string
+	//goland:noinspection ALL
+	resp := []InfoResponse{}
+	for _, i := range info {
+		resp = append(resp, InfoResponse{
+			Uid:      i.Uid,
+			Nickname: i.Nickname,
+			Account:  i.Account,
+			Avatar:   i.Avatar,
+		})
 	}
-	ret := make([]u, 0, len(users))
-	for _, user := range users {
-		retU := u{
-			Uid:      user.Uid,
-			Account:  user.Account,
-			Avatar:   user.Avatar,
-			Nickname: user.Nickname,
-		}
-		ret = append(ret, retU)
-	}
-	if err = resp.SetData(ret); err != nil {
-		return err
-	}
-
-	msg.Response(resp)
+	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, resp))
 	return nil
 }
 
