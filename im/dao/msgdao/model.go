@@ -24,12 +24,20 @@ type ChatMessage struct {
 
 // Session 会话, 记录会话的情况
 type Session struct {
-	// SessionTag 会话标识由发送者与接收者ID拼接成, ID大的放前面
-	SessionTag string
+	// SessionId 会话标识由发送者与接收者ID拼接成, ID大的放前面
+	SessionId string
+	// Uid 所有者
+	Uid int64
+	// To 接收者
+	To int64
+	// ReadAt 已读时间
+	ReadAt int64
 	// LastMID 最后一条消息的ID
-	LastMID string
-	// LastMsgAt 最后一条消息的时间
-	LastMsgAt int64
+	LastMID int64
+	// UpdateAt 最后一条消息的时间
+	UpdateAt int64
+	// CreateAt 创建时间
+	CreateAt int64
 }
 
 // OfflineMessage 用户不在线, 离线消息

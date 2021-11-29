@@ -9,6 +9,15 @@ import (
 type chatMsgDao struct {
 }
 
+func (chatMsgDao) GetRecentChatMessages(uid int64, after int64) ([]*ChatMessage, error) {
+	var ms []*ChatMessage
+	query := db.DB.Model(&ChatMessage{}).Where("`from` = ? OR `to` = ? AND `send_at` > ?", uid, uid, after).Find(&ms)
+	if query.Error != nil {
+		return nil, query.Error
+	}
+	return ms, nil
+}
+
 func (chatMsgDao) GetChatMessage(mid int64) (*ChatMessage, error) {
 	m := &ChatMessage{}
 	query := db.DB.Model(m).Where("m_id = ?", mid).Find(m)

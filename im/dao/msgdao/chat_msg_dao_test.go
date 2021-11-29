@@ -5,6 +5,16 @@ import (
 	"time"
 )
 
+func TestChatMsgDao_GetRecentChatMessages(t *testing.T) {
+	messages, err := instance.GetRecentChatMessages(1, 1637650186)
+	if err != nil {
+		t.Error(err)
+	}
+	for _, message := range messages {
+		t.Log(message)
+	}
+}
+
 func TestChatMsgDao_GetOfflineMessage(t *testing.T) {
 	m, err := GetOfflineMessage(1)
 	if err != nil {

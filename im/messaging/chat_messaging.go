@@ -15,12 +15,13 @@ func dispatchChatMessage(from int64, m *message.Message) {
 		return
 	}
 
-	if m.Action == message.ActionChatMessageResend {
+	if m.Action != message.ActionChatMessageResend {
 		lg := from
 		sm := msg.To
 		if lg < sm {
 			lg, sm = sm, lg
 		}
+		sessionId := strconv.FormatInt(lg, 10) + "_" + strconv.FormatInt(sm, 10)
 		dbMsg := msgdao.ChatMessage{
 			MID:        msg.Mid,
 			From:       from,
@@ -29,7 +30,7 @@ func dispatchChatMessage(from int64, m *message.Message) {
 			SendAt:     msg.CTime,
 			Content:    msg.Content,
 			CliSeq:     msg.CSeq,
-			SessionTag: strconv.FormatInt(lg, 10) + "_" + strconv.FormatInt(sm, 10),
+			SessionTag: sessionId,
 		}
 		// 保存消息
 		_, err := msgdao.AddChatMessage(&dbMsg)

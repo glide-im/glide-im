@@ -19,7 +19,7 @@ func getContactsId(uid int64, id int64, type_ int8) string {
 func (c ContactsDaoImpl) HasContacts(uid int64, id int64, type_ int8) (bool, error) {
 	contactsID := getContactsId(uid, id, type_)
 	var count int64
-	query := db.DB.Model(&Contacts{}).Where("f_id = ?", contactsID).Count(&count)
+	query := db.DB.Model(&Contacts{}).Where("fid = ?", contactsID).Count(&count)
 	if query.Error != nil {
 		return false, query.Error
 	}

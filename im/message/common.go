@@ -7,13 +7,15 @@ import (
 )
 
 const (
-	ActionMessage           Action = "message"
-	ActionGroupMessage             = "message.group"
-	ActionChatMessage              = "message.chat"
-	ActionChatMessageRetry         = "message.chat.retry"
-	ActionChatMessageResend        = "message.chat.resend"
-	ActionCSMessage                = "message.cs"
-	ActionMessageFailed            = "message.failed.send"
+	ActionMessage      Action = "message"
+	ActionGroupMessage        = "message.group"
+	ActionChatMessage         = "message.chat"
+	// ActionChatMessageRetry 消息重发, 服务器未ack
+	ActionChatMessageRetry = "message.chat.retry"
+	// ActionChatMessageResend 消息重发, 服务器已ack, 接收方未ack
+	ActionChatMessageResend = "message.chat.resend"
+	ActionCSMessage         = "message.cs"
+	ActionMessageFailed     = "message.failed.send"
 
 	ActionAckRequest  = "ack.request"
 	ActionAckGroupMsg = "ack.group.msg"
