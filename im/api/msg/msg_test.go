@@ -23,13 +23,26 @@ func getContext(uid int64, device int64) *route.Context {
 		Seq:    1,
 		Action: "",
 		R: func(message *message.Message) {
-			logger.D("Response=%v", message.Data)
+			logger.D("Response=%v", message)
 		},
 	}
 }
 
-func TestMsgApi_GetRecentChatMessages(t *testing.T) {
+func TestMsgApi_GetChatMessageHistory(t *testing.T) {
+	err := api.GetChatMessageHistory(getContext(1, 1), &GetChatHistoryRequest{
+		Uid:  2,
+		Page: 0,
+	})
+	if err != nil {
+		t.Error(err)
+	}
+}
 
+func TestMsgApi_GetRecentChatMessages(t *testing.T) {
+	err := api.GetRecentChatMessages(getContext(1, 1), &GetRecentMessageRequest{Uid: []int64{2, 3, 4, 5}})
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func TestMsgApi_GetRecentSessions(t *testing.T) {

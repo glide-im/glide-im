@@ -4,10 +4,10 @@ var instance MsgDao
 
 func init() {
 	instance = impl{
-		groupMsgDao: groupMsgDao{},
-		chatMsgDao:  chatMsgDao{},
-		cacheDao:    cacheDao{},
-		commonDao:   commonDao{},
+		GroupMsgDao: GroupMsgDaoImpl,
+		ChatMsgDao:  ChatMsgDaoImpl,
+		CacheDao:    cacheDao{},
+		CommonDao:   commonDao{},
 	}
 }
 
@@ -29,8 +29,8 @@ type GroupMsgDao interface {
 }
 
 type ChatMsgDao interface {
-	GetChatMessage(mid int64) (*ChatMessage, error)
-	GetRecentChatMessagesBySessionID(afterTime int64, sid ...string) ([]*ChatMessage, error)
+	GetChatMessage(mid ...int64) ([]*ChatMessage, error)
+	GetChatMessagesBySession(uid1, uid2 int64, page int, pageSize int) ([]*ChatMessage, error)
 	GetRecentChatMessages(uid int64, afterTime int64) ([]*ChatMessage, error)
 	AddOrUpdateChatMessage(message *ChatMessage) (bool, error)
 
@@ -68,10 +68,10 @@ type MsgDao interface {
 }
 
 type impl struct {
-	groupMsgDao
-	chatMsgDao
-	cacheDao
-	commonDao
+	ChatMsgDao
+	GroupMsgDao
+	CacheDao
+	CommonDao
 }
 
 /////////////////
@@ -126,8 +126,8 @@ func GetGroupMemberMsgState(gid int64, uid int64) (*GroupMemberMsgState, error) 
 
 ///////////////////////////////////////
 
-func GetChatMessage(mid int64) (*ChatMessage, error) {
-	return instance.GetChatMessage(mid)
+func GetChatMessage(mid ...int64) ([]*ChatMessage, error) {
+	return instance.GetChatMessage(mid...)
 }
 func AddChatMessage(message *ChatMessage) (bool, error) {
 	return instance.AddOrUpdateChatMessage(message)

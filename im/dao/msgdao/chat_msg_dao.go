@@ -6,19 +6,27 @@ import (
 	"strconv"
 )
 
-type chatMsgDao struct {
+var ChatMsgDaoImpl ChatMsgDao = chatMsgDaoImpl{}
+
+type chatMsgDaoImpl struct {
 }
 
-func (chatMsgDao) GetRecentChatMessagesBySessionID(afterTime int64, sid ...string) ([]*ChatMessage, error) {
+func (chatMsgDaoImpl) GetChatMessagesBySession(uid1, uid2 int64, page int, pageSize int) ([]*ChatMessage, error) {
+	sid := getSessionId(uid2, uid1)
 	var ms []*ChatMessage
-	query := db.DB.Model(&ChatMessage{}).Where("session_id in (?) AND `send_at` > ?", sid, afterTime).Find(&ms)
+	query := db.DB.Model(&ChatMessage{}).
+		Where("session_id = ?", sid, page).
+		Order("`send_at` DESC").
+		Offset(page * pageSize).
+		Limit(pageSize).
+		Find(&ms)
 	if query.Error != nil {
 		return nil, query.Error
 	}
 	return ms, nil
 }
 
-func (chatMsgDao) GetRecentChatMessages(uid int64, after int64) ([]*ChatMessage, error) {
+func (chatMsgDaoImpl) GetRecentChatMessages(uid int64, after int64) ([]*ChatMessage, error) {
 	var ms []*ChatMessage
 	query := db.DB.Model(&ChatMessage{}).Where("`from` = ? OR `to` = ? AND `send_at` > ?", uid, uid, after).Find(&ms)
 	if query.Error != nil {
@@ -27,16 +35,17 @@ func (chatMsgDao) GetRecentChatMessages(uid int64, after int64) ([]*ChatMessage,
 	return ms, nil
 }
 
-func (chatMsgDao) GetChatMessage(mid int64) (*ChatMessage, error) {
-	m := &ChatMessage{}
-	query := db.DB.Model(m).Where("m_id = ?", mid).Find(m)
+func (chatMsgDaoImpl) GetChatMessage(mid ...int64) ([]*ChatMessage, error) {
+	//goland:noinspection GoPreferNilSlice
+	m := []*ChatMessage{}
+	query := db.DB.Model(m).Where("m_id in (?)", mid).Find(m)
 	if err := common.ResolveError(query); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func (chatMsgDao) AddOrUpdateChatMessage(message *ChatMessage) (bool, error) {
+func (chatMsgDaoImpl) AddOrUpdateChatMessage(message *ChatMessage) (bool, error) {
 	var c int64
 	query := db.DB.Table("im_chat_message").Where("m_id = ?", message.MID).Count(&c)
 	if err := common.ResolveError(query); err != nil {
@@ -52,7 +61,7 @@ func (chatMsgDao) AddOrUpdateChatMessage(message *ChatMessage) (bool, error) {
 	return true, nil
 }
 
-func (chatMsgDao) GetChatMessageMidAfter(from, to int64, midAfter int64) ([]*ChatMessage, error) {
+func (chatMsgDaoImpl) GetChatMessageMidAfter(from, to int64, midAfter int64) ([]*ChatMessage, error) {
 	lg, sm := from, to
 	if lg < sm {
 		lg, sm = sm, lg
@@ -66,7 +75,7 @@ func (chatMsgDao) GetChatMessageMidAfter(from, to int64, midAfter int64) ([]*Cha
 	return ms, nil
 }
 
-func (chatMsgDao) GetChatMessageMidSpan(from, to int64, midStart, midEnd int64) ([]*ChatMessage, error) {
+func (chatMsgDaoImpl) GetChatMessageMidSpan(from, to int64, midStart, midEnd int64) ([]*ChatMessage, error) {
 	lg, sm := from, to
 	if lg < sm {
 		lg, sm = sm, lg
@@ -80,7 +89,7 @@ func (chatMsgDao) GetChatMessageMidSpan(from, to int64, midStart, midEnd int64) 
 	return ms, nil
 }
 
-func (chatMsgDao) AddOfflineMessage(uid int64, mid int64) error {
+func (chatMsgDaoImpl) AddOfflineMessage(uid int64, mid int64) error {
 	offlineMessage := &OfflineMessage{
 		MID: mid,
 		UID: uid,
@@ -89,7 +98,7 @@ func (chatMsgDao) AddOfflineMessage(uid int64, mid int64) error {
 	return common.ResolveError(query)
 }
 
-func (chatMsgDao) GetOfflineMessage(uid int64) ([]*OfflineMessage, error) {
+func (chatMsgDaoImpl) GetOfflineMessage(uid int64) ([]*OfflineMessage, error) {
 	var m []*OfflineMessage
 	query := db.DB.Model(&OfflineMessage{}).Where("uid = ?", uid).Find(&m)
 	if query.Error != nil {
@@ -98,7 +107,7 @@ func (chatMsgDao) GetOfflineMessage(uid int64) ([]*OfflineMessage, error) {
 	return m, nil
 }
 
-func (chatMsgDao) DelOfflineMessage(uid int64, mid []int64) error {
+func (chatMsgDaoImpl) DelOfflineMessage(uid int64, mid []int64) error {
 	query := db.DB.Where("uid = ? AND m_id IN (?)", uid, mid).Delete(&OfflineMessage{})
 	return query.Error
 }

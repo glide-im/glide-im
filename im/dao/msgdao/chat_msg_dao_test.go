@@ -1,17 +1,23 @@
 package msgdao
 
 import (
+	"strconv"
 	"testing"
 	"time"
 )
 
 func TestChatMsgDao_GetRecentChatMessagesBySessionID(t *testing.T) {
-	ms, err := instance.GetRecentChatMessagesBySessionID(time.Now().Unix()-10000000, "2_1")
-	if err != nil {
-		t.Error(err)
-	}
-	for _, m := range ms {
-		t.Log(m)
+	for i := 0; i < 100; i++ {
+		ms, err := instance.GetChatMessagesBySession(2, 1, 0, 10)
+		if err != nil {
+			t.Error(err)
+		}
+		if len(ms) == 0 {
+			break
+		}
+		for _, m := range ms {
+			t.Log(m)
+		}
 	}
 }
 
@@ -47,10 +53,29 @@ func TestChatMsgDao_DelOfflineMessage(t *testing.T) {
 	}
 }
 
+func TestAddChatMessage(t *testing.T) {
+	for i := 0; i < 100; i++ {
+		_, err := AddChatMessage(&ChatMessage{
+			MID:       int64(2000 + i),
+			SessionID: "2_1",
+			CliSeq:    int64(i),
+			From:      1,
+			To:        2,
+			Type:      1,
+			SendAt:    time.Now().Unix() - int64(60*i),
+			CreateAt:  time.Now().Unix(),
+			Content:   "Hello-" + strconv.FormatInt(int64(i*100), 10),
+		})
+		if err != nil {
+			t.Error(err)
+		}
+	}
+}
+
 func TestChatMsgDao_AddOrUpdateChatMessage(t *testing.T) {
 
 	message, err := AddChatMessage(&ChatMessage{
-		MID:       14,
+		MID:       15,
 		SessionID: "2_1",
 		CliSeq:    2,
 		From:      2,

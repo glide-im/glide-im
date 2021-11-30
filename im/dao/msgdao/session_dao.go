@@ -11,8 +11,8 @@ var SessionDaoImpl SessionDao = &sessionDaoImpl{}
 
 type sessionDaoImpl struct{}
 
-func getSessionId(from int64, to int64) string {
-	lg, sm := from, to
+func getSessionId(uid1 int64, uid2 int64) string {
+	lg, sm := uid1, uid2
 	if lg < sm {
 		lg, sm = sm, lg
 	}

@@ -1,5 +1,16 @@
 package msg
 
+type MessageResponse struct {
+	MID      int64
+	CliSeq   int64
+	From     int64
+	To       int64
+	Type     int
+	SendAt   int64
+	CreateAt int64
+	Content  string
+}
+
 type SessionRequest struct {
 	To int64
 }
@@ -13,6 +24,20 @@ type SessionResponse struct {
 
 type GetRecentMessageRequest struct {
 	Uid []int64
+}
+
+type RecentMessagesResponse struct {
+	Uid      int64
+	Messages []*MessageResponse
+}
+
+type GetChatHistoryRequest struct {
+	Uid  int64
+	Page int
+}
+
+type AckOfflineMessageRequest struct {
+	Mid []int64
 }
 
 type ChatHistoryRequest struct {

@@ -5,70 +5,89 @@ import (
 	"go_im/im/api/router"
 	"go_im/im/dao/msgdao"
 	"go_im/im/message"
-	"time"
+	"go_im/pkg/logger"
 )
 
 type MsgApi struct{}
 
-func (a *MsgApi) UpdateSession(ctx *route.Context, request *SessionRequest) error {
-	err := msgdao.SessionDaoImpl.UpdateOrInitSession(ctx.Uid, request.To, time.Now().Unix())
+//goland:noinspection GoPreferNilSlice
+func (*MsgApi) GetChatMessageHistory(ctx *route.Context, request *GetChatHistoryRequest) error {
+
+	ms, err := msgdao.ChatMsgDaoImpl.GetChatMessagesBySession(ctx.Uid, request.Uid, request.Page, 20)
 	if err != nil {
 		return comm.NewDbErr(err)
 	}
-	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, ""))
+	msr := []*MessageResponse{}
+	for _, m := range ms {
+		msr = append(msr, messageModel2MessageResponse(m))
+	}
+	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, msr))
 	return nil
 }
 
-func (*MsgApi) GetOrCreateSession(ctx *route.Context, request *SessionRequest) error {
-	session, err := msgdao.SessionDaoImpl.GetSession(ctx.Uid, request.To)
-	if err != nil {
-		return comm.NewDbErr(err)
-	}
-	if session == nil {
-		se, err := msgdao.SessionDaoImpl.CreateSession(ctx.Uid, request.To, time.Now().Unix())
+//goland:noinspection GoPreferNilSlice
+func (*MsgApi) GetRecentChatMessages(ctx *route.Context, request *GetRecentMessageRequest) error {
+	resp := []RecentMessagesResponse{}
+	var e = 0
+	for _, i := range request.Uid {
+		ms, err := msgdao.ChatMsgDaoImpl.GetChatMessagesBySession(ctx.Uid, i, 0, 20)
 		if err != nil {
-			return comm.NewDbErr(err)
+			logger.E("GetRecentChatMessages DB error %v", err)
+			e++
+			continue
 		}
-		session = se
-	}
-
-	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, session))
-	return nil
-}
-
-func (a *MsgApi) GetRecentSessions(ctx *route.Context) error {
-	week := time.Now().Unix() - (time.Hour.Milliseconds()*24*7)/1000
-	session, err := msgdao.SessionDaoImpl.GetRecentSession(ctx.Uid, week)
-	if err != nil {
-		return comm.NewDbErr(err)
-	}
-	//goland:noinspection GoPreferNilSlice
-	sr := []*SessionResponse{}
-	for _, s := range session {
-		sr = append(sr, &SessionResponse{
-			Uid2:     s.Uid,
-			Uid1:     s.Uid2,
-			LastMid:  s.LastMID,
-			UpdateAt: s.UpdateAt,
+		msr := []*MessageResponse{}
+		for _, m := range ms {
+			msr = append(msr, messageModel2MessageResponse(m))
+		}
+		resp = append(resp, RecentMessagesResponse{
+			Uid:      i,
+			Messages: msr,
 		})
 	}
-	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, sr))
+	if e == len(request.Uid) {
+		return errRecentMsgLoadFailed
+	}
+	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, resp))
 	return nil
 }
 
-func (*MsgApi) GetRecentChatMessages(msg *route.Context, request *GetRecentMessageRequest) error {
-
+func (*MsgApi) AckOfflineMessage(ctx *route.Context, request *AckOfflineMessageRequest) error {
+	err := msgdao.DelOfflineMessage(ctx.Uid, request.Mid)
+	if err != nil {
+		return comm.NewDbErr(err)
+	}
 	return nil
 }
 
-func (*MsgApi) SyncChatMsgBySeq2(msg *route.Context, request *GetRecentMessageRequest) error {
-	panic("implement me")
+//goland:noinspection GoPreferNilSlice
+func (*MsgApi) GetOfflineMessage(ctx *route.Context) error {
+	oms, err := msgdao.GetOfflineMessage(ctx.Uid)
+	if err != nil {
+		return comm.NewDbErr(err)
+	}
+	var mid = []int64{}
+	for _, m := range oms {
+		mid = append(mid, m.MID)
+	}
+	qms, err := msgdao.GetChatMessage(mid...)
+	var ms = []*MessageResponse{}
+	for _, m := range qms {
+		ms = append(ms, messageModel2MessageResponse(m))
+	}
+	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, ms))
+	return nil
 }
 
-func (*MsgApi) SyncChatMsgBySeq3(msg *route.Context, request *GetRecentMessageRequest) error {
-	panic("implement me")
-}
-
-func (*MsgApi) SyncChatMsgBySeq4(msg *route.Context, request *GetRecentMessageRequest) error {
-	panic("implement me")
+func messageModel2MessageResponse(m *msgdao.ChatMessage) *MessageResponse {
+	return &MessageResponse{
+		MID:      m.MID,
+		CliSeq:   m.CliSeq,
+		From:     m.From,
+		To:       m.To,
+		Type:     m.Type,
+		SendAt:   m.SendAt,
+		CreateAt: m.CreateAt,
+		Content:  m.Content,
+	}
 }

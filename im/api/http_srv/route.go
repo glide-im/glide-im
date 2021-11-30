@@ -1,6 +1,9 @@
 package http_srv
 
-import "go_im/im/api/auth"
+import (
+	"go_im/im/api/auth"
+	"go_im/im/api/msg"
+)
 
 func initRoute() {
 	authApi := auth.AuthApi{}
@@ -9,4 +12,15 @@ func initRoute() {
 	post("/api/auth/register", authApi.Register)
 	post("/api/auth/logout", authApi.Logout)
 	post("/api/auth/signin", authApi.SignIn)
+
+	msgApi := msg.MsgApi{}
+
+	post("/api/msg/history", msgApi.GetChatMessageHistory)
+	post("/api/msg/recent", msgApi.GetRecentChatMessages)
+	post("/api/msg/offline", msgApi.GetOfflineMessage)
+	post("/api/msg/offline/ack", msgApi.AckOfflineMessage)
+
+	post("/api/session/recent", msgApi.GetRecentSessions)
+	post("/api/session/get", msgApi.GetOrCreateSession)
+	post("/api/session/update", msgApi.UpdateSession)
 }

@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-var dao GroupMsgDao = groupMsgDao{}
+var dao GroupMsgDao = groupMsgDaoImpl{}
 
 func init() {
 	db.Init()
