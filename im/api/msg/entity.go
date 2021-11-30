@@ -5,13 +5,14 @@ type SessionRequest struct {
 }
 
 type SessionResponse struct {
-	To       int64
+	Uid1     int64
+	Uid2     int64
 	LastMid  int64
 	UpdateAt int64
-	ReadAt   int64
 }
 
-type SyncChatMsgReq struct {
+type GetRecentMessageRequest struct {
+	Uid []int64
 }
 
 type ChatHistoryRequest struct {

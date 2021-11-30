@@ -19,17 +19,26 @@ func (a *MsgApi) UpdateSession(ctx *route.Context, request *SessionRequest) erro
 	return nil
 }
 
-func (*MsgApi) CreateSession(ctx *route.Context, request *SessionRequest) error {
-	err := msgdao.SessionDaoImpl.CreateSession(ctx.Uid, request.To)
+func (*MsgApi) GetOrCreateSession(ctx *route.Context, request *SessionRequest) error {
+	session, err := msgdao.SessionDaoImpl.GetSession(ctx.Uid, request.To)
 	if err != nil {
 		return comm.NewDbErr(err)
 	}
-	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, ""))
+	if session == nil {
+		se, err := msgdao.SessionDaoImpl.CreateSession(ctx.Uid, request.To, time.Now().Unix())
+		if err != nil {
+			return comm.NewDbErr(err)
+		}
+		session = se
+	}
+
+	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, session))
 	return nil
 }
 
 func (a *MsgApi) GetRecentSessions(ctx *route.Context) error {
-	session, err := msgdao.SessionDaoImpl.GetRecentSession(time.Now().Unix() - (time.Hour.Milliseconds()*24*7)/1000)
+	week := time.Now().Unix() - (time.Hour.Milliseconds()*24*7)/1000
+	session, err := msgdao.SessionDaoImpl.GetRecentSession(ctx.Uid, week)
 	if err != nil {
 		return comm.NewDbErr(err)
 	}
@@ -37,28 +46,29 @@ func (a *MsgApi) GetRecentSessions(ctx *route.Context) error {
 	sr := []*SessionResponse{}
 	for _, s := range session {
 		sr = append(sr, &SessionResponse{
-			To:       s.To,
+			Uid2:     s.Uid,
+			Uid1:     s.Uid2,
 			LastMid:  s.LastMID,
 			UpdateAt: s.UpdateAt,
-			ReadAt:   s.ReadAt,
 		})
 	}
 	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, sr))
 	return nil
 }
 
-func (*MsgApi) Get(msg *route.Context, request *SyncChatMsgReq) error {
+func (*MsgApi) GetRecentChatMessages(msg *route.Context, request *GetRecentMessageRequest) error {
+
+	return nil
+}
+
+func (*MsgApi) SyncChatMsgBySeq2(msg *route.Context, request *GetRecentMessageRequest) error {
 	panic("implement me")
 }
 
-func (*MsgApi) SyncChatMsgBySeq2(msg *route.Context, request *SyncChatMsgReq) error {
+func (*MsgApi) SyncChatMsgBySeq3(msg *route.Context, request *GetRecentMessageRequest) error {
 	panic("implement me")
 }
 
-func (*MsgApi) SyncChatMsgBySeq3(msg *route.Context, request *SyncChatMsgReq) error {
-	panic("implement me")
-}
-
-func (*MsgApi) SyncChatMsgBySeq4(msg *route.Context, request *SyncChatMsgReq) error {
+func (*MsgApi) SyncChatMsgBySeq4(msg *route.Context, request *GetRecentMessageRequest) error {
 	panic("implement me")
 }

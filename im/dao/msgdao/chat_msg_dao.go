@@ -9,6 +9,15 @@ import (
 type chatMsgDao struct {
 }
 
+func (chatMsgDao) GetRecentChatMessagesBySessionID(afterTime int64, sid ...string) ([]*ChatMessage, error) {
+	var ms []*ChatMessage
+	query := db.DB.Model(&ChatMessage{}).Where("session_id in (?) AND `send_at` > ?", sid, afterTime).Find(&ms)
+	if query.Error != nil {
+		return nil, query.Error
+	}
+	return ms, nil
+}
+
 func (chatMsgDao) GetRecentChatMessages(uid int64, after int64) ([]*ChatMessage, error) {
 	var ms []*ChatMessage
 	query := db.DB.Model(&ChatMessage{}).Where("`from` = ? OR `to` = ? AND `send_at` > ?", uid, uid, after).Find(&ms)
@@ -48,9 +57,9 @@ func (chatMsgDao) GetChatMessageMidAfter(from, to int64, midAfter int64) ([]*Cha
 	if lg < sm {
 		lg, sm = sm, lg
 	}
-	sessionTag := strconv.FormatInt(lg, 10) + "_" + strconv.FormatInt(sm, 10)
+	sid := strconv.FormatInt(lg, 10) + "_" + strconv.FormatInt(sm, 10)
 	var ms []*ChatMessage
-	query := db.DB.Model(&ChatMessage{}).Where("session_tag = ? and m_id > ?", sessionTag, midAfter).Find(&ms)
+	query := db.DB.Model(&ChatMessage{}).Where("session_id = ? and m_id > ?", sid, midAfter).Find(&ms)
 	if err := common.ResolveError(query); err != nil {
 		return nil, err
 	}
@@ -62,9 +71,9 @@ func (chatMsgDao) GetChatMessageMidSpan(from, to int64, midStart, midEnd int64) 
 	if lg < sm {
 		lg, sm = sm, lg
 	}
-	sessionTag := strconv.FormatInt(lg, 10) + "_" + strconv.FormatInt(sm, 10)
+	sid := strconv.FormatInt(lg, 10) + "_" + strconv.FormatInt(sm, 10)
 	var ms []*ChatMessage
-	query := db.DB.Model(&ChatMessage{}).Where("session_tag = ? AND m_id >= ? AND m_id < ?", sessionTag, midStart, midEnd).Find(&ms)
+	query := db.DB.Model(&ChatMessage{}).Where("sid = ? AND m_id >= ? AND m_id < ?", sid, midStart, midEnd).Find(&ms)
 	if err := common.ResolveError(query); err != nil {
 		return nil, err
 	}

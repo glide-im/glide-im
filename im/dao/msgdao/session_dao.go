@@ -12,25 +12,39 @@ var SessionDaoImpl SessionDao = &sessionDaoImpl{}
 type sessionDaoImpl struct{}
 
 func getSessionId(from int64, to int64) string {
-	return strconv.FormatInt(from, 10) + "_" + strconv.FormatInt(to, 10)
+	lg, sm := from, to
+	if lg < sm {
+		lg, sm = sm, lg
+	}
+	return strconv.FormatInt(lg, 10) + "_" + strconv.FormatInt(sm, 10)
 }
 
-func (s *sessionDaoImpl) CreateSession(from int64, to int64) error {
-	sid := getSessionId(from, to)
-	create := db.DB.Create(&Session{
+func (s *sessionDaoImpl) GetSession(uid int64, uid2 int64) (*Session, error) {
+	sid := getSessionId(uid, uid2)
+	var se Session
+	query := db.DB.Model(&Session{}).Where("session_id = ?", sid).Find(&se)
+	return &se, query.Error
+}
+
+func (s *sessionDaoImpl) CreateSession(uid1 int64, uid2 int64, updateAt int64) (*Session, error) {
+	sid := getSessionId(uid1, uid2)
+	se := &Session{
 		SessionId: sid,
-		Uid:       from,
-		To:        to,
-		ReadAt:    0,
+		Uid:       uid1,
+		Uid2:      uid2,
 		LastMID:   0,
-		UpdateAt:  0,
+		UpdateAt:  updateAt,
 		CreateAt:  time.Now().Unix(),
-	})
-	return common.MustUpdate(create)
+	}
+	create := db.DB.Create(se)
+	if err := common.MustUpdate(create); err != nil {
+		return nil, err
+	}
+	return se, nil
 }
 
-func (s *sessionDaoImpl) UpdateOrInitSession(from int64, to int64, update int64) error {
-	sid := getSessionId(from, to)
+func (s *sessionDaoImpl) UpdateOrInitSession(uid1 int64, uid2 int64, update int64) error {
+	sid := getSessionId(uid1, uid2)
 
 	query := db.DB.Model(&Session{}).
 		Where("`session_id` = ?", sid).
@@ -41,9 +55,8 @@ func (s *sessionDaoImpl) UpdateOrInitSession(from int64, to int64, update int64)
 	if query.RowsAffected == 0 {
 		create := db.DB.Create(&Session{
 			SessionId: sid,
-			Uid:       from,
-			To:        to,
-			ReadAt:    0,
+			Uid:       uid1,
+			Uid2:      uid2,
 			LastMID:   0,
 			UpdateAt:  update,
 			CreateAt:  time.Now().Unix(),
@@ -55,9 +68,9 @@ func (s *sessionDaoImpl) UpdateOrInitSession(from int64, to int64, update int64)
 	return nil
 }
 
-func (s *sessionDaoImpl) GetRecentSession(updateAfter int64) ([]*Session, error) {
+func (s *sessionDaoImpl) GetRecentSession(uid int64, updateAfter int64) ([]*Session, error) {
 	var se []*Session
-	query := db.DB.Model(&Session{}).Where("`update_at` > ?", updateAfter).Find(&se)
+	query := db.DB.Model(&Session{}).Where("(`uid` = ? OR `uid2` = ?) AND `update_at` > ?", uid, uid, updateAfter).Find(&se)
 	if query.Error != nil {
 		return nil, query.Error
 	}

@@ -23,14 +23,14 @@ func dispatchChatMessage(from int64, m *message.Message) {
 		}
 		sessionId := strconv.FormatInt(lg, 10) + "_" + strconv.FormatInt(sm, 10)
 		dbMsg := msgdao.ChatMessage{
-			MID:        msg.Mid,
-			From:       from,
-			To:         msg.To,
-			Type:       msg.Type,
-			SendAt:     msg.CTime,
-			Content:    msg.Content,
-			CliSeq:     msg.CSeq,
-			SessionTag: sessionId,
+			MID:       msg.Mid,
+			From:      from,
+			To:        msg.To,
+			Type:      msg.Type,
+			SendAt:    msg.CTime,
+			Content:   msg.Content,
+			CliSeq:    msg.CSeq,
+			SessionID: sessionId,
 		}
 		// 保存消息
 		_, err := msgdao.AddChatMessage(&dbMsg)

@@ -4,8 +4,8 @@ package msgdao
 type ChatMessage struct {
 	// MID 消息 ID
 	MID int64 `gorm:"primaryKey"`
-	// SessionTag 会话标识由发送者与接收者ID拼接成, ID大的放前面
-	SessionTag string
+	// SessionID 会话标识由发送者与接收者ID拼接成, ID大的放前面
+	SessionID string
 	// CliSeq 发送者消息 seq
 	CliSeq int64
 	// From 发送者ID
@@ -26,12 +26,8 @@ type ChatMessage struct {
 type Session struct {
 	// SessionId 会话标识由发送者与接收者ID拼接成, ID大的放前面
 	SessionId string
-	// Uid 所有者
-	Uid int64
-	// To 接收者
-	To int64
-	// ReadAt 已读时间
-	ReadAt int64
+	Uid       int64
+	Uid2      int64
 	// LastMID 最后一条消息的ID
 	LastMID int64
 	// UpdateAt 最后一条消息的时间

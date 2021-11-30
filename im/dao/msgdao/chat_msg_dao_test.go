@@ -5,6 +5,16 @@ import (
 	"time"
 )
 
+func TestChatMsgDao_GetRecentChatMessagesBySessionID(t *testing.T) {
+	ms, err := instance.GetRecentChatMessagesBySessionID(time.Now().Unix()-10000000, "2_1")
+	if err != nil {
+		t.Error(err)
+	}
+	for _, m := range ms {
+		t.Log(m)
+	}
+}
+
 func TestChatMsgDao_GetRecentChatMessages(t *testing.T) {
 	messages, err := instance.GetRecentChatMessages(1, 1637650186)
 	if err != nil {
@@ -40,15 +50,15 @@ func TestChatMsgDao_DelOfflineMessage(t *testing.T) {
 func TestChatMsgDao_AddOrUpdateChatMessage(t *testing.T) {
 
 	message, err := AddChatMessage(&ChatMessage{
-		MID:        14,
-		SessionTag: "2_1",
-		CliSeq:     2,
-		From:       2,
-		To:         1,
-		Type:       1,
-		SendAt:     time.Now().Unix(),
-		CreateAt:   time.Now().Unix(),
-		Content:    "hello",
+		MID:       14,
+		SessionID: "2_1",
+		CliSeq:    2,
+		From:      2,
+		To:        1,
+		Type:      1,
+		SendAt:    time.Now().Unix(),
+		CreateAt:  time.Now().Unix(),
+		Content:   "hello",
 	})
 	if err != nil {
 		t.Error(err)

@@ -30,7 +30,8 @@ type GroupMsgDao interface {
 
 type ChatMsgDao interface {
 	GetChatMessage(mid int64) (*ChatMessage, error)
-	GetRecentChatMessages(uid int64, after int64) ([]*ChatMessage, error)
+	GetRecentChatMessagesBySessionID(afterTime int64, sid ...string) ([]*ChatMessage, error)
+	GetRecentChatMessages(uid int64, afterTime int64) ([]*ChatMessage, error)
 	AddOrUpdateChatMessage(message *ChatMessage) (bool, error)
 
 	GetChatMessageMidAfter(form, to int64, midAfter int64) ([]*ChatMessage, error)
@@ -42,9 +43,10 @@ type ChatMsgDao interface {
 }
 
 type SessionDao interface {
-	CreateSession(from int64, to int64) error
-	UpdateOrInitSession(from int64, to int64, update int64) error
-	GetRecentSession(updateAfter int64) ([]*Session, error)
+	GetSession(uid1 int64, uid2 int64) (*Session, error)
+	CreateSession(uid1 int64, uid2 int64, updateAt int64) (*Session, error)
+	UpdateOrInitSession(uid1 int64, uid2 int64, update int64) error
+	GetRecentSession(uid int64, updateAfter int64) ([]*Session, error)
 }
 
 type CacheDao interface {

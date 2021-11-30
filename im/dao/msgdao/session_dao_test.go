@@ -10,11 +10,20 @@ func init() {
 	db.Init()
 }
 
-func TestSessionDaoImpl_CreateSession(t *testing.T) {
-	err := SessionDaoImpl.CreateSession(1, 2)
+func TestSessionDaoImpl_GetSession(t *testing.T) {
+	session, err := SessionDaoImpl.GetSession(1, 2)
 	if err != nil {
 		t.Error(err)
 	}
+	t.Log(session)
+}
+
+func TestSessionDaoImpl_CreateSession(t *testing.T) {
+	se, err := SessionDaoImpl.CreateSession(1, 2, time.Now().Unix())
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(se)
 }
 
 func TestSessionDao_UpdateOrInitSession(t *testing.T) {
@@ -25,7 +34,7 @@ func TestSessionDao_UpdateOrInitSession(t *testing.T) {
 }
 
 func TestSessionDao_GetRecentSession(t *testing.T) {
-	session, err := SessionDaoImpl.GetRecentSession(time.Now().Unix() - 1000)
+	session, err := SessionDaoImpl.GetRecentSession(1, time.Now().Unix()-100000)
 	if err != nil {
 		t.Error(err)
 	}
