@@ -5,6 +5,7 @@ import (
 	"go_im/im/conn"
 	"go_im/im/dao"
 	"go_im/im/group"
+	"go_im/im/messaging"
 	"go_im/pkg/db"
 	"time"
 )
@@ -23,6 +24,7 @@ func Run() {
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
+	messaging.Init()
 	server = conn.NewWsServer(op)
 
 	server.SetConnHandler(func(conn conn.Connection) {

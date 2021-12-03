@@ -2,26 +2,18 @@ POST http://localhost:8081/api/auth/register
 Content-Type: application/json
 
 {
-  "Uid": 0,
-  "Device": 0,
-  "Data": {
-    "Account": "abc",
-    "Password": "abc"
-  }
+  "Account": "abc13",
+  "Password": "abc123"
 }
 
 ###
 
-POST http://localhost:8081/api/auth/login
+POST http://localhost:8081/api/auth/signin
 Content-Type: application/json
 
 {
-  "Uid": 0,
-  "Device": 0,
-  "Data": {
-    "Device": 1,
-    "Account": "abc",
-    "Password": "abc"
-  }
+  "Device": 1,
+  "Account": "abc",
+  "Password": "abc"
 }
 

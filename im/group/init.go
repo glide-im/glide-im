@@ -6,21 +6,22 @@ import (
 )
 
 func LoadAllGroup() map[int64]*Group {
-	res := map[int64]*Group{}
-	groups, err := groupdao.GroupDao2.GetAllGroup()
-	if err != nil {
-		logger.E("Init group error", err)
-		return res
-	}
-	for _, g := range groups {
-		group, err := initGroup(g)
-		if err != nil {
-			logger.E("Init group error", err)
-			continue
-		}
-		res[g.Gid] = group
-	}
-	return res
+	//res := map[int64]*Group{}
+	//groups, err := groupdao.GroupDao2.GetAllGroup()
+	//if err != nil {
+	//	logger.E("Init group error", err)
+	//	return res
+	//}
+	//for _, g := range groups {
+	//	group, err := initGroup(g)
+	//	if err != nil {
+	//		logger.E("Init group error", err)
+	//		continue
+	//	}
+	//	res[g.Gid] = group
+	//}
+	//return res
+	return map[int64]*Group{}
 }
 
 func LoadGroup(gid int64) (*Group, error) {

@@ -45,7 +45,3 @@ type ChatHistoryRequest struct {
 	Time int64
 	Type int8
 }
-
-type ChatInfoRequest struct {
-	Cid int64
-}

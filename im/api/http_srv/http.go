@@ -33,7 +33,7 @@ type CommonResponse struct {
 }
 
 type Validatable interface {
-	Validate(data string) error
+	Validate() error
 }
 
 var g *gin.Engine
@@ -94,21 +94,20 @@ func onHandlerFuncErr(ctx *gin.Context, err error) {
 	})
 }
 
-func requestParam(ctx *gin.Context) (*route.Context, string) {
-	commonP := &CommonParam{}
-	e := ctx.ShouldBindJSON(commonP)
-	if e != nil {
-		onParamError(ctx, e)
-		return nil, ""
-	}
+func getContext(ctx *gin.Context) *route.Context {
 	info := &route.Context{
-		Uid:    commonP.Uid,
-		Device: commonP.Device,
+		Uid:    1,
+		Device: 1,
 		R: func(message *message.Message) {
-			ctx.JSON(http.StatusOK, message)
+			response := CommonResponse{
+				Code: 100,
+				Msg:  "success",
+				Data: message.Data,
+			}
+			ctx.JSON(http.StatusOK, &response)
 		},
 	}
-	return info, string(commonP.Data)
+	return info
 }
 
 func deserialize(data string, i interface{}) error {
@@ -120,36 +119,34 @@ func post(path string, fn interface{}) {
 	handleFunc, paramType, hasParam, validate := reflectHandleFunc(path, fn)
 
 	g.POST(path, func(context *gin.Context) {
-		reqInfo, data := requestParam(context)
-		if reqInfo == nil {
-			onParamError(context, errors.New("invalid param"))
+		ctx := getContext(context)
+		if ctx == nil {
+			onParamValidateFailed(context, errors.New("authentication failed"))
 			return
 		}
-
 		var handlerParam []reflect.Value
 		if hasParam {
 			param := reflect.New(paramType).Interface()
+			err := context.BindJSON(&param)
+			if err != nil {
+				onParamError(context, errors.New("invalid parameter"))
+				return
+			}
 			if validate {
-				v := param.(Validatable)
-				err := v.Validate(data)
+				err = param.(Validatable).Validate()
 				if err != nil {
 					onParamValidateFailed(context, err)
 					return
 				}
-			} else {
-				err := deserialize(data, param)
-				if err != nil {
-					onParamError(context, err)
-					return
-				}
 			}
-			handlerParam = valOf(reqInfo, param)
+			handlerParam = valOf(ctx, param)
 		} else {
-			handlerParam = valOf(reqInfo)
+			handlerParam = valOf(ctx)
 		}
-		errV := handleFunc.Call(handlerParam)[0]
-		err := errV.Interface().(error)
-		if err != nil {
+		errV := handleFunc.Call(handlerParam)[0].Interface()
+
+		if errV != nil {
+			err := errV.(error)
 			onHandlerFuncErr(context, err)
 		}
 	})

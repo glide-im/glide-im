@@ -114,7 +114,7 @@ func (*AuthApi) Register(ctx *route.Context, req *RegisterRequest) error {
 	return err
 }
 
-func (a *AuthApi) Logout(ctx *route.Context, r *LogoutRequest) error {
+func (a *AuthApi) Logout(ctx *route.Context) error {
 	err := userdao.Dao.DelAuthToken(ctx.Uid, ctx.Device)
 	if err != nil {
 		return comm.NewDbErr(err)
