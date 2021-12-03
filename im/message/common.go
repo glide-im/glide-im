@@ -38,7 +38,7 @@ type Message struct {
 	Ver    int64
 	Seq    int64
 	Action Action
-	Data   string
+	Data   interface{}
 }
 
 func (m *Message) Deserialize(data []byte) error {
@@ -50,25 +50,16 @@ func (m *Message) Serialize() ([]byte, error) {
 }
 
 func (m *Message) SetData(v interface{}) error {
-	if s, ok := v.(string); ok {
-		m.Data = s
-		return nil
-	}
-	if s, ok := v.(error); ok {
-		m.Data = s.Error()
-		return nil
-	}
-
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-	m.Data = string(b)
+	m.Data = v
 	return nil
 }
 
 func (m *Message) DeserializeData(v interface{}) error {
-	return json.Unmarshal([]byte(m.Data), v)
+	s, ok := m.Data.(string)
+	if ok {
+		return json.Unmarshal([]byte(s), v)
+	}
+	return nil
 }
 
 func (m *Message) String() string {
