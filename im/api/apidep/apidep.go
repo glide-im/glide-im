@@ -4,6 +4,7 @@ import (
 	"go_im/im/client"
 	"go_im/im/group"
 	"go_im/im/message"
+	"go_im/pkg/logger"
 )
 
 // ClientManager 客户端连接相关接口
@@ -14,11 +15,12 @@ var GroupManager GroupManagerInterface = &groupInterface{}
 
 func SendMessage(uid int64, device int64, m *message.Message) {
 	ClientManager.EnqueueMessage(uid, device, m)
+	logger.D("uid=%d, device=%d, msg=%v", uid, device, m)
 }
 
 func SendMessageIfOnline(uid int64, device int64, m *message.Message) {
 	if ClientManager.IsDeviceOnline(uid, device) {
-		ClientManager.EnqueueMessage(uid, device, m)
+		SendMessage(uid, device, m)
 	}
 }
 

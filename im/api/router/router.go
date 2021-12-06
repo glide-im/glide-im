@@ -237,17 +237,17 @@ func (r *Router) Add(rts ...IRoute) {
 }
 
 func (r *Router) Handle(uid int64, device int64, msg *message.Message) error {
-	ri := &Context{
+	ctx := &Context{
 		Uid:    uid,
 		Seq:    msg.Seq,
 		Device: device,
 		Action: msg.Action,
-		R: func(message *message.Message) {
-			apidep.SendMessageIfOnline(uid, device, message)
-		},
+	}
+	ctx.R = func(message *message.Message) {
+		apidep.SendMessageIfOnline(ctx.Uid, ctx.Device, message)
 	}
 	p := newPath(msg.Action)
-	return r.root.handle(p, ri, msg.Data.Bytes())
+	return r.root.handle(p, ctx, msg.Data.Bytes())
 }
 
 func (r *Router) String() string {
