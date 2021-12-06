@@ -90,6 +90,7 @@ func (a *Routers) init() {
 
 func (a *Routers) Handle(uid int64, device int64, message *message.Message) {
 
+	logger.D("%v", message)
 	err := a.handle(uid, device, message)
 	if err != nil {
 		a.onError(uid, device, message, err)

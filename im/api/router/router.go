@@ -152,12 +152,12 @@ func (r *Rt) invokeHandleFunc(info *Context, data interface{}) error {
 	return nil
 }
 
-func (r *Rt) tryUnmarshal(i interface{}, j interface{}) {
-	s, ok := j.(string)
+func (r *Rt) tryUnmarshal(i interface{}, jsonData interface{}) {
+	s, ok := jsonData.(string)
 	if ok {
 		_ = json.Unmarshal([]byte(s), i)
 	}
-	bytes, ok := j.([]byte)
+	bytes, ok := jsonData.([]byte)
 	if ok {
 		_ = json.Unmarshal(bytes, i)
 	}
@@ -247,7 +247,7 @@ func (r *Router) Handle(uid int64, device int64, msg *message.Message) error {
 		},
 	}
 	p := newPath(msg.Action)
-	return r.root.handle(p, ri, msg.Data)
+	return r.root.handle(p, ri, msg.Data.Bytes())
 }
 
 func (r *Router) String() string {

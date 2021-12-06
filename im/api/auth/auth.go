@@ -46,20 +46,23 @@ type Interface interface {
 type AuthApi struct {
 }
 
-func (*AuthApi) AuthToken(info *route.Context, req *AuthTokenRequest) error {
+func (*AuthApi) AuthToken(ctx *route.Context, req *AuthTokenRequest) error {
 	uid, device, err := userdao.Dao.GetTokenInfo(req.Token)
 	if err != nil {
 		return err
 	}
 	if uid == 0 {
-		info.Response(message.NewMessage(info.Seq, comm.ActionFailed, "token is invalid, plz sign in"))
+		ctx.Response(message.NewMessage(ctx.Seq, comm.ActionFailed, "token is invalid, plz sign in"))
 		return nil
 	}
 	if req.Device != device {
 
 	}
-	apidep.ClientManager.ClientSignIn(info.Uid, uid, device)
-	info.Response(message.NewMessage(info.Seq, comm.ActionSuccess, AuthResponse{Uid: uid}))
+	apidep.ClientManager.ClientSignIn(ctx.Uid, uid, device)
+
+	ctx.Uid = uid
+	ctx.Device = req.Device
+	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, AuthResponse{Uid: uid}))
 	return nil
 }
 
@@ -95,6 +98,9 @@ func (*AuthApi) SignIn(ctx *route.Context, request *SignInRequest) error {
 	}
 	resp := message.NewMessage(ctx.Seq, comm.ActionSuccess, AuthResponse{Token: token, Uid: uid})
 	apidep.ClientManager.ClientSignIn(ctx.Uid, uid, request.Device)
+
+	ctx.Uid = uid
+	ctx.Device = request.Device
 	ctx.Response(resp)
 	return nil
 }

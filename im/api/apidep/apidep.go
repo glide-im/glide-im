@@ -13,11 +13,13 @@ var ClientManager ClientManagerInterface = client.Manager
 var GroupManager GroupManagerInterface = &groupInterface{}
 
 func SendMessage(uid int64, device int64, m *message.Message) {
-
+	ClientManager.EnqueueMessage(uid, device, m)
 }
 
 func SendMessageIfOnline(uid int64, device int64, m *message.Message) {
-
+	if ClientManager.IsDeviceOnline(uid, device) {
+		ClientManager.EnqueueMessage(uid, device, m)
+	}
 }
 
 type ClientManagerInterface interface {
