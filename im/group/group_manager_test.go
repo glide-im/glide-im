@@ -66,7 +66,7 @@ func TestDefaultManager_DispatchMessage(t *testing.T) {
 	msg := &message.UpChatMessage{
 		Mid:     1,
 		CSeq:    1,
-		From_:   1,
+		From:    1,
 		To:      1,
 		Type:    1,
 		Content: "HelloWorld",
@@ -95,7 +95,7 @@ func TestDefaultManager_DispatchMessage2(t *testing.T) {
 	msg := &message.UpChatMessage{
 		Mid:     1,
 		CSeq:    1,
-		From_:   1,
+		From:    1,
 		To:      1,
 		Type:    1,
 		Content: "HelloWorld",

@@ -6,8 +6,8 @@ type UpChatMessage struct {
 	Mid int64
 	// CSeq 发送者消息 seq
 	CSeq int64
-	// From_ internal
-	From_ int64
+	// From internal
+	From int64
 	// To 接收者 ID
 	To int64
 	// Type 消息类型

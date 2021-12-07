@@ -13,7 +13,7 @@ func dispatchGroupMsg(from int64, msg *message.Message) {
 	if !unwrap(from, msg, groupMsg) {
 		return
 	}
-	groupMsg.From_ = from
+	groupMsg.From = from
 	err := group.Manager.DispatchMessage(groupMsg.To, groupMsg)
 	if err != nil {
 		notify := message.NewMessage(0, message.ActionMessageFailed, message.AckNotify{Mid: groupMsg.Mid})

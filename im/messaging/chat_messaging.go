@@ -14,6 +14,7 @@ func dispatchChatMessage(from int64, m *message.Message) {
 	if !unwrap(from, m, msg) {
 		return
 	}
+	msg.From = from
 
 	if m.Action != message.ActionChatMessageResend {
 		lg := from
@@ -44,10 +45,8 @@ func dispatchChatMessage(from int64, m *message.Message) {
 	ackChatMessage(from, msg.Mid)
 
 	// 对方不在线, 下发确认包
-	if !client.Manager.IsOnline(from) {
-		ackMsg := message.AckNotify{Mid: msg.Mid}
-		ackNotify := message.NewMessage(0, message.ActionAckMessage, ackMsg)
-		client.EnqueueMessage(from, ackNotify)
+	if !client.Manager.IsOnline(msg.To) {
+		ackNotifyMessage(from, msg.Mid)
 		err := msgdao.AddOfflineMessage(msg.To, msg.Mid)
 		if err != nil {
 			logger.E("save offline message error %v", err)
@@ -56,6 +55,12 @@ func dispatchChatMessage(from int64, m *message.Message) {
 	} else {
 		dispatchOnline(from, msg)
 	}
+}
+
+func ackNotifyMessage(from int64, mid int64) {
+	ackNotify := message.AckNotify{Mid: mid}
+	msg := message.NewMessage(0, message.ActionAckNotify, ackNotify)
+	client.EnqueueMessage(from, msg)
 }
 
 func ackChatMessage(from int64, mid int64) {

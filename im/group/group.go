@@ -102,7 +102,7 @@ func (g *Group) EnqueueNotify(msg *message.GroupNotify) error {
 func (g *Group) EnqueueMessage(msg *message.UpChatMessage) (int64, error) {
 
 	g.mu.Lock()
-	mf, exist := g.members[msg.From_]
+	mf, exist := g.members[msg.From]
 	g.mu.Unlock()
 
 	if !exist {
@@ -116,7 +116,7 @@ func (g *Group) EnqueueMessage(msg *message.UpChatMessage) (int64, error) {
 		MID:     msg.Mid,
 		Seq:     seq,
 		To:      g.gid,
-		From:    msg.From_,
+		From:    msg.From,
 		Type:    msg.Type,
 		SendAt:  msg.CTime,
 		Content: msg.Content,
@@ -134,7 +134,7 @@ func (g *Group) EnqueueMessage(msg *message.UpChatMessage) (int64, error) {
 	dMsg := &message.DownGroupMessage{
 		Mid:     msg.Mid,
 		Seq:     seq,
-		From:    msg.From_,
+		From:    msg.From,
 		Type:    msg.Type,
 		Content: msg.Content,
 		SendAt:  msg.CTime,
