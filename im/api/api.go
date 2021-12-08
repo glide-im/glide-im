@@ -61,7 +61,7 @@ func (a *Routers) init() {
 				route.Route("online", a.GetOnlineUser),
 				route.Group("info",
 					route.Route("get", a.GetUserInfo),
-					route.Route("me", a.UserInfo),
+					route.Route("me", a.UserProfile),
 				),
 			),
 			route.Group("contacts",

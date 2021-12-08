@@ -66,7 +66,7 @@ func (a *UserApi) GetOnlineUser(msg *route.Context) error {
 	return nil
 }
 
-func (a *UserApi) UserInfo(msg *route.Context) error {
+func (a *UserApi) UserProfile(msg *route.Context) error {
 
 	return nil
 }
