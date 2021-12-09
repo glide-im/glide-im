@@ -47,8 +47,12 @@ func (m *MockGroupManager) MemberOffline(gid int64, uid int64) error {
 	logger.D("MemberOffline, gid=%d, uid=%d", gid, uid)
 	return nil
 }
+func (g *MockGroupManager) UpdateMember(gid int64, uid int64, flag int64) error {
+	logger.D("UpdateMember, gid=%d, uid=%d, flag=%d", gid, uid, flag)
+	return nil
+}
 
-func (m *MockGroupManager) PutMember(gid int64, mb map[int64]int32) error {
+func (m *MockGroupManager) PutMember(gid int64, mb []int64) error {
 	logger.D("PutMember, gid=%d, mb=%v", gid, mb)
 	return nil
 }

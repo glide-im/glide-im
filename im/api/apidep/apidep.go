@@ -36,11 +36,12 @@ type ClientManagerInterface interface {
 type GroupManagerInterface interface {
 	MemberOnline(gid int64, uid int64) error
 	MemberOffline(gid int64, uid int64) error
-	PutMember(gid int64, mb map[int64]int32) error
+	PutMember(gid int64, mb []int64) error
 	RemoveMember(gid int64, uid ...int64) error
 	CreateGroup(gid int64) error
 	DissolveGroup(gid int64) error
 	MuteGroup(gid int64, mute bool) error
+	UpdateMember(gid int64, uid int64, flag int64) error
 	DispatchNotifyMessage(gid int64, message *message.Message) error
 }
 
@@ -51,6 +52,17 @@ func (g *groupInterface) MemberOnline(gid int64, uid int64) error {
 		{
 			Uid:   uid,
 			Flag:  group.FlagMemberOnline,
+			Extra: nil,
+		},
+	}
+	return group.Manager.UpdateMember(gid, u)
+}
+
+func (g *groupInterface) UpdateMember(gid int64, uid int64, flag int64) error {
+	u := []group.MemberUpdate{
+		{
+			Uid:   uid,
+			Flag:  flag,
 			Extra: nil,
 		},
 	}
@@ -68,10 +80,10 @@ func (g *groupInterface) MemberOffline(gid int64, uid int64) error {
 	return group.Manager.UpdateMember(gid, u)
 }
 
-func (g *groupInterface) PutMember(gid int64, mb map[int64]int32) error {
+func (g *groupInterface) PutMember(gid int64, mb []int64) error {
 
 	var u []group.MemberUpdate
-	for uid := range mb {
+	for _, uid := range mb {
 		u = append(u, group.MemberUpdate{
 			Uid:  uid,
 			Flag: group.FlagMemberAdd,

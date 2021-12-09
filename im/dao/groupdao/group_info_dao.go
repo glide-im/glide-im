@@ -49,6 +49,15 @@ func (GroupInfoDaoImpl) GetGroupMute(gid int64) (bool, error) {
 	return mute, nil
 }
 
+func (GroupInfoDaoImpl) HasGroup(gid int64) (bool, error) {
+	var count int64
+	query := db.DB.Model(&GroupModel{}).Where("gid = ?", gid).Count(&count)
+	if err := common.JustError(query); err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
 func (GroupInfoDaoImpl) GetGroupFlag(gid int64) (int, error) {
 	model := &GroupModel{}
 	var flag int

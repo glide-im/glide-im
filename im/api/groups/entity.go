@@ -8,14 +8,17 @@ type GroupInfoRequest struct {
 	Gid []int64
 }
 
+type InviteGroupMessage struct {
+	Gid int64
+}
+
 type CreateGroupRequest struct {
 	Name   string
 	Member []int64
 }
 
-type GroupResponse struct {
-	groupdao.Group
-	Members []*groupdao.GroupMember
+type CreateGroupResponse struct {
+	Gid int64
 }
 
 type GroupAddMemberResponse struct {
@@ -44,7 +47,7 @@ type GroupMemberResponse struct {
 	Uid        int64
 	Nickname   string
 	RemarkName string
-	Type       int32
+	Type       int64
 	Online     bool
 	Mute       bool
 }
