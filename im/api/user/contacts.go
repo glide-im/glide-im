@@ -8,16 +8,19 @@ import (
 	"go_im/im/message"
 )
 
-func (a *UserApi) DeleteContact(ctx *route.Context, request *DeleteContactsRequest) {
+func (a *UserApi) DeleteContact(ctx *route.Context, request *DeleteContactsRequest) error {
 	// TODO 2021-11-29
+	return nil
 }
 
-func (a *UserApi) UpdateContactRemark(ctx *route.Context, request *UpdateRemarkRequest) {
+func (a *UserApi) UpdateContactRemark(ctx *route.Context, request *UpdateRemarkRequest) error {
 	// TODO 2021-11-29
+	return nil
 }
 
-func (a *UserApi) ContactApproval(ctx *route.Context, request *ContactApproval) {
+func (a *UserApi) ContactApproval(ctx *route.Context, request *ContactApproval) error {
 	// TODO 2021-11-29
+	return nil
 }
 
 func (a *UserApi) AddContact(ctx *route.Context, request *AddContacts) error {

@@ -102,7 +102,7 @@ func getContext(ctx *gin.Context) *route.Context {
 			response := CommonResponse{
 				Code: 100,
 				Msg:  "success",
-				Data: message.Data,
+				Data: &message.Data,
 			}
 			ctx.JSON(http.StatusOK, &response)
 		},
