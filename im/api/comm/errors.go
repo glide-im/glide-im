@@ -15,31 +15,31 @@ func NewApiBizError(code int, msg string) *ErrApiBiz {
 }
 
 func (e *ErrApiBiz) Error() string {
-	return strconv.FormatInt(int64(e.Code), 10) + "," + e.msg
+	return e.msg
 }
 
 type ErrUnexpected struct {
-	Code int
-	msg  string
-	e    error
+	Code   int
+	Msg    string
+	Origin error
 }
 
 func NewUnexpectedErr(msg string, origin error) *ErrUnexpected {
 	return &ErrUnexpected{
-		Code: 1000,
-		msg:  msg,
-		e:    origin,
+		Code:   1000,
+		Msg:    msg,
+		Origin: origin,
 	}
 }
 
 func NewDbErr(origin error) *ErrUnexpected {
 	return &ErrUnexpected{
-		Code: 1001,
-		msg:  "internal server error",
-		e:    origin,
+		Code:   1001,
+		Msg:    "internal server error",
+		Origin: origin,
 	}
 }
 
 func (u *ErrUnexpected) Error() string {
-	return strconv.FormatInt(int64(u.Code), 10) + "," + u.msg
+	return strconv.FormatInt(int64(u.Code), 10) + "," + u.Msg
 }

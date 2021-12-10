@@ -22,7 +22,7 @@ func (*MsgApi) GetOrCreateSession(ctx *route.Context, request *SessionRequest) e
 	if err != nil {
 		return comm.NewDbErr(err)
 	}
-	if session == nil {
+	if session.SessionId == "" {
 		se, err := msgdao.SessionDaoImpl.CreateSession(ctx.Uid, request.To, time.Now().Unix())
 		if err != nil {
 			return comm.NewDbErr(err)
