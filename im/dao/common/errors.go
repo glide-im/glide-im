@@ -18,6 +18,13 @@ func ResolveError(db *gorm.DB) error {
 	return nil
 }
 
+func JustError(db *gorm.DB) error {
+	if db.Error != nil {
+		return db.Error
+	}
+	return nil
+}
+
 func ResolveFindErr(db *gorm.DB) error {
 	if db.Error != nil {
 		return db.Error
