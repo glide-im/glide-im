@@ -25,7 +25,7 @@ func JustError(db *gorm.DB) error {
 	return nil
 }
 
-func ResolveFindErr(db *gorm.DB) error {
+func MustFind(db *gorm.DB) error {
 	if db.Error != nil {
 		return db.Error
 	}

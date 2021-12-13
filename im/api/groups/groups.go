@@ -68,7 +68,11 @@ func (m *GroupApi) GetGroupMember(ctx *route.Context, request *GetGroupMemberReq
 }
 
 func (m *GroupApi) GetGroupInfo(ctx *route.Context, request *GroupInfoRequest) error {
-	// TODO 2021-12-9 21:55:07
+	groups, err := groupdao.Dao.GetGroups(request.Gid...)
+	if err != nil {
+		return comm.NewDbErr(err)
+	}
+	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, groups))
 	return nil
 }
 

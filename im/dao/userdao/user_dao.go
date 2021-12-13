@@ -79,7 +79,7 @@ func (d *UserInfoDaoImpl) GetUser(uid int64) (*User, error) {
 func (d *UserInfoDaoImpl) GetUserSimpleInfo(uid ...int64) ([]*User, error) {
 	var us []*User
 	query := db.DB.Model(&User{}).Where("uid IN (?)", uid).Select("uid, account, nickname, avatar").Find(&us)
-	if err := common.ResolveFindErr(query); err != nil {
+	if err := common.MustFind(query); err != nil {
 		return nil, err
 	}
 	return us, nil

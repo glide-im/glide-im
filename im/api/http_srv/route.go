@@ -36,7 +36,8 @@ func initRoute() {
 
 	msgApi := msg.MsgApi{}
 	post("/api/msg/history", msgApi.GetChatMessageHistory)
-	post("/api/msg/recent", msgApi.GetRecentChatMessages)
+	post("/api/msg/user", msgApi.GetRecentMessageByUser)
+	post("/api/msg/recent", msgApi.GetRecentMessageByUser)
 	post("/api/msg/offline", msgApi.GetOfflineMessage)
 	post("/api/msg/offline/ack", msgApi.AckOfflineMessage)
 

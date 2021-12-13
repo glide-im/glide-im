@@ -23,6 +23,25 @@ func (GroupInfoDaoImpl) CreateGroup(name string, flag int) (*GroupModel, error) 
 	return model, nil
 }
 
+func (GroupInfoDaoImpl) GetGroup(gid int64) (*GroupModel, error) {
+	model := &GroupModel{}
+	query := db.DB.Model(model).Where("gid = ?", gid).Find(model)
+	if err := common.MustFind(query); err != nil {
+		return nil, err
+	}
+	return model, nil
+}
+
+func (GroupInfoDaoImpl) GetGroups(gid ...int64) ([]*GroupModel, error) {
+	//goland:noinspection GoPreferNilSlice
+	model := []*GroupModel{}
+	query := db.DB.Model(model).Where("gid IN (?)", gid).Find(&model)
+	if err := common.MustFind(query); err != nil {
+		return nil, err
+	}
+	return model, nil
+}
+
 func (g *GroupInfoDaoImpl) UpdateGroupName(gid int64, name string) error {
 	return g.updateGroupField(gid, "name", name)
 }

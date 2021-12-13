@@ -8,6 +8,12 @@ type GroupInfoRequest struct {
 	Gid []int64
 }
 
+type GroupInfoResponse struct {
+	Name   string
+	Gid    int64
+	Avatar string
+}
+
 type InviteGroupMessage struct {
 	Gid int64
 }

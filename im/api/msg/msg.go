@@ -6,6 +6,7 @@ import (
 	"go_im/im/dao/msgdao"
 	"go_im/im/message"
 	"go_im/pkg/logger"
+	"time"
 )
 
 type MsgApi struct{}
@@ -26,13 +27,27 @@ func (*MsgApi) GetChatMessageHistory(ctx *route.Context, request *GetChatHistory
 }
 
 //goland:noinspection GoPreferNilSlice
-func (*MsgApi) GetRecentChatMessages(ctx *route.Context, request *GetRecentMessageRequest) error {
+func (*MsgApi) GetRecentMessage(ctx *route.Context) error {
+	messages, err := msgdao.ChatMsgDaoImpl.GetRecentChatMessages(ctx.Uid, time.Now().Unix()-int64(time.Hour*3*24))
+	if err != nil {
+		return comm.NewDbErr(err)
+	}
+	msr := []*MessageResponse{}
+	for _, m := range messages {
+		msr = append(msr, messageModel2MessageResponse(m))
+	}
+	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, msr))
+	return nil
+}
+
+//goland:noinspection GoPreferNilSlice
+func (*MsgApi) GetRecentMessageByUser(ctx *route.Context, request *GetRecentMessageRequest) error {
 	resp := []RecentMessagesResponse{}
 	var e = 0
 	for _, i := range request.Uid {
 		ms, err := msgdao.ChatMsgDaoImpl.GetChatMessagesBySession(ctx.Uid, i, 0, 20)
 		if err != nil {
-			logger.E("GetRecentChatMessages DB error %v", err)
+			logger.E("GetRecentMessageByUser DB error %v", err)
 			e++
 			continue
 		}
