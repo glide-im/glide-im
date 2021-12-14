@@ -41,7 +41,23 @@ func (groupMsgDaoImpl) CreateGroupMsgSeq(gid int64, step int64) error {
 	return nil
 }
 
-func (groupMsgDaoImpl) GetGroupMessage(mid int64) (*GroupMessage, error) {
+func (groupMsgDaoImpl) GetGroupMessage(gid int64, page int, pageSize int) ([]*GroupMessage, error) {
+
+	//goland:noinspection GoPreferNilSlice
+	ms := []*GroupMessage{}
+	query := db.DB.Model(&GroupMessage{}).
+		Where("`to` = ?", gid).
+		Order("`send_at` DESC").
+		Limit(pageSize).
+		Offset(pageSize * page).
+		Find(&ms)
+	if err := common.JustError(query); err != nil {
+		return nil, err
+	}
+	return ms, nil
+}
+
+func (groupMsgDaoImpl) GetMessage(mid int64) (*GroupMessage, error) {
 	gm := &GroupMessage{}
 	query := db.DB.Model(gm).Where("m_id = ?", mid).Find(gm)
 	if err := common.ResolveError(query); err != nil {

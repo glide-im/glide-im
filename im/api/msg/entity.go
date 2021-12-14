@@ -1,5 +1,7 @@
 package msg
 
+import "go_im/im/dao/msgdao"
+
 type MessageResponse struct {
 	MID      int64
 	CliSeq   int64
@@ -9,6 +11,19 @@ type MessageResponse struct {
 	SendAt   int64
 	CreateAt int64
 	Content  string
+}
+
+type GroupMessageResponse struct {
+	MID     int64
+	Sender  int64
+	Gid     int64
+	Type    int
+	SendAt  int64
+	Content string
+}
+
+type GroupMessageStateResponse struct {
+	*msgdao.GroupMessageState
 }
 
 type SessionRequest struct {
@@ -44,4 +59,13 @@ type ChatHistoryRequest struct {
 	Cid  int64
 	Time int64
 	Type int8
+}
+
+type GetGroupMsgRequest struct {
+	Gid  int64
+	Page int
+}
+
+type GetGroupMsgStateRequest struct {
+	Gid int64
 }

@@ -1,7 +1,5 @@
 package comm
 
-import "strconv"
-
 type ErrApiBiz struct {
 	Code int
 	msg  string
@@ -41,5 +39,5 @@ func NewDbErr(origin error) *ErrUnexpected {
 }
 
 func (u *ErrUnexpected) Error() string {
-	return strconv.FormatInt(int64(u.Code), 10) + "," + u.Msg
+	return u.Msg
 }

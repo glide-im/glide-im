@@ -16,7 +16,8 @@ type GroupMsgDao interface {
 	UpdateGroupMsgSeq(gid int64, seq int64) error
 	CreateGroupMsgSeq(gid int64, step int64) error
 
-	GetGroupMessage(mid int64) (*GroupMessage, error)
+	GetMessage(mid int64) (*GroupMessage, error)
+	GetGroupMessage(gid int64, page int, pageSize int) ([]*GroupMessage, error)
 	GetGroupMessageSeqAfter(gid int64, seqAfter int64) ([]*GroupMessage, error)
 
 	AddGroupMessage(message *GroupMessage) error
@@ -103,7 +104,7 @@ func CreateGroupMsgSeq(gid int64, step int64) error {
 }
 
 func GetGroupMessage(mid int64) (*GroupMessage, error) {
-	return instance.GetGroupMessage(mid)
+	return instance.GetMessage(mid)
 }
 func GetGroupMessageSeqAfter(gid int64, seqAfter int64) ([]*GroupMessage, error) {
 	return instance.GetGroupMessageSeqAfter(gid, seqAfter)

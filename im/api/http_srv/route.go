@@ -35,11 +35,15 @@ func initRoute() {
 	post("/api/user/profile/update", userApi.UpdateUserProfile)
 
 	msgApi := msg.MsgApi{}
-	post("/api/msg/history", msgApi.GetChatMessageHistory)
-	post("/api/msg/user", msgApi.GetRecentMessageByUser)
-	post("/api/msg/recent", msgApi.GetRecentMessageByUser)
-	post("/api/msg/offline", msgApi.GetOfflineMessage)
-	post("/api/msg/offline/ack", msgApi.AckOfflineMessage)
+
+	post("/api/msg/group/history", msgApi.GetGroupMessageHistory)
+	post("/api/msg/group/state", msgApi.GetGroupMessageState)
+
+	post("/api/msg/chat/history", msgApi.GetChatMessageHistory)
+	post("/api/msg/chat/user", msgApi.GetRecentMessageByUser)
+	post("/api/msg/chat/recent", msgApi.GetRecentMessageByUser)
+	post("/api/msg/chat/offline", msgApi.GetOfflineMessage)
+	post("/api/msg/chat/offline/ack", msgApi.AckOfflineMessage)
 
 	post("/api/session/recent", msgApi.GetRecentSessions)
 	post("/api/session/get", msgApi.GetOrCreateSession)
