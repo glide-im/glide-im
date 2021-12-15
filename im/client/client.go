@@ -144,6 +144,9 @@ func (c *Client) readMessage() {
 			logger.W("heartbeat timout")
 		case msg, ok := <-readChan:
 			if !ok {
+				if Manager.IsDeviceOnline(c.id, c.device) {
+					Manager.ClientLogout(c.id, c.device)
+				}
 				goto STOP
 			}
 			if msg.err != nil {
@@ -197,6 +200,7 @@ func (c *Client) writeMessage() {
 		}
 	}
 STOP:
+	c.Exit()
 	atomic.StoreInt32(&c.state, stateClosed)
 	close(c.messages)
 	_ = c.conn.Close()

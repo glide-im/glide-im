@@ -51,6 +51,7 @@ type defaultReader struct{}
 func (d *defaultReader) ReadCh(conn conn.Connection) (<-chan *readerRes, chan<- struct{}) {
 	c := make(chan *readerRes)
 	done := make(chan struct{})
+	// TODO 2021-12-3 IO重构
 	go func() {
 		for {
 			select {
@@ -80,6 +81,7 @@ func (d *defaultReader) ReadCh(conn conn.Connection) (<-chan *readerRes, chan<- 
 }
 
 func (d *defaultReader) Read(conn conn.Connection) (*message.Message, error) {
+	// TODO 2021-12-3 校验数据包
 	m := message.Message{}
 	bytes, err := conn.Read()
 	if err != nil {
