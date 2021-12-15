@@ -3,7 +3,7 @@ package msg
 import "go_im/im/dao/msgdao"
 
 type MessageResponse struct {
-	MID      int64
+	Mid      int64
 	CliSeq   int64
 	From     int64
 	To       int64
@@ -14,9 +14,10 @@ type MessageResponse struct {
 }
 
 type GroupMessageResponse struct {
-	MID     int64
+	Mid     int64
 	Sender  int64
 	Gid     int64
+	Seq     int64
 	Type    int
 	SendAt  int64
 	Content string
@@ -37,7 +38,11 @@ type SessionResponse struct {
 	UpdateAt int64
 }
 
-type GetRecentMessageRequest struct {
+type RecentChatMessageRequest struct {
+	Uid int64
+}
+
+type RecentMessageRequest struct {
 	Uid []int64
 }
 
@@ -46,26 +51,28 @@ type RecentMessagesResponse struct {
 	Messages []*MessageResponse
 }
 
-type GetChatHistoryRequest struct {
-	Uid  int64
-	Page int
+type ChatHistoryRequest struct {
+	Uid       int64
+	BeforeMid int64
 }
 
 type AckOfflineMessageRequest struct {
 	Mid []int64
 }
 
-type ChatHistoryRequest struct {
-	Cid  int64
-	Time int64
-	Type int8
+type GroupMessageRequest struct {
+	Mid []int64
 }
 
-type GetGroupMsgRequest struct {
-	Gid  int64
-	Page int
+type RecentGroupMessageRequest struct {
+	Gid int64
 }
 
-type GetGroupMsgStateRequest struct {
+type GroupMsgHistoryRequest struct {
+	Gid       int64
+	BeforeSeq int64
+}
+
+type GroupMsgStateRequest struct {
 	Gid int64
 }

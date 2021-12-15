@@ -19,8 +19,7 @@ type InviteGroupMessage struct {
 }
 
 type CreateGroupRequest struct {
-	Name   string
-	Member []int64
+	Name string
 }
 
 type CreateGroupResponse struct {

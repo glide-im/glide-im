@@ -4,6 +4,7 @@ import (
 	"go_im/im/dao/common"
 	"go_im/pkg/db"
 	"strconv"
+	"time"
 )
 
 var GroupMsgDaoImpl GroupMsgDao = groupMsgDaoImpl{}
@@ -41,15 +42,28 @@ func (groupMsgDaoImpl) CreateGroupMsgSeq(gid int64, step int64) error {
 	return nil
 }
 
-func (groupMsgDaoImpl) GetGroupMessage(gid int64, page int, pageSize int) ([]*GroupMessage, error) {
-
+func (groupMsgDaoImpl) GetLatestGroupMessage(gid int64, pageSize int) ([]*GroupMessage, error) {
 	//goland:noinspection GoPreferNilSlice
 	ms := []*GroupMessage{}
 	query := db.DB.Model(&GroupMessage{}).
 		Where("`to` = ?", gid).
 		Order("`send_at` DESC").
 		Limit(pageSize).
-		Offset(pageSize * page).
+		Find(&ms)
+	if err := common.JustError(query); err != nil {
+		return nil, err
+	}
+	return ms, nil
+}
+
+func (groupMsgDaoImpl) GetGroupMessage(gid int64, beforeSeq int64, pageSize int) ([]*GroupMessage, error) {
+
+	//goland:noinspection GoPreferNilSlice
+	ms := []*GroupMessage{}
+	query := db.DB.Model(&GroupMessage{}).
+		Where("`to` = ? AND `seq` < ?", gid, beforeSeq).
+		Order("`send_at` DESC").
+		Limit(pageSize).
 		Find(&ms)
 	if err := common.JustError(query); err != nil {
 		return nil, err
@@ -60,6 +74,16 @@ func (groupMsgDaoImpl) GetGroupMessage(gid int64, page int, pageSize int) ([]*Gr
 func (groupMsgDaoImpl) GetMessage(mid int64) (*GroupMessage, error) {
 	gm := &GroupMessage{}
 	query := db.DB.Model(gm).Where("m_id = ?", mid).Find(gm)
+	if err := common.ResolveError(query); err != nil {
+		return nil, err
+	}
+	return gm, nil
+}
+
+func (groupMsgDaoImpl) GetMessages(mid ...int64) ([]*GroupMessage, error) {
+	//goland:noinspection GoPreferNilSlice
+	gm := []*GroupMessage{}
+	query := db.DB.Model(gm).Where("m_id IN (?)", mid).Find(gm)
 	if err := common.ResolveError(query); err != nil {
 		return nil, err
 	}
@@ -112,6 +136,19 @@ func (groupMsgDaoImpl) UpdateGroupMessageState(gid int64, lastMID int64, lastMsg
 		return err
 	}
 	return nil
+}
+
+func (groupMsgDaoImpl) CreateGroupMessageState(gid int64) (*GroupMessageState, error) {
+	state := &GroupMessageState{
+		Gid:       gid,
+		LastMsgAt: time.Now().Unix(),
+	}
+	query := db.DB.Create(state)
+
+	if err := common.ResolveUpdateErr(query); err != nil {
+		return nil, err
+	}
+	return state, nil
 }
 
 func (groupMsgDaoImpl) GetGroupMessageState(gid int64) (*GroupMessageState, error) {

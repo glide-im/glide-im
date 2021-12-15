@@ -1,5 +1,10 @@
 package comm
 
+import (
+	"runtime"
+	"strconv"
+)
+
 type ErrApiBiz struct {
 	Code int
 	msg  string
@@ -20,6 +25,7 @@ type ErrUnexpected struct {
 	Code   int
 	Msg    string
 	Origin error
+	Line   string
 }
 
 func NewUnexpectedErr(msg string, origin error) *ErrUnexpected {
@@ -27,6 +33,7 @@ func NewUnexpectedErr(msg string, origin error) *ErrUnexpected {
 		Code:   1000,
 		Msg:    msg,
 		Origin: origin,
+		Line:   getLine(),
 	}
 }
 
@@ -35,9 +42,18 @@ func NewDbErr(origin error) *ErrUnexpected {
 		Code:   1001,
 		Msg:    "internal server error",
 		Origin: origin,
+		Line:   getLine(),
 	}
 }
 
 func (u *ErrUnexpected) Error() string {
 	return u.Msg
+}
+
+func getLine() string {
+	_, file, line, ok := runtime.Caller(2)
+	if ok {
+		return file + ":" + strconv.FormatInt(int64(line), 10)
+	}
+	return ""
 }

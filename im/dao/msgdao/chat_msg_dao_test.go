@@ -7,17 +7,12 @@ import (
 )
 
 func TestChatMsgDao_GetRecentChatMessagesBySessionID(t *testing.T) {
-	for i := 0; i < 100; i++ {
-		ms, err := instance.GetChatMessagesBySession(2, 1, 0, 10)
-		if err != nil {
-			t.Error(err)
-		}
-		if len(ms) == 0 {
-			break
-		}
-		for _, m := range ms {
-			t.Log(m)
-		}
+	ms, err := instance.GetChatMessagesBySession(2, 1, 1010, 10)
+	if err != nil {
+		t.Error(err)
+	}
+	for _, m := range ms {
+		t.Log(m)
 	}
 }
 
@@ -54,13 +49,13 @@ func TestChatMsgDao_DelOfflineMessage(t *testing.T) {
 }
 
 func TestAddChatMessage(t *testing.T) {
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 4; i++ {
 		_, err := AddChatMessage(&ChatMessage{
-			MID:       int64(2000 + i),
-			SessionID: "2_1",
+			MID:       int64(4000 + i),
+			SessionID: "543604_1",
 			CliSeq:    int64(i),
-			From:      1,
-			To:        2,
+			From:      543604,
+			To:        1,
 			Type:      1,
 			SendAt:    time.Now().Unix() - int64(60*i),
 			CreateAt:  time.Now().Unix(),

@@ -29,9 +29,9 @@ func getContext(uid int64, device int64) *route.Context {
 }
 
 func TestMsgApi_GetChatMessageHistory(t *testing.T) {
-	err := api.GetChatMessageHistory(getContext(1, 1), &GetChatHistoryRequest{
-		Uid:  2,
-		Page: 0,
+	err := api.GetChatMessageHistory(getContext(1, 0), &ChatHistoryRequest{
+		Uid:       2,
+		BeforeMid: 0,
 	})
 	if err != nil {
 		t.Error(err)
@@ -39,7 +39,7 @@ func TestMsgApi_GetChatMessageHistory(t *testing.T) {
 }
 
 func TestMsgApi_GetRecentChatMessages(t *testing.T) {
-	err := api.GetRecentMessageByUser(getContext(1, 1), &GetRecentMessageRequest{Uid: []int64{2, 3, 4, 5}})
+	err := api.GetRecentMessageByUser(getContext(1, 1), &RecentMessageRequest{Uid: []int64{2, 3, 4, 5}})
 	if err != nil {
 		t.Error(err)
 	}

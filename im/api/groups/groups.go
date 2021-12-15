@@ -5,6 +5,8 @@ import (
 	"go_im/im/api/comm"
 	"go_im/im/api/router"
 	"go_im/im/dao/groupdao"
+	"go_im/im/dao/msgdao"
+	"go_im/im/dao/userdao"
 	"go_im/im/group"
 	"go_im/im/message"
 )
@@ -21,19 +23,28 @@ func (m *GroupApi) CreateGroup(ctx *route.Context, request *CreateGroupRequest) 
 	if err != nil {
 		return comm.NewDbErr(err)
 	}
+	_, err = msgdao.GroupMsgDaoImpl.CreateGroupMessageState(dbGroup.Gid)
+	if err != nil {
+		return comm.NewDbErr(err)
+	}
+	err = userdao.Dao.AddContacts(ctx.Uid, dbGroup.Gid, 2)
+	if err != nil {
+		return comm.NewDbErr(err)
+	}
+
 	err = groupdao.Dao.AddMember(dbGroup.Gid, ctx.Uid, MemberTypeAdmin, MemberFlagDefault)
 	if err != nil {
 		return comm.NewDbErr(err)
 	}
-	err = groupdao.Dao.AddMembers(dbGroup.Gid, MemberFlagDefault, MemberTypeNormal, request.Member...)
-	if err != nil {
-		return comm.NewDbErr(err)
-	}
+	//err = groupdao.Dao.AddMembers(dbGroup.Gid, MemberFlagDefault, MemberTypeNormal, request.Member...)
+	//if err != nil {
+	//	return comm.NewDbErr(err)
+	//}
 	err = apidep.GroupManager.CreateGroup(dbGroup.Gid)
 	if err != nil {
 		return comm.NewUnexpectedErr("create group failed", err)
 	}
-	err = apidep.GroupManager.PutMember(dbGroup.Gid, request.Member)
+	err = apidep.GroupManager.PutMember(dbGroup.Gid, []int64{ctx.Uid})
 	if err != nil {
 		return comm.NewUnexpectedErr("add group member failed", err)
 	}
@@ -41,10 +52,10 @@ func (m *GroupApi) CreateGroup(ctx *route.Context, request *CreateGroupRequest) 
 	if err != nil {
 		return comm.NewUnexpectedErr("create group failed", err)
 	}
-	n := message.NewMessage(0, comm.ActionInviteToGroup, InviteGroupMessage{Gid: dbGroup.Gid})
-	for _, uid := range request.Member {
-		apidep.SendMessageIfOnline(uid, 0, n)
-	}
+	//n := message.NewMessage(0, comm.ActionInviteToGroup, InviteGroupMessage{Gid: dbGroup.Gid})
+	//for _, uid := range request.Member {
+	//	apidep.SendMessageIfOnline(uid, 0, n)
+	//}
 	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, CreateGroupResponse{Gid: dbGroup.Gid}))
 	return nil
 }

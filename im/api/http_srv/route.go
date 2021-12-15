@@ -37,11 +37,12 @@ func initRoute() {
 	msgApi := msg.MsgApi{}
 
 	post("/api/msg/group/history", msgApi.GetGroupMessageHistory)
+	post("/api/msg/group/recent", msgApi.GetRecentGroupMessage)
 	post("/api/msg/group/state", msgApi.GetGroupMessageState)
 
 	post("/api/msg/chat/history", msgApi.GetChatMessageHistory)
 	post("/api/msg/chat/user", msgApi.GetRecentMessageByUser)
-	post("/api/msg/chat/recent", msgApi.GetRecentMessageByUser)
+	post("/api/msg/chat/recent", msgApi.GetRecentMessage)
 	post("/api/msg/chat/offline", msgApi.GetOfflineMessage)
 	post("/api/msg/chat/offline/ack", msgApi.AckOfflineMessage)
 

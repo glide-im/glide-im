@@ -12,9 +12,23 @@ import (
 type ChatMsgApi struct{}
 
 //goland:noinspection GoPreferNilSlice
-func (*ChatMsgApi) GetChatMessageHistory(ctx *route.Context, request *GetChatHistoryRequest) error {
+func (*ChatMsgApi) GetRecentChatMessage(ctx *route.Context, request *RecentChatMessageRequest) error {
+	ms, err := msgdao.ChatMsgDaoImpl.GetRecentChatMessagesBySession(ctx.Uid, request.Uid, 10)
+	if err != nil {
+		return comm.NewDbErr(err)
+	}
+	msr := []*MessageResponse{}
+	for _, m := range ms {
+		msr = append(msr, messageModel2MessageResponse(m))
+	}
+	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, msr))
+	return nil
+}
 
-	ms, err := msgdao.ChatMsgDaoImpl.GetChatMessagesBySession(ctx.Uid, request.Uid, request.Page, 20)
+//goland:noinspection GoPreferNilSlice
+func (*ChatMsgApi) GetChatMessageHistory(ctx *route.Context, request *ChatHistoryRequest) error {
+
+	ms, err := msgdao.ChatMsgDaoImpl.GetChatMessagesBySession(ctx.Uid, request.Uid, request.BeforeMid, 20)
 	if err != nil {
 		return comm.NewDbErr(err)
 	}
@@ -41,7 +55,7 @@ func (*ChatMsgApi) GetRecentMessage(ctx *route.Context) error {
 }
 
 //goland:noinspection GoPreferNilSlice
-func (*ChatMsgApi) GetRecentMessageByUser(ctx *route.Context, request *GetRecentMessageRequest) error {
+func (*ChatMsgApi) GetRecentMessageByUser(ctx *route.Context, request *RecentMessageRequest) error {
 	resp := []RecentMessagesResponse{}
 	var e = 0
 	for _, i := range request.Uid {
@@ -96,7 +110,7 @@ func (*ChatMsgApi) GetOfflineMessage(ctx *route.Context) error {
 
 func messageModel2MessageResponse(m *msgdao.ChatMessage) *MessageResponse {
 	return &MessageResponse{
-		MID:      m.MID,
+		Mid:      m.MID,
 		CliSeq:   m.CliSeq,
 		From:     m.From,
 		To:       m.To,

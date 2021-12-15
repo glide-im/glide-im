@@ -81,7 +81,8 @@ func onHandlerFuncErr(ctx *gin.Context, err error) {
 
 	errUnexpected, ok := err.(*comm.ErrUnexpected)
 	if ok {
-		logger.E("api error msg:%s, %v", errUnexpected.Msg, errUnexpected.Origin)
+		logger.D("api error:\n %s", errUnexpected.Line)
+		logger.E("msg=%s, origin=%v", errUnexpected.Msg, errUnexpected.Origin)
 		ctx.JSON(http.StatusOK, CommonResponse{
 			Code: errUnexpected.Code,
 			Msg:  errUnexpected.Error(),

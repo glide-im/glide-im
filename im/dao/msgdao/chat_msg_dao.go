@@ -11,13 +11,26 @@ var ChatMsgDaoImpl ChatMsgDao = chatMsgDaoImpl{}
 type chatMsgDaoImpl struct {
 }
 
-func (chatMsgDaoImpl) GetChatMessagesBySession(uid1, uid2 int64, page int, pageSize int) ([]*ChatMessage, error) {
+func (chatMsgDaoImpl) GetRecentChatMessagesBySession(uid1, uid2 int64, pageSize int) ([]*ChatMessage, error) {
 	sid := getSessionId(uid2, uid1)
 	var ms []*ChatMessage
 	query := db.DB.Model(&ChatMessage{}).
-		Where("session_id = ?", sid, page).
+		Where("`session_id` = ?", sid).
 		Order("`send_at` DESC").
-		Offset(page * pageSize).
+		Limit(pageSize).
+		Find(&ms)
+	if query.Error != nil {
+		return nil, query.Error
+	}
+	return ms, nil
+}
+
+func (chatMsgDaoImpl) GetChatMessagesBySession(uid1, uid2 int64, beforeMid int64, pageSize int) ([]*ChatMessage, error) {
+	sid := getSessionId(uid2, uid1)
+	var ms []*ChatMessage
+	query := db.DB.Model(&ChatMessage{}).
+		Where("`session_id` = ? AND `m_id` < ?", sid, beforeMid).
+		Order("`send_at` DESC").
 		Limit(pageSize).
 		Find(&ms)
 	if query.Error != nil {

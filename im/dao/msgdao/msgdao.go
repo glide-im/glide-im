@@ -17,12 +17,16 @@ type GroupMsgDao interface {
 	CreateGroupMsgSeq(gid int64, step int64) error
 
 	GetMessage(mid int64) (*GroupMessage, error)
-	GetGroupMessage(gid int64, page int, pageSize int) ([]*GroupMessage, error)
+	GetMessages(mid ...int64) ([]*GroupMessage, error)
+
+	GetLatestGroupMessage(gid int64, pageSize int) ([]*GroupMessage, error)
+	GetGroupMessage(gid int64, beforeSeq int64, pageSize int) ([]*GroupMessage, error)
 	GetGroupMessageSeqAfter(gid int64, seqAfter int64) ([]*GroupMessage, error)
 
 	AddGroupMessage(message *GroupMessage) error
 	UpdateGroupMessageState(gid int64, lastMID int64, lastMsgAt int64, lastMsgSeq int64) error
 	GetGroupMessageState(gid int64) (*GroupMessageState, error)
+	CreateGroupMessageState(gid int64) (*GroupMessageState, error)
 
 	CreateGroupMemberMsgState(gid int64, uid int64) error
 	UpdateGroupMemberMsgState(gid int64, uid int64, lastAck int64, lastAckSeq int64) error
@@ -31,7 +35,8 @@ type GroupMsgDao interface {
 
 type ChatMsgDao interface {
 	GetChatMessage(mid ...int64) ([]*ChatMessage, error)
-	GetChatMessagesBySession(uid1, uid2 int64, page int, pageSize int) ([]*ChatMessage, error)
+	GetChatMessagesBySession(uid1, uid2 int64, beforeMid int64, pageSize int) ([]*ChatMessage, error)
+	GetRecentChatMessagesBySession(uid1, uid2 int64, pageSize int) ([]*ChatMessage, error)
 	GetRecentChatMessages(uid int64, afterTime int64) ([]*ChatMessage, error)
 	AddOrUpdateChatMessage(message *ChatMessage) (bool, error)
 
