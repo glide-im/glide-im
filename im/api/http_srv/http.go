@@ -68,7 +68,7 @@ func onParamError(ctx *gin.Context, err error) {
 	})
 }
 
-func onHandlerFuncErr(ctx *gin.Context, err error) {
+func onHandlerFuncErr(ctx *gin.Context, err error, handlerParam []reflect.Value) {
 	errBiz, ok := err.(*comm.ErrApiBiz)
 	if ok {
 		ctx.JSON(http.StatusOK, CommonResponse{
@@ -81,7 +81,15 @@ func onHandlerFuncErr(ctx *gin.Context, err error) {
 
 	errUnexpected, ok := err.(*comm.ErrUnexpected)
 	if ok {
-		logger.D("api error:\n %s", errUnexpected.Line)
+		logger.D("api error, path:%s\n\t%s", ctx.FullPath(), errUnexpected.Line)
+		context, ok := handlerParam[0].Interface().(*route.Context)
+		if ok {
+			logger.D("uid:%d, device:%d", context.Uid, context.Device)
+		}
+		if len(handlerParam) == 2 {
+			marshal, _ := json.Marshal(handlerParam[1].Interface())
+			logger.D("param: %v", string(marshal))
+		}
 		logger.E("msg=%s, origin=%v", errUnexpected.Msg, errUnexpected.Origin)
 		ctx.JSON(http.StatusOK, CommonResponse{
 			Code: errUnexpected.Code,
@@ -151,7 +159,7 @@ func post(path string, fn interface{}) {
 
 		if errV != nil {
 			err := errV.(error)
-			onHandlerFuncErr(context, err)
+			onHandlerFuncErr(context, err, handlerParam)
 		}
 	})
 }

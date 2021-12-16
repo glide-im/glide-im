@@ -5,6 +5,7 @@ import (
 	route "go_im/im/api/router"
 	"go_im/im/dao/common"
 	"go_im/im/dao/msgdao"
+	"go_im/im/dao/userdao"
 	"go_im/im/message"
 )
 
@@ -51,6 +52,28 @@ func (*GroupMsgApi) GetGroupMessage(ctx *route.Context, request *GroupMessageReq
 		resp = append(resp, dbGroupMsg2ResponseMsg(m))
 	}
 	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, resp))
+	return nil
+}
+
+func (*GroupMsgApi) GetUserGroupMessageState(ctx *route.Context) error {
+	groups, err := userdao.Dao.GetContactsByType(ctx.Uid, 2)
+	if err != nil {
+		return comm.NewDbErr(err)
+	}
+	if len(groups) == 0 {
+		ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, []byte{}))
+		return nil
+	}
+	//goland:noinspection GoPreferNilSlice
+	gid := []int64{}
+	for _, group := range groups {
+		gid = append(gid, group.Id)
+	}
+	state, err := msgdao.GroupMsgDaoImpl.GetGroupsMessageState(gid...)
+	if err != nil {
+		return comm.NewDbErr(err)
+	}
+	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, state))
 	return nil
 }
 

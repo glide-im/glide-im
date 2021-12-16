@@ -38,6 +38,7 @@ type ContactsDaoInterface interface {
 	AddContacts(uid int64, id int64, type_ int8) error
 	DelContacts(uid int64, id int64, type_ int8) error
 	GetContacts(uid int64) ([]*Contacts, error)
+	GetContactsByType(uid int64, type_ int) ([]*Contacts, error)
 }
 
 type UserDao struct {

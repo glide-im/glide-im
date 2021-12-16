@@ -26,6 +26,7 @@ type GroupMsgDao interface {
 	AddGroupMessage(message *GroupMessage) error
 	UpdateGroupMessageState(gid int64, lastMID int64, lastMsgAt int64, lastMsgSeq int64) error
 	GetGroupMessageState(gid int64) (*GroupMessageState, error)
+	GetGroupsMessageState(gid ...int64) ([]*GroupMessageState, error)
 	CreateGroupMessageState(gid int64) (*GroupMessageState, error)
 
 	CreateGroupMemberMsgState(gid int64, uid int64) error

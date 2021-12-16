@@ -50,3 +50,9 @@ func (c ContactsDaoImpl) GetContacts(uid int64) ([]*Contacts, error) {
 	query := db.DB.Model(&Contacts{}).Where("uid = ?", uid).Find(&cs)
 	return cs, common.ResolveError(query)
 }
+
+func (c ContactsDaoImpl) GetContactsByType(uid int64, type_ int) ([]*Contacts, error) {
+	var cs []*Contacts
+	query := db.DB.Model(&Contacts{}).Where("uid = ? AND `type` = ?", uid, type_).Find(&cs)
+	return cs, common.ResolveError(query)
+}

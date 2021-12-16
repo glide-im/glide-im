@@ -161,6 +161,16 @@ func (groupMsgDaoImpl) GetGroupMessageState(gid int64) (*GroupMessageState, erro
 	return state, nil
 }
 
+func (groupMsgDaoImpl) GetGroupsMessageState(gid ...int64) ([]*GroupMessageState, error) {
+	//goland:noinspection GoPreferNilSlice
+	state := []*GroupMessageState{}
+	query := db.DB.Model(state).Where("gid IN (?)", gid).Find(&state)
+	if err := common.JustError(query); err != nil {
+		return nil, err
+	}
+	return state, nil
+}
+
 func (groupMsgDaoImpl) UpdateGroupMemberMsgState(gid int64, uid int64, ackMid int64, ackSeq int64) error {
 	mbId := strconv.FormatInt(gid, 10) + strconv.FormatInt(uid, 10)
 	s := &GroupMemberMsgState{}
