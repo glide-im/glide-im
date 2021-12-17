@@ -76,3 +76,7 @@ type GroupMsgHistoryRequest struct {
 type GroupMsgStateRequest struct {
 	Gid int64
 }
+
+type MessageIDResponse struct {
+	Mid int64
+}

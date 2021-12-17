@@ -37,6 +37,7 @@ func initRoute() {
 
 	msgApi := msg.MsgApi{}
 
+	post("/api/msg/id", msgApi.GetMessageID)
 	post("/api/msg/group/history", msgApi.GetGroupMessageHistory)
 	post("/api/msg/group/recent", msgApi.GetRecentGroupMessage)
 	post("/api/msg/group/state", msgApi.GetGroupMessageState)
