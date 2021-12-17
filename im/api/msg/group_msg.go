@@ -57,11 +57,11 @@ func (*GroupMsgApi) GetGroupMessage(ctx *route.Context, request *GroupMessageReq
 
 func (*GroupMsgApi) GetUserGroupMessageState(ctx *route.Context) error {
 	groups, err := userdao.Dao.GetContactsByType(ctx.Uid, 2)
-	if err != nil {
+	if err != nil && err != common.ErrNoRecordFound {
 		return comm.NewDbErr(err)
 	}
 	if len(groups) == 0 {
-		ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, []byte{}))
+		ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, []string{}))
 		return nil
 	}
 	//goland:noinspection GoPreferNilSlice

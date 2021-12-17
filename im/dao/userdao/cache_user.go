@@ -12,6 +12,7 @@ import (
 
 var keyToken2Uid = "im:auth:token:"
 var keyUid2Token = "im:auth:login:"
+var keyTokenVersion = "im:token:ver:"
 
 type UserCacheDao struct {
 }
@@ -32,29 +33,7 @@ func (UserCacheDao) GetUserSignState(uid int64) ([]*LoginState, error) {
 
 func (UserCacheDao) DelAuthToken(uid int64, device int64) error {
 	s := fmt.Sprintf("%d_%d", device, uid)
-
-	db.Redis.Pipeline()
-	token, err := db.Redis.Get(keyUid2Token + s).Result()
-	if err != nil {
-		if err.Error() == "redis: nil" {
-			logger.D("not signed in")
-			return nil
-		}
-		return err
-	}
-	if token == "" {
-		logger.W("token not exist")
-		return nil
-	}
-
-	r, err := db.Redis.Del(keyUid2Token + s).Result()
-	if r == 0 {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-	_, err = db.Redis.Del(keyToken2Uid + token).Result()
+	_, err := db.Redis.Del(keyTokenVersion + s).Result()
 	if err != nil {
 		return err
 	}
@@ -104,6 +83,28 @@ func (UserCacheDao) GetTokenInfo(token string) (int64, int64, error) {
 		return 0, 0, err
 	}
 	return uid, deviceId, nil
+}
+
+func (UserCacheDao) GetTokenVersion(uid int64, device int64) (int64, error) {
+	s := fmt.Sprintf("%d_%d", device, uid)
+	v, err := db.Redis.Get(keyTokenVersion + s).Result()
+	if err != nil {
+		return 0, err
+	}
+	i, err := strconv.ParseInt(v, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return i, nil
+}
+
+func (UserCacheDao) SetTokenVersion(uid int64, device int64, version int64, expiredAt time.Duration) error {
+	s := fmt.Sprintf("%d_%d", device, uid)
+	_, err := db.Redis.Set(keyTokenVersion+s, version, expiredAt).Result()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (UserCacheDao) SetSignInToken(uid int64, device int64, token string, expiredAt time.Duration) error {

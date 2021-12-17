@@ -1,8 +1,7 @@
 package auth
 
 type AuthTokenRequest struct {
-	Token  string
-	Device int64
+	Token string
 }
 
 type SignInRequest struct {

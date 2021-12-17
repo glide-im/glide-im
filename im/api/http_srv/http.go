@@ -108,8 +108,8 @@ func onHandlerFuncErr(ctx *gin.Context, err error, handlerParam []reflect.Value)
 
 func getContext(ctx *gin.Context) *route.Context {
 	info := &route.Context{
-		Uid:    1,
-		Device: 1,
+		Uid:    0,
+		Device: 0,
 		R: func(message *message.Message) {
 			response := CommonResponse{
 				Code: 100,
@@ -119,6 +119,16 @@ func getContext(ctx *gin.Context) *route.Context {
 			ctx.JSON(http.StatusOK, &response)
 		},
 	}
+	a, exists := ctx.Get(CtxKeyAuthInfo)
+	if exists {
+		authInfo, ok := a.(*comm.AuthInfo)
+		if ok {
+			info.Uid = authInfo.Uid
+			info.Device = authInfo.Device
+		} else {
+			logger.E("cast request context auth info (%s) failed, the value is: %v", CtxKeyAuthInfo, a)
+		}
+	}
 	return info
 }
 
@@ -126,11 +136,11 @@ func deserialize(data string, i interface{}) error {
 	return json.Unmarshal([]byte(data), i)
 }
 
-func post(path string, fn interface{}) {
+func postRt(router gin.IRoutes, path string, fn interface{}) {
 
 	handleFunc, paramType, hasParam, validate := reflectHandleFunc(path, fn)
 
-	g.POST(path, func(context *gin.Context) {
+	router.POST(path, func(context *gin.Context) {
 		ctx := getContext(context)
 		if ctx == nil {
 			onParamValidateFailed(context, errors.New("authentication failed"))

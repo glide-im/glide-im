@@ -12,9 +12,10 @@ func initRoute() {
 	// TODO 2021-11-15 完成其他 api 的 http 服务
 
 	authApi := auth.AuthApi{}
-	post("/api/auth/register", authApi.Register)
+	postNoAuth("/api/auth/register", authApi.Register)
+	postNoAuth("/api/auth/signin", authApi.SignIn)
+	postNoAuth("/api/auth/token", authApi.AuthToken)
 	post("/api/auth/logout", authApi.Logout)
-	post("/api/auth/signin", authApi.SignIn)
 
 	groupApi := groups.GroupApi{}
 	post("/api/group/info", groupApi.GetGroupInfo)
@@ -50,4 +51,12 @@ func initRoute() {
 	post("/api/session/recent", msgApi.GetRecentSessions)
 	post("/api/session/get", msgApi.GetOrCreateSession)
 	post("/api/session/update", msgApi.UpdateSession)
+}
+
+func postNoAuth(path string, fn interface{}) {
+	postRt(g, path, fn)
+}
+
+func post(path string, fn interface{}) {
+	postRt(useAuth(), path, fn)
 }

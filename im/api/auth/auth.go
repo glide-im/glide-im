@@ -8,7 +8,6 @@ import (
 	"go_im/im/dao/common"
 	"go_im/im/dao/userdao"
 	"go_im/im/message"
-	"go_im/pkg/logger"
 	"math/rand"
 	"time"
 )
@@ -47,22 +46,22 @@ type AuthApi struct {
 }
 
 func (*AuthApi) AuthToken(ctx *route.Context, req *AuthTokenRequest) error {
-	uid, device, err := userdao.Dao.GetTokenInfo(req.Token)
+	token, err := comm.ParseJwt(req.Token)
 	if err != nil {
-		return err
-	}
-	if uid == 0 {
 		ctx.Response(message.NewMessage(ctx.Seq, comm.ActionFailed, "token is invalid, plz sign in"))
 		return nil
 	}
-	if req.Device != device {
-
+	version, err := userdao.Dao.GetTokenVersion(token.Uid, token.Device)
+	if err != nil || version == 0 || version > token.Ver {
+		ctx.Response(message.NewMessage(ctx.Seq, comm.ActionFailed, "token is invalid, plz sign in"))
+		return nil
 	}
-	apidep.ClientManager.ClientSignIn(ctx.Uid, uid, device)
-
-	ctx.Uid = uid
-	ctx.Device = req.Device
-	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, AuthResponse{Uid: uid}))
+	if ctx.Uid != 0 {
+		apidep.ClientManager.ClientSignIn(ctx.Uid, token.Uid, token.Device)
+		ctx.Uid = token.Uid
+		ctx.Device = token.Device
+	}
+	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, AuthResponse{Uid: token.Uid}))
 	return nil
 }
 
@@ -71,32 +70,28 @@ func (*AuthApi) SignIn(ctx *route.Context, request *SignInRequest) error {
 		return errors.New("account or password empty")
 	}
 	uid, err := userdao.Dao.GetUidInfoByLogin(request.Account, request.Password)
-	if err != nil {
-		if err == common.ErrNoRecordFound {
+	if err != nil || uid == 0 {
+		if err == common.ErrNoRecordFound || uid == 0 {
 			return comm.NewApiBizError(1001, "check your account and password")
 		}
 		return comm.NewDbErr(err)
 	}
-	if uid == 0 {
-		return comm.NewApiBizError(1001, "check your account and password")
+	jt := comm.AuthInfo{
+		Uid:    uid,
+		Device: request.Device,
+		Ver:    comm.GenJwtVersion(),
 	}
-
-	if apidep.ClientManager.IsDeviceOnline(uid, request.Device) {
-		err = userdao.Dao.DelAuthToken(uid, request.Device)
-		if err != nil {
-			logger.E("del user token failed %v", err)
-		}
-		notify := message.NewMessage(0, message.ActionNotify, "your account has sign in on another device")
-		apidep.SendMessage(uid, request.Device, notify)
-		apidep.ClientManager.ClientLogout(uid, request.Device)
+	token, err := comm.GenJwt(jt)
+	if err != nil {
+		return comm.NewUnexpectedErr("login failed", err)
 	}
-
-	token := genToken(32)
-	err = userdao.Dao.SetSignInToken(uid, request.Device, token, time.Hour*24*7)
+	err = userdao.Dao.SetTokenVersion(jt.Uid, jt.Device, jt.Ver, time.Duration(jt.ExpiresAt))
 	if err != nil {
 		return comm.NewDbErr(err)
 	}
-	resp := message.NewMessage(ctx.Seq, comm.ActionSuccess, AuthResponse{Token: token, Uid: uid})
+
+	tk := AuthResponse{Token: token, Uid: uid}
+	resp := message.NewMessage(ctx.Seq, comm.ActionSuccess, tk)
 	apidep.ClientManager.ClientSignIn(ctx.Uid, uid, request.Device)
 
 	ctx.Uid = uid
@@ -128,4 +123,16 @@ func (a *AuthApi) Logout(ctx *route.Context) error {
 	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, ""))
 	apidep.ClientManager.ClientLogout(ctx.Uid, ctx.Device)
 	return nil
+}
+
+func (a *AuthApi) offline(uid int64, device int64) {
+	if apidep.ClientManager.IsDeviceOnline(uid, device) {
+		//err := userdao.Dao.DelAuthToken(uid, device)
+		//if err != nil {
+		//	logger.E("del user token failed %v", err)
+		//}
+		notify := message.NewMessage(0, message.ActionNotify, "your account has sign in on another device")
+		apidep.SendMessage(uid, device, notify)
+		apidep.ClientManager.ClientLogout(uid, device)
+	}
 }

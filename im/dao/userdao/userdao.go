@@ -9,13 +9,16 @@ var Dao = UserDao{
 }
 
 type Cache interface {
-	GetUserSignState(uid int64) ([]*LoginState, error)
-	IsUserSignIn(uid int64, device int64) (bool, error)
+	//GetUserSignState(uid int64) ([]*LoginState, error)
+	//IsUserSignIn(uid int64, device int64) (bool, error)
+	//DelToken(token string) error
+	//DelAllToken(uid int64) error
+	//GetTokenInfo(token string) (int64, int64, error)
+	//SetSignInToken(uid int64, device int64, token string, expiredAt time.Duration) error
+
 	DelAuthToken(uid int64, device int64) error
-	DelToken(token string) error
-	DelAllToken(uid int64) error
-	GetTokenInfo(token string) (int64, int64, error)
-	SetSignInToken(uid int64, device int64, token string, expiredAt time.Duration) error
+	SetTokenVersion(uid int64, device int64, version int64, expiredAt time.Duration) error
+	GetTokenVersion(uid int64, device int64) (int64, error)
 }
 
 type UserInfoDaoInterface interface {
