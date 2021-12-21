@@ -65,7 +65,8 @@ type Client struct {
 	writeClose chan struct{}
 
 	// hb 心跳倒计时
-	hb *timingwheel.Task
+	hb     *timingwheel.Task
+	hbLost int
 
 	// seq 服务器下行消息递增序列号
 	seq *comm.AtomicInt64
@@ -140,14 +141,19 @@ func (c *Client) readMessage() {
 		case <-c.readClose:
 			goto STOP
 		case <-c.hb.C:
-			// TODO 处理心跳超时
-			logger.W("heartbeat timout")
+			c.hbLost++
+			if c.hbLost > 3 {
+				logger.D("heartbeat timout, id=%d, device=%d", c.id, c.device)
+				goto STOP
+			}
+			c.EnqueueMessage(message.NewMessage(0, message.ActionHeartbeat, ""))
 		case msg, ok := <-readChan:
 			if !ok {
-				if Manager.IsDeviceOnline(c.id, c.device) {
-					Manager.ClientLogout(c.id, c.device)
-				}
-				goto STOP
+				//if Manager.IsDeviceOnline(c.id, c.device) {
+				//	Manager.ClientLogout(c.id, c.device)
+				//}
+				//goto STOP
+				continue
 			}
 			if msg.err != nil {
 				if c.Closed() || c.handleError(msg.err) {
@@ -156,6 +162,7 @@ func (c *Client) readMessage() {
 				}
 				continue
 			}
+			c.hbLost = 0
 			c.hb.Cancel()
 			c.hb = tw.After(HeartbeatDuration)
 			// 统一处理消息函数
@@ -164,6 +171,7 @@ func (c *Client) readMessage() {
 		}
 	}
 STOP:
+	c.hb.Cancel()
 	close(done)
 }
 
