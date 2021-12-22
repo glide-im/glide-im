@@ -90,6 +90,10 @@ func (c *DefaultManager) ClientSignIn(id, uid int64, device int64) {
 		logger.E("attempt to sign in a nonexistent client, id=%d", id)
 		return
 	}
+	if ds.get(device) != nil {
+		logger.E("replicated login id=%d, device=%d", id, device)
+		return
+	}
 	cli := ds.get(0)
 	cli.SetID(uid, device)
 

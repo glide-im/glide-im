@@ -56,6 +56,9 @@ func (*AuthApi) AuthToken(ctx *route.Context, req *AuthTokenRequest) error {
 		ctx.Response(message.NewMessage(ctx.Seq, comm.ActionFailed, "token is invalid, plz sign in"))
 		return nil
 	}
+	if ctx.Uid == token.Uid && ctx.Device == token.Device {
+		return comm.NewApiBizError(1009, "replicated login")
+	}
 	if ctx.Uid != 0 {
 		apidep.ClientManager.ClientSignIn(ctx.Uid, token.Uid, token.Device)
 		ctx.Uid = token.Uid

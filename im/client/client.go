@@ -173,6 +173,7 @@ func (c *Client) readMessage() {
 STOP:
 	c.hb.Cancel()
 	close(done)
+	logger.D("client read closed, id=%d", c.id)
 }
 
 // writeMessage 开始向 Connection 中写入消息队列中的消息
