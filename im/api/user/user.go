@@ -1,6 +1,7 @@
 package user
 
 import (
+	"errors"
 	"go_im/im/api/apidep"
 	"go_im/im/api/comm"
 	"go_im/im/api/router"
@@ -66,7 +67,25 @@ func (a *UserApi) GetOnlineUser(msg *route.Context) error {
 	return nil
 }
 
-func (a *UserApi) UserProfile(msg *route.Context) error {
+func (a *UserApi) UserProfile(ctx *route.Context) error {
 
+	info, err := userdao.UserInfoDao.GetUserSimpleInfo(ctx.Uid)
+	if err != nil {
+		return comm.NewDbErr(err)
+	}
+	//goland:noinspection ALL
+	resp := []InfoResponse{}
+	for _, i := range info {
+		resp = append(resp, InfoResponse{
+			Uid:      i.Uid,
+			Nickname: i.Nickname,
+			Account:  i.Account,
+			Avatar:   i.Avatar,
+		})
+	}
+	if len(resp) != 1 {
+		return comm.NewUnexpectedErr("no such user", errors.New("user info is empty"))
+	}
+	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, resp[0]))
 	return nil
 }
