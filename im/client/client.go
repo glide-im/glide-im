@@ -64,6 +64,8 @@ type Client struct {
 	// writeClose 关闭或写入则停止写
 	writeClose chan struct{}
 
+	readClosed int32
+
 	// hb 心跳倒计时
 	hb     *timingwheel.Task
 	hbLost int
@@ -136,6 +138,7 @@ func (c *Client) readMessage() {
 		}
 	}()
 
+	atomic.StoreInt32(&c.readClosed, 0)
 	for {
 		select {
 		case <-c.readClose:
@@ -172,6 +175,7 @@ func (c *Client) readMessage() {
 	}
 STOP:
 	c.hb.Cancel()
+	atomic.StoreInt32(&c.readClosed, 1)
 	close(done)
 	logger.D("client read closed, id=%d", c.id)
 }
@@ -189,7 +193,13 @@ func (c *Client) writeMessage() {
 		select {
 		case <-c.writeClose:
 			goto STOP
-		case m := <-c.messages:
+		case m, ok := <-c.messages:
+			if !ok {
+				if atomic.LoadInt32(&c.readClosed) == 1 {
+					goto STOP
+				}
+				continue
+			}
 			b, err := m.Serialize()
 			if err != nil {
 				logger.E("serialize output message", err)
@@ -234,7 +244,10 @@ func (c *Client) Exit() {
 	}
 	atomic.StoreInt32(&c.state, stateClosing)
 
-	close(c.readClose)
+	if atomic.LoadInt32(&c.readClosed) != 1 {
+		atomic.StoreInt32(&c.readClosed, 1)
+		close(c.readClose)
+	}
 	close(c.writeClose)
 	statistics.SConnExit()
 }
