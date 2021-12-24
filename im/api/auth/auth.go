@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"github.com/pkg/errors"
 	"go_im/im/api/apidep"
 	"go_im/im/api/comm"
 	"go_im/im/api/router"
@@ -42,22 +41,26 @@ type Interface interface {
 	Register(info *route.Context, req *RegisterRequest) error
 }
 
+var (
+	ErrInvalidToken      = comm.NewApiBizError(1001, "token is invalid, plz sign in")
+	ErrSignInAccountInfo = comm.NewApiBizError(1002, "check your account and password")
+	ErrReplicatedLogin   = comm.NewApiBizError(1003, "replicated login")
+)
+
 type AuthApi struct {
 }
 
 func (*AuthApi) AuthToken(ctx *route.Context, req *AuthTokenRequest) error {
 	token, err := comm.ParseJwt(req.Token)
 	if err != nil {
-		ctx.Response(message.NewMessage(ctx.Seq, comm.ActionFailed, "token is invalid, plz sign in"))
-		return nil
+		return ErrInvalidToken
 	}
 	version, err := userdao.Dao.GetTokenVersion(token.Uid, token.Device)
 	if err != nil || version == 0 || version > token.Ver {
-		ctx.Response(message.NewMessage(ctx.Seq, comm.ActionFailed, "token is invalid, plz sign in"))
-		return nil
+		return ErrInvalidToken
 	}
 	if ctx.Uid == token.Uid && ctx.Device == token.Device {
-		return comm.NewApiBizError(1009, "replicated login")
+		return ErrReplicatedLogin
 	}
 	if ctx.Uid != 0 {
 		apidep.ClientManager.ClientSignIn(ctx.Uid, token.Uid, token.Device)
@@ -70,12 +73,12 @@ func (*AuthApi) AuthToken(ctx *route.Context, req *AuthTokenRequest) error {
 
 func (*AuthApi) SignIn(ctx *route.Context, request *SignInRequest) error {
 	if len(request.Account) == 0 || len(request.Password) == 0 {
-		return errors.New("account or password empty")
+		return ErrSignInAccountInfo
 	}
 	uid, err := userdao.Dao.GetUidInfoByLogin(request.Account, request.Password)
 	if err != nil || uid == 0 {
 		if err == common.ErrNoRecordFound || uid == 0 {
-			return comm.NewApiBizError(1001, "check your account and password")
+			return ErrSignInAccountInfo
 		}
 		return comm.NewDbErr(err)
 	}
