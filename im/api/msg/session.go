@@ -30,7 +30,12 @@ func (*MsgApi) GetOrCreateSession(ctx *route.Context, request *SessionRequest) e
 		session = se
 	}
 
-	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, session))
+	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, SessionResponse{
+		Uid1:     session.Uid,
+		Uid2:     session.Uid2,
+		LastMid:  session.LastMID,
+		UpdateAt: session.UpdateAt,
+	}))
 	return nil
 }
 

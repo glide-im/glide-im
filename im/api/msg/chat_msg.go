@@ -6,6 +6,7 @@ import (
 	"go_im/im/dao/msgdao"
 	"go_im/im/message"
 	"go_im/pkg/logger"
+	"math"
 	"time"
 )
 
@@ -28,6 +29,9 @@ func (*ChatMsgApi) GetRecentChatMessage(ctx *route.Context, request *RecentChatM
 //goland:noinspection GoPreferNilSlice
 func (*ChatMsgApi) GetChatMessageHistory(ctx *route.Context, request *ChatHistoryRequest) error {
 
+	if request.BeforeMid == 0 {
+		request.BeforeMid = math.MaxInt64
+	}
 	ms, err := msgdao.ChatMsgDaoImpl.GetChatMessagesBySession(ctx.Uid, request.Uid, request.BeforeMid, 20)
 	if err != nil {
 		return comm.NewDbErr(err)
