@@ -104,6 +104,6 @@ func wrapMessage(msg *message.Message) *pb.Message {
 	return &pb.Message{
 		Seq:    msg.Seq,
 		Action: string(msg.Action),
-		Data:   msg.Data,
+		//Data:   msg.Data,
 	}
 }

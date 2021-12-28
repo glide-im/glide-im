@@ -51,7 +51,7 @@ func initRoute() {
 
 	post("/api/session/recent", msgApi.GetRecentSessions)
 	post("/api/session/get", msgApi.GetOrCreateSession)
-	post("/api/session/update", msgApi.UpdateSession)
+	post("/api/session/read", msgApi.ReadMessage)
 }
 
 func postNoAuth(path string, fn interface{}) {

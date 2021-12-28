@@ -27,6 +27,10 @@ type GroupMessageStateResponse struct {
 	*msgdao.GroupMessageState
 }
 
+type ReadMessageRequest struct {
+	To int64
+}
+
 type SessionRequest struct {
 	To int64
 }
@@ -34,6 +38,7 @@ type SessionRequest struct {
 type SessionResponse struct {
 	Uid1     int64
 	Uid2     int64
+	Unread   int64
 	LastMid  int64
 	UpdateAt int64
 }

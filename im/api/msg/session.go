@@ -8,12 +8,11 @@ import (
 	"time"
 )
 
-func (a *MsgApi) UpdateSession(ctx *route.Context, request *SessionRequest) error {
-	err := msgdao.SessionDaoImpl.UpdateOrInitSession(ctx.Uid, request.To, time.Now().Unix())
+func (*MsgApi) ReadMessage(ctx *route.Context, request *ReadMessageRequest) error {
+	err := msgdao.SessionDaoImpl.CleanUserSessionUnread(ctx.Uid, request.To, request.To)
 	if err != nil {
 		return comm.NewDbErr(err)
 	}
-	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, ""))
 	return nil
 }
 

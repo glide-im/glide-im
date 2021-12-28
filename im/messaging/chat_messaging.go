@@ -33,8 +33,12 @@ func dispatchChatMessage(from int64, m *message.Message) {
 			CliSeq:    msg.CSeq,
 			SessionID: sessionId,
 		}
+		err := msgdao.SessionDaoImpl.UpdateOrCreateSession(lg, sm, from, msg.Mid, msg.CTime)
+		if err != nil {
+			logger.E("update session error")
+		}
 		// 保存消息
-		_, err := msgdao.AddChatMessage(&dbMsg)
+		_, err = msgdao.AddChatMessage(&dbMsg)
 		if err != nil {
 			logger.E("save chat message error %v", err)
 			return

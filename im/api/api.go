@@ -7,6 +7,7 @@ import (
 	"go_im/im/api/auth"
 	"go_im/im/api/groups"
 	"go_im/im/api/http_srv"
+	"go_im/im/api/msg"
 	"go_im/im/api/router"
 	"go_im/im/api/test"
 	"go_im/im/api/user"
@@ -36,6 +37,7 @@ type Routers struct {
 	*groups.GroupApi
 	*auth.AuthApi
 	*app.AppApi
+	*msg.MsgApi
 	*test.TestApi
 	router *route.Router
 }
@@ -52,6 +54,9 @@ func (a *Routers) init() {
 		route.Group("api",
 			route.Group("app",
 				route.Route("echo", a.Echo),
+			),
+			route.Group("session",
+				route.Route("read", a.ReadMessage),
 			),
 			route.Group("user",
 				route.Route("login", a.SignIn),
