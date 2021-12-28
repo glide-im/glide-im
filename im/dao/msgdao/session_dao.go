@@ -117,6 +117,8 @@ func (s *sessionDaoImpl) CreateSession(uid1 int64, uid2 int64, updateAt int64) (
 		"update":    updateAt,
 		"create":    updateAt,
 	}).Result()
+	db.Redis.ExpireAt(keySession+sid, time.Now().Add(time.Hour*24*30))
+
 	if err != nil {
 		return nil, err
 	}
@@ -157,39 +159,33 @@ func (s *sessionDaoImpl) UpdateOrCreateSession(uid1 int64, uid2 int64, sender in
 		if err != nil {
 			return err
 		}
-		m := map[string]interface{}{
-			"l_mid":     mid,
-			"lg_unread": 0,
-			"sm_unread": 0,
-			"update":    sender,
-			"create":    sendAt,
-		}
-		if sender == lg {
-			m["sm_unread"] = 1
-		} else {
-			m["lg_unread"] = 1
-		}
-		_, err = db.Redis.HMSet(keySession+sid, m).Result()
+	}
+
+	key := "lg_unread"
+	if sender != lg {
+		key = "sm_unread"
+	}
+
+	m := map[string]interface{}{
+		"l_mid": mid,
+		// TODO 2021-12-28 NOTE: do business here, clean sender's unread
+		key:      0,
+		"update": sender,
+	}
+	_, err = db.Redis.HMSet(keySession+sid, m).Result()
+	db.Redis.ExpireAt(keySession+sid, time.Now().Add(time.Hour*24*30))
+
+	if err != nil {
+		return err
+	}
+
+	if sender == lg {
+		_, err := db.Redis.HIncrBy(keySession+sid, "sm_unread", 1).Result()
 		if err != nil {
 			return err
 		}
 	} else {
-		if sender == lg {
-			_, err := db.Redis.HIncrBy(keySession+sid, "sm_unread", 1).Result()
-			if err != nil {
-				return err
-			}
-		} else {
-			_, err := db.Redis.HIncrBy(keySession+sid, "lg_unread", 1).Result()
-			if err != nil {
-				return err
-			}
-		}
-		_, err := db.Redis.HSet(keySession+sid, "l_mid", mid).Result()
-		if err != nil {
-			return err
-		}
-		_, err = db.Redis.HSet(keySession+sid, "update", sendAt).Result()
+		_, err := db.Redis.HIncrBy(keySession+sid, "lg_unread", 1).Result()
 		if err != nil {
 			return err
 		}

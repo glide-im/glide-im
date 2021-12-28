@@ -34,7 +34,7 @@ func TestSessionDaoImpl_CreateSession(t *testing.T) {
 }
 
 func TestSessionDao_UpdateOrInitSession(t *testing.T) {
-	err := SessionDaoImpl.UpdateOrCreateSession(1, 2, 1, 1, time.Now().Unix())
+	err := SessionDaoImpl.UpdateOrCreateSession(1, 2, 2, 5, time.Now().Unix())
 	if err != nil {
 		t.Error(err)
 	}
