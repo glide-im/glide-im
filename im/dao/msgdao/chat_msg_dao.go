@@ -12,7 +12,7 @@ type chatMsgDaoImpl struct {
 }
 
 func (chatMsgDaoImpl) GetRecentChatMessagesBySession(uid1, uid2 int64, pageSize int) ([]*ChatMessage, error) {
-	sid := getSessionId(uid2, uid1)
+	sid, _, _ := getSessionId(uid2, uid1)
 	var ms []*ChatMessage
 	query := db.DB.Model(&ChatMessage{}).
 		Where("`session_id` = ?", sid).
@@ -26,7 +26,7 @@ func (chatMsgDaoImpl) GetRecentChatMessagesBySession(uid1, uid2 int64, pageSize 
 }
 
 func (chatMsgDaoImpl) GetChatMessagesBySession(uid1, uid2 int64, beforeMid int64, pageSize int) ([]*ChatMessage, error) {
-	sid := getSessionId(uid2, uid1)
+	sid, _, _ := getSessionId(uid2, uid1)
 	var ms []*ChatMessage
 	query := db.DB.Model(&ChatMessage{}).
 		Where("`session_id` = ? AND `m_id` < ?", sid, beforeMid).

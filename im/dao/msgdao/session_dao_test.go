@@ -18,8 +18,15 @@ func TestSessionDaoImpl_GetSession(t *testing.T) {
 	t.Log(session)
 }
 
+func TestSessionDaoImpl_CleanUserSessionUnread(t *testing.T) {
+	err := SessionDaoImpl.CleanUserSessionUnread(1, 2, 2)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
 func TestSessionDaoImpl_CreateSession(t *testing.T) {
-	se, err := SessionDaoImpl.CreateSession(1, 2, time.Now().Unix())
+	se, err := SessionDaoImpl.CreateSession(1, 4, time.Now().Unix())
 	if err != nil {
 		t.Error(err)
 	}
@@ -27,14 +34,14 @@ func TestSessionDaoImpl_CreateSession(t *testing.T) {
 }
 
 func TestSessionDao_UpdateOrInitSession(t *testing.T) {
-	err := SessionDaoImpl.UpdateOrInitSession(1, 2, time.Now().Unix())
+	err := SessionDaoImpl.UpdateOrCreateSession(1, 2, 1, 1, time.Now().Unix())
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestSessionDao_GetRecentSession(t *testing.T) {
-	session, err := SessionDaoImpl.GetRecentSession(1, time.Now().Unix()-100000)
+	session, err := SessionDaoImpl.GetRecentSession(1, time.Now().Unix())
 	if err != nil {
 		t.Error(err)
 	}

@@ -50,9 +50,10 @@ type ChatMsgDao interface {
 }
 
 type SessionDao interface {
+	CleanUserSessionUnread(uid1, uid2 int64, uid int64) error
 	GetSession(uid1 int64, uid2 int64) (*Session, error)
 	CreateSession(uid1 int64, uid2 int64, updateAt int64) (*Session, error)
-	UpdateOrInitSession(uid1 int64, uid2 int64, update int64) error
+	UpdateOrCreateSession(uid1 int64, uid2 int64, sender int64, mid int64, sendAt int64) error
 	GetRecentSession(uid int64, updateAfter int64) ([]*Session, error)
 }
 

@@ -25,9 +25,11 @@ type ChatMessage struct {
 // Session 会话, 记录会话的情况
 type Session struct {
 	// SessionId 会话标识由发送者与接收者ID拼接成, ID大的放前面
-	SessionId string
-	Uid       int64
-	Uid2      int64
+	SessionId   string
+	Uid         int64
+	Uid2        int64
+	LgUidUnread int64
+	SmUidUnread int64
 	// LastMID 最后一条消息的ID
 	LastMID int64
 	// UpdateAt 最后一条消息的时间
