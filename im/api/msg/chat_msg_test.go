@@ -46,7 +46,7 @@ func TestMsgApi_GetRecentChatMessages(t *testing.T) {
 }
 
 func TestMsgApi_GetRecentSessions(t *testing.T) {
-	err := api.GetRecentSessions(getContext(1, 1))
+	err := api.GetRecentSessions(getContext(543602, 1))
 	if err != nil {
 		t.Error(err)
 	}

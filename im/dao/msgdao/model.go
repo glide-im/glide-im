@@ -34,8 +34,6 @@ type Session struct {
 	LastMID int64
 	// UpdateAt 最后一条消息的时间
 	UpdateAt int64
-	// CreateAt 创建时间
-	CreateAt int64
 }
 
 // OfflineMessage 用户不在线, 离线消息

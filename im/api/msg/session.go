@@ -39,8 +39,8 @@ func (*MsgApi) GetOrCreateSession(ctx *route.Context, request *SessionRequest) e
 }
 
 func (a *MsgApi) GetRecentSessions(ctx *route.Context) error {
-	week := time.Now().Unix() - (time.Hour.Milliseconds()*24*7)/1000
-	session, err := msgdao.SessionDaoImpl.GetRecentSession(ctx.Uid, week)
+	now := time.Now().Unix() + 100
+	session, err := msgdao.SessionDaoImpl.GetRecentSession(ctx.Uid, now, 100)
 	if err != nil {
 		return comm.NewDbErr(err)
 	}

@@ -95,7 +95,6 @@ func (s *sessionDaoImpl) GetSession(uid int64, uid2 int64) (*Session, error) {
 		SmUidUnread: getInt64FromMap(result, "sm_unread"),
 		LastMID:     getInt64FromMap(result, "l_mid"),
 		UpdateAt:    getInt64FromMap(result, "update"),
-		CreateAt:    getInt64FromMap(result, "create"),
 	}
 	return &se, nil
 }
@@ -139,7 +138,6 @@ func (s *sessionDaoImpl) CreateSession(uid1 int64, uid2 int64, updateAt int64) (
 		SmUidUnread: 0,
 		LastMID:     0,
 		UpdateAt:    updateAt,
-		CreateAt:    updateAt,
 	}
 	return &session, nil
 }
@@ -193,14 +191,14 @@ func (s *sessionDaoImpl) UpdateOrCreateSession(uid1 int64, uid2 int64, sender in
 	return nil
 }
 
-func (s *sessionDaoImpl) GetRecentSession(uid int64, updateAfter int64) ([]*Session, error) {
+func (s *sessionDaoImpl) GetRecentSession(uid int64, before int64, pageSize int64) ([]*Session, error) {
 	var se []*Session
 
 	result, err := db.Redis.ZRevRangeByScore(keyUserSessions+strconv.FormatInt(uid, 10), redis.ZRangeBy{
 		Min:    "0",
-		Max:    strconv.FormatInt(updateAfter, 10),
+		Max:    strconv.FormatInt(before, 10),
 		Offset: 0,
-		Count:  20,
+		Count:  pageSize,
 	}).Result()
 	if err != nil {
 		return nil, err

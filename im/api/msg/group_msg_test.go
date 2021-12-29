@@ -14,8 +14,7 @@ func init() {
 func TestGroupMsgApi_GetGroupMessageHistory(t *testing.T) {
 
 	err := groupMsgApi.GetGroupMessageHistory(getContext(1, 1), &GroupMsgHistoryRequest{
-		Gid:  4,
-		Page: 1,
+		Gid: 4,
 	})
 	if err != nil {
 		t.Error(err)
