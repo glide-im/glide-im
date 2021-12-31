@@ -14,3 +14,7 @@ func (t TcpConnection) Read() ([]byte, error) {
 func (t TcpConnection) Close() error {
 	panic("implement me")
 }
+
+func (t TcpConnection) GetConnInfo() *ConnectionInfo {
+	panic("implement me")
+}

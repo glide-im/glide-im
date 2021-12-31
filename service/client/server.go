@@ -48,7 +48,6 @@ func unwrapMessage(pbMsg *pb.Message) *message.Message {
 	return &message.Message{
 		Seq:    pbMsg.Seq,
 		Action: message.Action(pbMsg.Action),
-		Data:   pbMsg.Data,
 	}
 }
 

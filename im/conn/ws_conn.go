@@ -2,6 +2,7 @@ package conn
 
 import (
 	"github.com/gorilla/websocket"
+	"net"
 	"strings"
 	"time"
 )
@@ -52,6 +53,17 @@ func (c *WsConnection) Read() ([]byte, error) {
 
 func (c *WsConnection) Close() error {
 	return c.wrapError(c.conn.Close())
+}
+
+func (c *WsConnection) GetConnInfo() *ConnectionInfo {
+	c.conn.UnderlyingConn()
+	remoteAddr := c.conn.RemoteAddr().(*net.TCPAddr)
+	info := ConnectionInfo{
+		Ip:   remoteAddr.IP.String(),
+		Port: remoteAddr.Port,
+		Addr: c.conn.RemoteAddr().String(),
+	}
+	return &info
 }
 
 func (c *WsConnection) wrapError(err error) error {

@@ -12,6 +12,12 @@ var (
 	ErrReadTimeout      = errors.New("i/o timeout")
 )
 
+type ConnectionInfo struct {
+	Ip   string
+	Port int
+	Addr string
+}
+
 // Connection expression a network keep-alive connection, WebSocket, tcp etc
 type Connection interface {
 	// Write message to the connection.
@@ -20,6 +26,8 @@ type Connection interface {
 	Read() ([]byte, error)
 	// Close the connection.
 	Close() error
+	// GetConnInfo return the connection info
+	GetConnInfo() *ConnectionInfo
 }
 
 // ConnectionProxy expression a binder of Connection.
@@ -37,4 +45,8 @@ func (c ConnectionProxy) Read() ([]byte, error) {
 
 func (c ConnectionProxy) Close() error {
 	return c.conn.Close()
+}
+
+func (c ConnectionProxy) GetConnInfo() *ConnectionInfo {
+	return c.conn.GetConnInfo()
 }

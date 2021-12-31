@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"go_im/im/client"
+	"go_im/im/conn"
 	"go_im/im/dao/uid"
 	"go_im/im/message"
 	"go_im/service/route"
@@ -25,6 +26,10 @@ func (m *mockConn) Read() ([]byte, error) {
 }
 
 func (m *mockConn) Close() error { return nil }
+
+func (m *mockConn) GetConnInfo() *conn.ConnectionInfo {
+	return nil
+}
 
 type mockManager struct {
 	*manager

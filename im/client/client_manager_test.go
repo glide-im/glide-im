@@ -1,6 +1,7 @@
 package client
 
 import (
+	"go_im/im/conn"
 	"go_im/im/dao"
 	"go_im/im/message"
 	"go_im/pkg/db"
@@ -21,6 +22,10 @@ func (f *fakeConn) Read() ([]byte, error) {
 }
 
 func (f *fakeConn) Close() error {
+	return nil
+}
+
+func (f *fakeConn) GetConnInfo() *conn.ConnectionInfo {
 	return nil
 }
 
