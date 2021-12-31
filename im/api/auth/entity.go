@@ -20,6 +20,7 @@ type RegisterRequest struct {
 
 // AuthResponse login or register result
 type AuthResponse struct {
-	Token string
-	Uid   int64
+	Token   string
+	Uid     int64
+	Servers []string
 }

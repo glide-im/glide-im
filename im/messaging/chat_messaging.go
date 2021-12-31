@@ -3,6 +3,7 @@ package messaging
 import (
 	"go_im/im/client"
 	"go_im/im/dao/msgdao"
+	"go_im/im/dao/uid"
 	"go_im/im/message"
 	"go_im/pkg/logger"
 	"strconv"
@@ -10,6 +11,10 @@ import (
 
 // dispatchChatMessage 分发用户单聊消息
 func dispatchChatMessage(from int64, m *message.Message) {
+	if uid.IsTempId(from) {
+		logger.D("not sign in")
+		return
+	}
 	msg := new(message.UpChatMessage)
 	if !unwrap(from, m, msg) {
 		return

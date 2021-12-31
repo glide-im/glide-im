@@ -67,7 +67,13 @@ func (*AuthApi) AuthToken(ctx *route.Context, req *AuthTokenRequest) error {
 		ctx.Uid = token.Uid
 		ctx.Device = token.Device
 	}
-	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, AuthResponse{Uid: token.Uid}))
+	resp := AuthResponse{
+		Uid: token.Uid,
+		Servers: []string{
+			"ws://192.168.1.123:8080/ws",
+		},
+	}
+	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, resp))
 	return nil
 }
 
@@ -96,7 +102,13 @@ func (*AuthApi) SignIn(ctx *route.Context, request *SignInRequest) error {
 		return comm.NewDbErr(err)
 	}
 
-	tk := AuthResponse{Token: token, Uid: uid}
+	tk := AuthResponse{
+		Uid:   uid,
+		Token: token,
+		Servers: []string{
+			"ws://192.168.1.123:8080/ws",
+		},
+	}
 	resp := message.NewMessage(ctx.Seq, comm.ActionSuccess, tk)
 	apidep.ClientManager.ClientSignIn(ctx.Uid, uid, request.Device)
 

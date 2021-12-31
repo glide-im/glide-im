@@ -7,6 +7,7 @@ import (
 	"go_im/im/message"
 	"go_im/im/statistics"
 	"go_im/pkg/logger"
+	"strconv"
 )
 
 // Manager 客户端管理入口
@@ -84,35 +85,35 @@ func (c *DefaultManager) AddClient(uid int64, cs IClient) {
 
 // ClientSignIn 客户端登录, id 为连接时使用的临时标识, uid 为用户标识, device 用于区分不同设备
 func (c *DefaultManager) ClientSignIn(id, uid int64, device int64) {
-	ds := c.clients.get(id)
-	if ds == nil || ds.size() == 0 {
+	tempDs := c.clients.get(id)
+	if tempDs == nil || tempDs.size() == 0 {
 		// 该客户端不存在
 		logger.E("attempt to sign in a nonexistent client, id=%d", id)
 		return
 	}
-	if ds.get(device) != nil {
-		logger.E("replicated login id=%d, device=%d", id, device)
-		return
-	}
-	cli := ds.get(0)
-	cli.SetID(uid, device)
-
-	// 移除临时 id 标识使用 uid 标记
-	c.clients.delete(id, 0)
-
-	loggedIn := c.clients.get(uid)
-	if loggedIn != nil {
-		log := loggedIn.get(device)
-		if log != nil {
+	client := tempDs.get(0)
+	logged := c.clients.get(uid)
+	if logged != nil && logged.size() > 0 {
+		// 多设备登录
+		loggedDevice := logged.get(device)
+		if loggedDevice != nil {
+			logger.D("multi device login mutex, uid=%d, device=%d", uid, device)
 			// "Your account is logged in on another device"
-			log.Exit()
+			loggedDevice.EnqueueMessage(message.NewMessage(0, message.ActionNotify, "Your account is logged in on another device"))
+			loggedDevice.Exit()
+			logged.remove(device)
 		}
-
-		loggedIn.put(device, cli)
-		//c.EnqueueMessage(uid, device, nil)
+		client.SetID(uid, device)
+		if logged.size() > 0 {
+			EnqueueMessage(uid, message.NewMessage(0, message.ActionNotify, "multi device login, device="+strconv.FormatInt(device, 10)))
+		}
+		logged.put(device, client)
 	} else {
-		c.clients.add(uid, device, cli)
+		// 单设备登录
+		c.clients.add(uid, device, client)
 	}
+	// 删除临时 id
+	c.clients.delete(id, 0)
 }
 
 func (c *DefaultManager) ClientLogout(uid int64, device int64) {

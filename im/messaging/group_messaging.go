@@ -3,12 +3,18 @@ package messaging
 import (
 	"go_im/im/client"
 	"go_im/im/dao/msgdao"
+	"go_im/im/dao/uid"
 	"go_im/im/group"
 	"go_im/im/message"
+	"go_im/pkg/logger"
 )
 
 // dispatchGroupMsg 分发群消息
 func dispatchGroupMsg(from int64, msg *message.Message) {
+	if uid.IsTempId(from) {
+		logger.D("not sign in, uid=%d", from)
+		return
+	}
 	groupMsg := new(message.UpChatMessage)
 	if !unwrap(from, msg, groupMsg) {
 		return

@@ -57,13 +57,12 @@ type Client struct {
 	// state client 状态
 	state int32
 
+	// queuedMessage messages in the queue
+	queuedMessage int64
 	// messages 带缓冲的下行消息管道, 缓冲大小40
 	messages chan *message.Message
 	// readClose 关闭或写入则停止读
-	readClose chan struct{}
-	// writeClose 关闭或写入则停止写
-	writeClose chan struct{}
-
+	readClose  chan struct{}
 	readClosed int32
 
 	// hb 心跳倒计时
@@ -82,7 +81,6 @@ func newClient(conn conn.Connection) *Client {
 	client.messages = make(chan *message.Message, 60)
 	client.connectAt = time.Now()
 	client.readClose = make(chan struct{})
-	client.writeClose = make(chan struct{})
 	client.seq = new(comm.AtomicInt64)
 	client.hb = tw.After(HeartbeatDuration)
 	return client
@@ -100,8 +98,10 @@ func (c *Client) Closed() bool {
 
 // EnqueueMessage 放入下行消息队列
 func (c *Client) EnqueueMessage(message *message.Message) {
+	atomic.AddInt64(&c.queuedMessage, 1)
 	go func() {
 		defer func() {
+			atomic.AddInt64(&c.queuedMessage, -1)
 			e := recover()
 			if e != nil {
 				logger.E("panic: %v", e)
@@ -112,7 +112,7 @@ func (c *Client) EnqueueMessage(message *message.Message) {
 			logger.D("client has exited, enqueue message failed")
 			return
 		}
-		//logger.I("EnqueueMessage(id=%d, %s): %v", c.id, message.Action, message)
+		logger.I("EnqueueMessage(id=%d, %s): %v", c.id, message.Action, message)
 		if message.Seq < 0 {
 			// 服务端主动发送的消息使用服务端的序列号
 			message.Seq = c.getNextSeq()
@@ -120,6 +120,7 @@ func (c *Client) EnqueueMessage(message *message.Message) {
 		select {
 		case c.messages <- message:
 		default:
+			atomic.AddInt64(&c.queuedMessage, -1)
 			// TODO 客户端弱网消息下行速度过慢导致缓冲溢出
 			// 消息 chan 缓冲溢出, 这条消息将被丢弃
 			logger.E("message chan is full, id=%d", c.id)
@@ -142,6 +143,7 @@ func (c *Client) readMessage() {
 	for {
 		select {
 		case <-c.readClose:
+			logger.D("read close now by readClose chan")
 			goto STOP
 		case <-c.hb.C:
 			c.hbLost++
@@ -191,11 +193,10 @@ func (c *Client) writeMessage() {
 
 	for {
 		select {
-		case <-c.writeClose:
-			goto STOP
 		case m, ok := <-c.messages:
 			if !ok {
 				if atomic.LoadInt32(&c.readClosed) == 1 {
+					logger.D("read closed, down message queue is empty, close write now, uid=%d", c.id)
 					goto STOP
 				}
 				continue
@@ -206,6 +207,7 @@ func (c *Client) writeMessage() {
 				continue
 			}
 			err = c.conn.Write(b)
+			atomic.AddInt64(&c.queuedMessage, -1)
 			if err != nil {
 				if c.Closed() || c.handleError(err) {
 					// 连接断开或致命错误中断写消息
@@ -223,6 +225,7 @@ STOP:
 	atomic.StoreInt32(&c.state, stateClosed)
 	close(c.messages)
 	_ = c.conn.Close()
+	logger.D("client write closed, uid=%d", c.id)
 }
 
 // handleError 处理上下行消息过程中的错误, 如果是致命错误, 则返回 true
@@ -248,7 +251,6 @@ func (c *Client) Exit() {
 		atomic.StoreInt32(&c.readClosed, 1)
 		close(c.readClose)
 	}
-	close(c.writeClose)
 	statistics.SConnExit()
 }
 
@@ -260,7 +262,7 @@ func (c *Client) getNextSeq() int64 {
 }
 
 func (c *Client) Run() {
-	logger.I(">>>> client %d running", c.id)
+	logger.I(">>>> client %s running", c.conn.GetConnInfo().Addr)
 	go c.readMessage()
 	go c.writeMessage()
 }
