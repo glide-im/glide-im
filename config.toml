@@ -4,7 +4,7 @@ Port = 3306
 Username = "root"
 Password = "root"
 Db = "go_im"
-Charset = "utf8"
+Charset = "utf8mb4"
 
 [Redis]
 Host = "127.0.0.1"
