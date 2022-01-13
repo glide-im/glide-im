@@ -262,7 +262,7 @@ func (c *Client) getNextSeq() int64 {
 }
 
 func (c *Client) Run() {
-	logger.I(">>>> client %s running", c.conn.GetConnInfo().Addr)
+	logger.I(">>>> client %s running, id=%d", c.conn.GetConnInfo().Addr, c.id)
 	go c.readMessage()
 	go c.writeMessage()
 }

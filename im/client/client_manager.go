@@ -85,6 +85,7 @@ func (c *DefaultManager) AddClient(uid int64, cs IClient) {
 
 // ClientSignIn 客户端登录, id 为连接时使用的临时标识, uid 为用户标识, device 用于区分不同设备
 func (c *DefaultManager) ClientSignIn(id, uid int64, device int64) {
+	logger.D("client sign in origin-id=%d, uid=%d", id, uid)
 	tempDs := c.clients.get(id)
 	if tempDs == nil || tempDs.size() == 0 {
 		// 该客户端不存在

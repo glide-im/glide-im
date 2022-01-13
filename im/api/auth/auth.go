@@ -7,29 +7,30 @@ import (
 	"go_im/im/dao/common"
 	"go_im/im/dao/userdao"
 	"go_im/im/message"
+	"go_im/pkg/logger"
 	"math/rand"
 	"time"
 )
 
 var avatars = []string{
-	"https://dengzii.com/static/a.webp",
-	"https://dengzii.com/static/b.webp",
-	"https://dengzii.com/static/c.webp",
-	"https://dengzii.com/static/d.webp",
-	"https://dengzii.com/static/e.webp",
-	"https://dengzii.com/static/f.webp",
-	"https://dengzii.com/static/g.webp",
-	"https://dengzii.com/static/h.webp",
-	"https://dengzii.com/static/i.webp",
-	"https://dengzii.com/static/j.webp",
-	"https://dengzii.com/static/k.webp",
-	"https://dengzii.com/static/l.webp",
-	"https://dengzii.com/static/m.webp",
-	"https://dengzii.com/static/n.webp",
-	"https://dengzii.com/static/o.webp",
-	"https://dengzii.com/static/p.webp",
-	"https://dengzii.com/static/q.webp",
-	"https://dengzii.com/static/r.webp",
+	"http://dengzii.com/static/a.webp",
+	"http://dengzii.com/static/b.webp",
+	"http://dengzii.com/static/c.webp",
+	"http://dengzii.com/static/d.webp",
+	"http://dengzii.com/static/e.webp",
+	"http://dengzii.com/static/f.webp",
+	"http://dengzii.com/static/g.webp",
+	"http://dengzii.com/static/h.webp",
+	"http://dengzii.com/static/i.webp",
+	"http://dengzii.com/static/j.webp",
+	"http://dengzii.com/static/k.webp",
+	"http://dengzii.com/static/l.webp",
+	"http://dengzii.com/static/m.webp",
+	"http://dengzii.com/static/n.webp",
+	"http://dengzii.com/static/o.webp",
+	"http://dengzii.com/static/p.webp",
+	"http://dengzii.com/static/q.webp",
+	"http://dengzii.com/static/r.webp",
 }
 
 var nicknames = []string{"佐菲", "赛文", "杰克", "艾斯", "泰罗", "雷欧", "阿斯特拉", "艾迪", "迪迦", "杰斯", "奈克斯", "梦比优斯", "盖亚", "戴拿"}
@@ -60,9 +61,9 @@ func (*AuthApi) AuthToken(ctx *route.Context, req *AuthTokenRequest) error {
 		return ErrInvalidToken
 	}
 	if ctx.Uid == token.Uid && ctx.Device == token.Device {
-		return ErrReplicatedLogin
-	}
-	if ctx.Uid != 0 {
+		// logged in
+		logger.D("auth token for a connection is logged in")
+	} else {
 		apidep.ClientManager.ClientSignIn(ctx.Uid, token.Uid, token.Device)
 		ctx.Uid = token.Uid
 		ctx.Device = token.Device
@@ -119,11 +120,13 @@ func (*AuthApi) SignIn(ctx *route.Context, request *SignInRequest) error {
 }
 
 func (*AuthApi) Register(ctx *route.Context, req *RegisterRequest) error {
+
+	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
 	u := &userdao.User{
 		Account:  req.Account,
 		Password: req.Password,
-		Nickname: nicknames[rand.Intn(len(nicknames))],
-		Avatar:   avatars[rand.Intn(len(avatars))],
+		Nickname: nicknames[rnd.Intn(len(nicknames))],
+		Avatar:   avatars[rnd.Intn(len(avatars))],
 	}
 	err := userdao.UserInfoDao.AddUser(u)
 	if err != nil {
