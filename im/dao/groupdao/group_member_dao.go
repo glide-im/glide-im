@@ -12,7 +12,7 @@ type GroupMemberDaoImpl struct {
 func (GroupMemberDaoImpl) GetMembers(gid int64) ([]*GroupMemberModel, error) {
 	var gms []*GroupMemberModel
 	query := db.DB.Model(&GroupMemberModel{}).Where("gid = ?", gid).Find(&gms)
-	if err := common.ResolveError(query); err != nil {
+	if err := common.JustError(query); err != nil {
 		return nil, err
 	}
 	return gms, nil

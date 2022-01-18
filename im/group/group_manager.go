@@ -4,7 +4,10 @@ import (
 	"errors"
 	"go_im/im/client"
 	"go_im/im/comm"
+	"go_im/im/dao/groupdao"
 	"go_im/im/message"
+	"go_im/pkg/logger"
+	"strconv"
 	"time"
 )
 
@@ -78,9 +81,27 @@ func NewDefaultManager() *DefaultManager {
 }
 
 func (m *DefaultManager) Init() {
-	allGroup := LoadAllGroup()
-	for gid, g := range allGroup {
-		m.groups[gid] = g
+	groups, err := groupdao.Dao.GetAllGroup()
+	if err != nil {
+		logger.E("Init group error", err)
+		return
+	}
+	for _, g := range groups {
+		logger.D("load group %d", g.Gid)
+		sGroup := newGroup(g.Gid)
+		m.groups[g.Gid] = sGroup
+		mbs, err := groupdao.Dao.GetMembers(g.Gid)
+		if err != nil {
+			logger.E("load group member error gid=%d %v", g.Gid, err)
+			continue
+		}
+		for _, mb := range mbs {
+			info := newMemberInfo()
+			info.muted = mb.Flag == 1
+			info.admin = mb.Type == 1
+			info.online = true
+			sGroup.PutMember(mb.Uid, info)
+		}
 	}
 }
 
@@ -143,7 +164,7 @@ func (m *DefaultManager) DispatchMessage(gid int64, msg *message.UpChatMessage) 
 	g, ok := m.groups[gid]
 	m.mu.Unlock()
 	if !ok {
-		return errors.New("group not exist")
+		return errors.New("group not exist gid=" + strconv.FormatInt(gid, 10))
 	}
 	if g.mute {
 		return errors.New("group is muted")

@@ -9,6 +9,12 @@ import (
 type GroupInfoDaoImpl struct {
 }
 
+func (GroupInfoDaoImpl) GetAllGroup() ([]*GroupModel, error) {
+	g := []*GroupModel{}
+	find := db.DB.Model(GroupModel{}).Find(&g)
+	return g, common.JustError(find)
+}
+
 func (GroupInfoDaoImpl) CreateGroup(name string, flag int) (*GroupModel, error) {
 	model := &GroupModel{
 		Name:     name,

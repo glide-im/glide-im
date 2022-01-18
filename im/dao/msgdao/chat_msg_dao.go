@@ -51,7 +51,7 @@ func (chatMsgDaoImpl) GetRecentChatMessages(uid int64, after int64) ([]*ChatMess
 func (chatMsgDaoImpl) GetChatMessage(mid ...int64) ([]*ChatMessage, error) {
 	//goland:noinspection GoPreferNilSlice
 	m := []*ChatMessage{}
-	query := db.DB.Model(m).Where("m_id in (?)", mid).Find(m)
+	query := db.DB.Model(m).Where("m_id in (?)", mid).Find(&m)
 	if err := common.ResolveError(query); err != nil {
 		return nil, err
 	}

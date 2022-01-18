@@ -18,6 +18,10 @@ const (
 	ActionCSMessage         = "message.cs"
 	ActionMessageFailed     = "message.failed.send"
 
+	ActionNeedAuth   = "notify.auth"
+	ActionKickOut    = "notify.kickout"
+	ActionNewContact = "notify.contact"
+
 	ActionAckRequest  = "ack.request"
 	ActionAckGroupMsg = "ack.group.msg"
 	ActionAckMessage  = "ack.message"
@@ -26,7 +30,7 @@ const (
 	ActionApi       = "api"
 	ActionHeartbeat = "heartbeat"
 	ActionNotify    = "notify"
-	ActionFailed    = "failed"
+	ActionApiFailed = "api.failed"
 )
 
 type Action string

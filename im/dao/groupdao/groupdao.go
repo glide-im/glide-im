@@ -8,6 +8,7 @@ var Dao = GroupDao{
 type GroupInfoDao interface {
 	CreateGroup(name string, flag int) (*GroupModel, error)
 	GetGroup(gid int64) (*GroupModel, error)
+	GetAllGroup() ([]*GroupModel, error)
 	GetGroups(gid ...int64) ([]*GroupModel, error)
 	UpdateGroupName(gid int64, name string) error
 	UpdateGroupAvatar(gid int64, avatar string) error

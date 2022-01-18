@@ -49,7 +49,7 @@ func (s *Server) AddGroup(ctx context.Context, request *pb.GroupIDRequest, reply
 }
 
 func (s *Server) DispatchNotifyMessage(ctx context.Context, request *pb.NotifyRequest, reply *pb.Response) error {
-	group.Manager.DispatchNotifyMessage(request.GetGid(), unwrapMessage(request.GetMessage()))
+	group.DispatchNotifyMessage(request.GetGid(), unwrapMessage(request.GetMessage()))
 	return nil
 }
 

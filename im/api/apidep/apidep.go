@@ -55,7 +55,7 @@ func (g *groupInterface) MemberOnline(gid int64, uid int64) error {
 			Extra: nil,
 		},
 	}
-	return group.Manager.UpdateMember(gid, u)
+	return group.UpdateMember(gid, u)
 }
 
 func (g *groupInterface) UpdateMember(gid int64, uid int64, flag int64) error {
@@ -66,7 +66,7 @@ func (g *groupInterface) UpdateMember(gid int64, uid int64, flag int64) error {
 			Extra: nil,
 		},
 	}
-	return group.Manager.UpdateMember(gid, u)
+	return group.UpdateMember(gid, u)
 }
 
 func (g *groupInterface) MemberOffline(gid int64, uid int64) error {
@@ -77,7 +77,7 @@ func (g *groupInterface) MemberOffline(gid int64, uid int64) error {
 			Extra: nil,
 		},
 	}
-	return group.Manager.UpdateMember(gid, u)
+	return group.UpdateMember(gid, u)
 }
 
 func (g *groupInterface) PutMember(gid int64, mb []int64) error {
@@ -89,7 +89,7 @@ func (g *groupInterface) PutMember(gid int64, mb []int64) error {
 			Flag: group.FlagMemberAdd,
 		})
 	}
-	return group.Manager.UpdateMember(gid, u)
+	return group.UpdateMember(gid, u)
 }
 
 func (g *groupInterface) RemoveMember(gid int64, uid ...int64) error {
@@ -100,15 +100,15 @@ func (g *groupInterface) RemoveMember(gid int64, uid ...int64) error {
 			Flag: group.FlagMemberDel,
 		})
 	}
-	return group.Manager.UpdateMember(gid, u)
+	return group.UpdateMember(gid, u)
 }
 
 func (g *groupInterface) CreateGroup(gid int64) error {
-	return group.Manager.UpdateGroup(gid, group.Update{Flag: group.FlagGroupCreate})
+	return group.UpdateGroup(gid, group.Update{Flag: group.FlagGroupCreate})
 }
 
 func (g *groupInterface) DissolveGroup(gid int64) error {
-	return group.Manager.UpdateGroup(gid, group.Update{Flag: group.FlagGroupDissolve})
+	return group.UpdateGroup(gid, group.Update{Flag: group.FlagGroupDissolve})
 }
 
 func (g *groupInterface) MuteGroup(gid int64, mute bool) error {
@@ -116,9 +116,9 @@ func (g *groupInterface) MuteGroup(gid int64, mute bool) error {
 	if !mute {
 		f = group.FlagGroupCancelMute
 	}
-	return group.Manager.UpdateGroup(gid, group.Update{Flag: int64(f)})
+	return group.UpdateGroup(gid, group.Update{Flag: int64(f)})
 }
 
 func (g *groupInterface) DispatchNotifyMessage(gid int64, message *message.Message) error {
-	return group.Manager.DispatchNotifyMessage(gid, message)
+	return group.DispatchNotifyMessage(gid, message)
 }

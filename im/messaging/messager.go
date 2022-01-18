@@ -28,7 +28,7 @@ func Init() {
 
 // messageHandler 处理接收到的所有类型消息, 所有消息处理的入口
 func messageHandler(from int64, device int64, msg *message.Message) {
-	logger.D("new message: %v", msg)
+	logger.D("new message: uid=%d, %v", from, msg)
 	err := execPool.Submit(func() {
 		statistics.SMsgInput()
 		switch msg.Action {

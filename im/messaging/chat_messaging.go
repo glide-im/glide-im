@@ -13,6 +13,7 @@ import (
 func dispatchChatMessage(from int64, m *message.Message) {
 	if uid.IsTempId(from) {
 		logger.D("not sign in")
+		client.EnqueueMessage(from, message.NewMessage(0, message.ActionNeedAuth, ""))
 		return
 	}
 	msg := new(message.UpChatMessage)
@@ -38,12 +39,8 @@ func dispatchChatMessage(from int64, m *message.Message) {
 			CliSeq:    msg.CSeq,
 			SessionID: sessionId,
 		}
-		err := msgdao.SessionDaoImpl.UpdateOrCreateSession(lg, sm, from, msg.Mid, msg.CTime)
-		if err != nil {
-			logger.E("update session error")
-		}
 		// 保存消息
-		_, err = msgdao.AddChatMessage(&dbMsg)
+		_, err := msgdao.AddChatMessage(&dbMsg)
 		if err != nil {
 			logger.E("save chat message error %v", err)
 			return
@@ -54,6 +51,7 @@ func dispatchChatMessage(from int64, m *message.Message) {
 	ackChatMessage(from, msg.Mid)
 
 	// 对方不在线, 下发确认包
+	// TODO 2022-1-17 处理假在线, 假链接
 	if !client.Manager.IsOnline(msg.To) {
 		ackNotifyMessage(from, msg.Mid)
 		err := msgdao.AddOfflineMessage(msg.To, msg.Mid)

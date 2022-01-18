@@ -20,8 +20,9 @@ func dispatchGroupMsg(from int64, msg *message.Message) {
 		return
 	}
 	groupMsg.From = from
-	err := group.Manager.DispatchMessage(groupMsg.To, groupMsg)
+	err := group.DispatchMessage(groupMsg.To, groupMsg)
 	if err != nil {
+		logger.E("dispatch group message error: %v", err)
 		notify := message.NewMessage(0, message.ActionMessageFailed, message.AckNotify{Mid: groupMsg.Mid})
 		client.EnqueueMessage(from, notify)
 	}

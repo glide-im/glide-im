@@ -37,7 +37,7 @@ func initUserMock(gid int64, uid ...int64) {
 			Flag: FlagMemberOnline,
 		})
 	}
-	e := Manager.UpdateMember(gid, um)
+	e := UpdateMember(gid, um)
 	if e != nil {
 		panic(e)
 	}
@@ -49,7 +49,7 @@ func initMock() {
 
 	Manager = NewDefaultManager()
 
-	_ = Manager.UpdateGroup(1, Update{Flag: FlagGroupCreate})
+	_ = UpdateGroup(1, Update{Flag: FlagGroupCreate})
 }
 
 func TestDefaultManager_DispatchMessage(t *testing.T) {
@@ -75,7 +75,7 @@ func TestDefaultManager_DispatchMessage(t *testing.T) {
 
 	for i := 0; i < 4; i++ {
 		time.Sleep(time.Millisecond)
-		e := Manager.DispatchMessage(1, msg)
+		e := DispatchMessage(1, msg)
 		if e != nil {
 			t.Error(e)
 		}
@@ -102,7 +102,7 @@ func TestDefaultManager_DispatchMessage2(t *testing.T) {
 		CTime:   time.Now().Unix(),
 	}
 	msg.Mid = 2
-	err := Manager.DispatchMessage(1, msg)
+	err := DispatchMessage(1, msg)
 	if err != nil {
 		t.Error(err)
 	}
@@ -110,7 +110,7 @@ func TestDefaultManager_DispatchMessage2(t *testing.T) {
 	time.Sleep(time.Second * 2)
 
 	msg.Mid = 3
-	err = Manager.DispatchMessage(1, msg)
+	err = DispatchMessage(1, msg)
 	if err != nil {
 		t.Error(err)
 	}
@@ -118,7 +118,7 @@ func TestDefaultManager_DispatchMessage2(t *testing.T) {
 	time.Sleep(time.Second * 2)
 
 	msg.Mid = 4
-	err = Manager.DispatchMessage(1, msg)
+	err = DispatchMessage(1, msg)
 	if err != nil {
 		t.Error(err)
 	}

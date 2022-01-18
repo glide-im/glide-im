@@ -48,7 +48,7 @@ func (c ContactsDaoImpl) DelContacts(uid int64, id int64, type_ int8) error {
 func (c ContactsDaoImpl) GetContacts(uid int64) ([]*Contacts, error) {
 	var cs []*Contacts
 	query := db.DB.Model(&Contacts{}).Where("uid = ?", uid).Find(&cs)
-	return cs, common.ResolveError(query)
+	return cs, common.JustError(query)
 }
 
 func (c ContactsDaoImpl) GetContactsByType(uid int64, type_ int) ([]*Contacts, error) {

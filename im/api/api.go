@@ -138,6 +138,6 @@ func (a *Routers) intercept(uid int64, device int64, message *message.Message) e
 func (a *Routers) onError(uid int64, device int64, msg *message.Message, err error) {
 	logger.D("a.onError: uid=%d, Action=%s, err=%s", uid, msg.Action, err.Error())
 
-	errMsg := message.NewMessage(msg.Seq, message.ActionFailed, err.Error())
+	errMsg := message.NewMessage(msg.Seq, message.ActionApiFailed, err.Error())
 	apidep.SendMessageIfOnline(uid, device, errMsg)
 }
