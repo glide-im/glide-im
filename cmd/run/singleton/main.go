@@ -1,12 +1,14 @@
 package main
 
 import (
+	"go_im/im/api"
 	"go_im/im/client"
 	"go_im/im/conn"
 	"go_im/im/dao"
 	"go_im/im/group"
 	"go_im/im/messaging"
 	"go_im/pkg/db"
+	"sync"
 	"time"
 )
 
@@ -33,8 +35,24 @@ func Run() {
 
 	group.Manager.(*group.DefaultManager).Init()
 
-	err := server.Run("0.0.0.0", 8080)
-	if err != nil {
-		panic(err)
-	}
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		err := api.RunHttpServer("0.0.0.0", 8081)
+		if err != nil {
+			panic(err)
+		}
+		wg.Done()
+	}()
+
+	wg.Add(1)
+	go func() {
+		err := server.Run("0.0.0.0", 8080)
+		if err != nil {
+			panic(err)
+		}
+		wg.Done()
+	}()
+
+	wg.Wait()
 }
