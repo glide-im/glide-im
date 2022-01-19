@@ -27,7 +27,7 @@ func (m *GroupApi) CreateGroup(ctx *route.Context, request *CreateGroupRequest) 
 	if err != nil {
 		return comm.NewDbErr(err)
 	}
-	err = userdao.Dao.AddContacts(ctx.Uid, dbGroup.Gid, 2)
+	err = userdao.Dao.AddContacts(ctx.Uid, dbGroup.Gid, userdao.ContactsTypeGroup)
 	if err != nil {
 		return comm.NewDbErr(err)
 	}
@@ -125,7 +125,21 @@ func (m *GroupApi) ExitGroup(ctx *route.Context, request *ExitGroupRequest) erro
 }
 
 func (m *GroupApi) JoinGroup(ctx *route.Context, request *JoinGroupRequest) error {
-	err := addGroupMemberDb(request.Gid, ctx.Uid, MemberFlagDefault)
+
+	isC, err := userdao.ContactsDao.HasContacts(ctx.Uid, request.Gid, userdao.ContactsTypeGroup)
+	if err != nil {
+		return comm.NewDbErr(err)
+	}
+	if isC {
+		return ErrMemberAlreadyExist
+	}
+	// TODO 2021-11-29 use transaction
+	err = userdao.ContactsDao.AddContacts(ctx.Uid, request.Gid, userdao.ContactsTypeGroup)
+	if err != nil {
+		return comm.NewDbErr(err)
+	}
+
+	err = addGroupMemberDb(request.Gid, ctx.Uid, MemberFlagDefault)
 	if err != nil {
 		return err
 	}

@@ -84,35 +84,36 @@ func (c *DefaultManager) AddClient(uid int64, cs IClient) {
 }
 
 // ClientSignIn 客户端登录, id 为连接时使用的临时标识, uid 为用户标识, device 用于区分不同设备
-func (c *DefaultManager) ClientSignIn(id, uid int64, device int64) {
-	logger.D("client sign in origin-id=%d, uid=%d", id, uid)
+func (c *DefaultManager) ClientSignIn(id, uid_ int64, device int64) {
+	logger.D("client sign in origin-id=%d, uid=%d", id, uid_)
 	tempDs := c.clients.get(id)
 	if tempDs == nil || tempDs.size() == 0 {
 		// 该客户端不存在
-		logger.E("attempt to sign in a nonexistent client, id=%d", id)
+		logger.W("attempt to sign in a nonexistent client, id=%d", id)
 		return
 	}
 	client := tempDs.get(0)
-	logged := c.clients.get(uid)
+	logged := c.clients.get(uid_)
 	if logged != nil && logged.size() > 0 {
 		// 多设备登录
-		loggedDevice := logged.get(device)
-		if loggedDevice != nil {
-			logger.D("multi device login mutex, uid=%d, device=%d", uid, device)
+		existing := logged.get(device)
+		if existing != nil {
+			logger.D("multi device login mutex, uid=%d, device=%d", uid_, device)
+			existing.SetID(uid.GenTemp(), 0)
 			// "Your account is logged in on another device"
-			loggedDevice.EnqueueMessage(message.NewMessage(0, message.ActionNotify, "Your account is logged in on another device"))
-			loggedDevice.Exit()
+			existing.EnqueueMessage(message.NewMessage(0, message.ActionKickOut, "Your account is logged in on another device"))
+			existing.Exit()
 			logged.remove(device)
 		}
-		client.SetID(uid, device)
 		if logged.size() > 0 {
-			EnqueueMessage(uid, message.NewMessage(0, message.ActionNotify, "multi device login, device="+strconv.FormatInt(device, 10)))
+			EnqueueMessage(uid_, message.NewMessage(0, message.ActionNotify, "multi device login, device="+strconv.FormatInt(device, 10)))
 		}
 		logged.put(device, client)
 	} else {
 		// 单设备登录
-		c.clients.add(uid, device, client)
+		c.clients.add(uid_, device, client)
 	}
+	client.SetID(uid_, device)
 	// 删除临时 id
 	c.clients.delete(id, 0)
 }

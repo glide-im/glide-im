@@ -88,6 +88,7 @@ func newClient(conn conn.Connection) *Client {
 
 // SetID 设置 id 标识及设备标识
 func (c *Client) SetID(id int64, device int64) {
+	logger.D("set client id, origin: id=%d, device=%d, new: id=%d, device=%d", c.id, c.device, id, device)
 	atomic.StoreInt64(&c.id, id)
 	atomic.StoreInt64(&c.device, device)
 }
@@ -108,8 +109,8 @@ func (c *Client) EnqueueMessage(message *message.Message) {
 			}
 		}()
 		s := atomic.LoadInt32(&c.state)
-		if s == stateClosed || s == stateClosing {
-			logger.D("client has exited, enqueue message failed")
+		if s == stateClosed {
+			logger.D("client has closed, enqueue message failed")
 			return
 		}
 		logger.I("EnqueueMessage(id=%d, %s): %v", c.id, message.Action, message)
@@ -143,7 +144,6 @@ func (c *Client) readMessage() {
 	for {
 		select {
 		case <-c.readClose:
-			logger.D("read close now by readClose chan")
 			goto STOP
 		case <-c.hb.C:
 			c.hbLost++
@@ -170,8 +170,9 @@ func (c *Client) readMessage() {
 			c.hbLost = 0
 			c.hb.Cancel()
 			c.hb = tw.After(HeartbeatDuration)
+			id, device := c.getID()
 			// 统一处理消息函数
-			MessageHandleFunc(c.id, c.device, msg.m)
+			MessageHandleFunc(id, device, msg.m)
 			msg.Recycle()
 		}
 	}
@@ -179,7 +180,8 @@ STOP:
 	c.hb.Cancel()
 	atomic.StoreInt32(&c.readClosed, 1)
 	close(done)
-	logger.D("client read closed, id=%d", c.id)
+	id, device := c.getID()
+	logger.D("client read closed, id=%d, device=%d", id, device)
 }
 
 // writeMessage 开始向 Connection 中写入消息队列中的消息
@@ -252,6 +254,10 @@ func (c *Client) Exit() {
 		close(c.readClose)
 	}
 	statistics.SConnExit()
+}
+
+func (c *Client) getID() (int64, int64) {
+	return atomic.LoadInt64(&c.id), atomic.LoadInt64(&c.device)
 }
 
 // getNextSeq 获取下一个下行消息序列号 sequence

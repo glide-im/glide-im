@@ -47,7 +47,7 @@ func (m *MockGroupManager) MemberOffline(gid int64, uid int64) error {
 	logger.D("MemberOffline, gid=%d, uid=%d", gid, uid)
 	return nil
 }
-func (g *MockGroupManager) UpdateMember(gid int64, uid int64, flag int64) error {
+func (m *MockGroupManager) UpdateMember(gid int64, uid int64, flag int64) error {
 	logger.D("UpdateMember, gid=%d, uid=%d, flag=%d", gid, uid, flag)
 	return nil
 }

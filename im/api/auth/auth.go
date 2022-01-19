@@ -64,9 +64,12 @@ func (*AuthApi) AuthToken(ctx *route.Context, req *AuthTokenRequest) error {
 		// logged in
 		logger.D("auth token for a connection is logged in")
 	} else {
-		apidep.ClientManager.ClientSignIn(ctx.Uid, token.Uid, token.Device)
-		ctx.Uid = token.Uid
-		ctx.Device = token.Device
+		// if the request from http, at the first time auth, the uid is 0.
+		if ctx.Uid != 0 {
+			apidep.ClientManager.ClientSignIn(ctx.Uid, token.Uid, token.Device)
+			ctx.Uid = token.Uid
+			ctx.Device = token.Device
+		}
 	}
 	resp := AuthResponse{
 		Uid: token.Uid,
@@ -98,6 +101,7 @@ func (*AuthApi) SignIn(ctx *route.Context, request *SignInRequest) error {
 	if err != nil {
 		return comm.NewUnexpectedErr("login failed", err)
 	}
+
 	err = userdao.Dao.SetTokenVersion(jt.Uid, jt.Device, jt.Ver, time.Duration(jt.ExpiresAt))
 	if err != nil {
 		return comm.NewDbErr(err)
@@ -111,7 +115,6 @@ func (*AuthApi) SignIn(ctx *route.Context, request *SignInRequest) error {
 		},
 	}
 	resp := message.NewMessage(ctx.Seq, comm.ActionSuccess, tk)
-	apidep.ClientManager.ClientSignIn(ctx.Uid, uid, request.Device)
 
 	ctx.Uid = uid
 	ctx.Device = request.Device
