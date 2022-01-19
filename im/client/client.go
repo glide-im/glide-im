@@ -88,7 +88,7 @@ func newClient(conn conn.Connection) *Client {
 
 // SetID 设置 id 标识及设备标识
 func (c *Client) SetID(id int64, device int64) {
-	logger.D("set client id, origin: id=%d, device=%d, new: id=%d, device=%d", c.id, c.device, id, device)
+	//logger.D("set client id, origin: id=%d, device=%d, new: id=%d, device=%d", c.id, c.device, id, device)
 	atomic.StoreInt64(&c.id, id)
 	atomic.StoreInt64(&c.device, device)
 }
@@ -233,7 +233,9 @@ STOP:
 // handleError 处理上下行消息过程中的错误, 如果是致命错误, 则返回 true
 func (c *Client) handleError(err error) bool {
 	statistics.SError(err)
-	logger.E("handle message error: %s", err.Error())
+	if conn.ErrClosed != err {
+		logger.E("handle message error: %s", err.Error())
+	}
 	if atomic.LoadInt64(&c.id) > 0 {
 		Manager.ClientLogout(atomic.LoadInt64(&c.id), c.device)
 	}

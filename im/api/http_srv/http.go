@@ -51,7 +51,7 @@ func Run(addr string, port int) error {
 }
 
 func onParamValidateFailed(ctx *gin.Context, err error) {
-	logger.E("validate request param failed %v", err)
+	logger.D("validate request param failed %v", err)
 	_ = ctx.BindJSON(CommonResponse{
 		Code: 300,
 		Msg:  "invalid parameter",

@@ -118,10 +118,10 @@ func (c *DefaultManager) ClientSignIn(id, uid_ int64, device int64) {
 	c.clients.delete(id, 0)
 }
 
-func (c *DefaultManager) ClientLogout(uid int64, device int64) {
-	cl := c.clients.get(uid)
+func (c *DefaultManager) ClientLogout(uid_ int64, device int64) {
+	cl := c.clients.get(uid_)
 	if cl == nil || cl.size() == 0 {
-		logger.E("uid is not sign in, uid=%d", uid)
+		logger.E("uid is not sign in, uid=%d", uid_)
 		return
 	}
 	logDevice := cl.get(device)
@@ -129,7 +129,8 @@ func (c *DefaultManager) ClientLogout(uid int64, device int64) {
 		logger.E("device not exist")
 		return
 	}
-	logger.I("client logout, uid=%d, device=%d", uid, device)
+	logger.I("client logout, uid=%d, device=%d", uid_, device)
+	logDevice.SetID(uid.GenTemp(), 0)
 	logDevice.Exit()
 	cl.remove(device)
 }

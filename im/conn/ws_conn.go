@@ -78,11 +78,11 @@ func (c *WsConnection) wrapError(err error) error {
 	}
 	if strings.Contains(err.Error(), "An existing connection was forcibly closed by the remote host") {
 		_ = c.conn.Close()
-		return ErrForciblyClosed
+		return ErrClosed
 	}
 	if strings.Contains(err.Error(), "use of closed network conn") {
 		_ = c.conn.Close()
-		return ErrConnectionClosed
+		return ErrClosed
 	}
 	if strings.Contains(err.Error(), "i/o timeout") {
 		return ErrReadTimeout

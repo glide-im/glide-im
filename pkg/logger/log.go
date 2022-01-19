@@ -34,8 +34,8 @@ func D(format string, args ...interface{}) {
 	sugar.Debugf(format, args...)
 }
 
-func W(msg string) {
-	sugar.Warn(msg)
+func W(format string, args ...interface{}) {
+	sugar.Warnf(format, args)
 }
 
 func ErrE(msg string, e error) {
