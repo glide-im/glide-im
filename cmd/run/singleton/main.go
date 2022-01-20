@@ -1,6 +1,7 @@
 package main
 
 import (
+	"go_im/config"
 	"go_im/im/api"
 	"go_im/im/client"
 	"go_im/im/conn"
@@ -38,7 +39,7 @@ func Run() {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
-		err := api.RunHttpServer("0.0.0.0", 8081)
+		err := api.RunHttpServer(config.ApiHttpService.Addr, config.ApiHttpService.Port)
 		if err != nil {
 			panic(err)
 		}
@@ -47,7 +48,7 @@ func Run() {
 
 	wg.Add(1)
 	go func() {
-		err := server.Run("0.0.0.0", 8080)
+		err := server.Run(config.IMService.Addr, config.IMService.Port)
 		if err != nil {
 			panic(err)
 		}

@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"fmt"
+	"go_im/config"
 	"go_im/im/api/apidep"
 	"go_im/im/api/comm"
 	"go_im/im/api/router"
@@ -48,6 +50,12 @@ var (
 	ErrReplicatedLogin   = comm.NewApiBizError(1003, "replicated login")
 )
 
+var (
+	host = []string{
+		fmt.Sprintf("ws://%s:%d/ws", config.IMService.Service, config.IMService.Port),
+	}
+)
+
 type AuthApi struct {
 }
 
@@ -72,10 +80,8 @@ func (*AuthApi) AuthToken(ctx *route.Context, req *AuthTokenRequest) error {
 		}
 	}
 	resp := AuthResponse{
-		Uid: token.Uid,
-		Servers: []string{
-			"ws://192.168.1.123:8080/ws",
-		},
+		Uid:     token.Uid,
+		Servers: host,
 	}
 	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, resp))
 	return nil
@@ -108,11 +114,9 @@ func (*AuthApi) SignIn(ctx *route.Context, request *SignInRequest) error {
 	}
 
 	tk := AuthResponse{
-		Uid:   uid,
-		Token: token,
-		Servers: []string{
-			"ws://192.168.1.123:8080/ws",
-		},
+		Uid:     uid,
+		Token:   token,
+		Servers: host,
 	}
 	resp := message.NewMessage(ctx.Seq, comm.ActionSuccess, tk)
 
@@ -147,16 +151,4 @@ func (a *AuthApi) Logout(ctx *route.Context) error {
 	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, ""))
 	apidep.ClientManager.ClientLogout(ctx.Uid, ctx.Device)
 	return nil
-}
-
-func (a *AuthApi) offline(uid int64, device int64) {
-	if apidep.ClientManager.IsDeviceOnline(uid, device) {
-		//err := userdao.Dao.DelAuthToken(uid, device)
-		//if err != nil {
-		//	logger.E("del user token failed %v", err)
-		//}
-		notify := message.NewMessage(0, message.ActionNotify, "your account has sign in on another device")
-		apidep.SendMessage(uid, device, notify)
-		apidep.ClientManager.ClientLogout(uid, device)
-	}
 }

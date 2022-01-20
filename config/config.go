@@ -9,8 +9,10 @@ import (
 const configEnv = "IM_CONFIG"
 
 var (
-	MySql *MySqlConf
-	Redis *RedisConf
+	MySql          *MySqlConf
+	Redis          *RedisConf
+	IMService      *IMServiceConf
+	ApiHttpService *ApiHttpServiceConf
 )
 
 type MySqlConf struct {
@@ -29,9 +31,22 @@ type RedisConf struct {
 	Db       int
 }
 
+type IMServiceConf struct {
+	Addr    string
+	Service string
+	Port    int
+}
+
+type ApiHttpServiceConf struct {
+	Addr string
+	Port int
+}
+
 type config struct {
-	MySql MySqlConf
-	Redis RedisConf
+	MySql     MySqlConf
+	Redis     RedisConf
+	IMService IMServiceConf
+	ApiHttp   ApiHttpServiceConf
 }
 
 func init() {
@@ -48,4 +63,6 @@ func init() {
 	}
 	MySql = &conf.MySql
 	Redis = &conf.Redis
+	IMService = &conf.IMService
+	ApiHttpService = &conf.ApiHttp
 }
