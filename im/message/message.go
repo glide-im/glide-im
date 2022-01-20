@@ -34,7 +34,7 @@ type DownGroupMessage struct {
 	Mid int64
 	// Seq 群消息 Seq
 	Seq     int64
-	Gid     int64
+	To      int64
 	Type    int
 	From    int64
 	Content string

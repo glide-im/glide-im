@@ -59,7 +59,7 @@ func (a *UserApi) AddContact(ctx *route.Context, request *AddContacts) error {
 		Uid:  request.Uid,
 		Type: contactsTypeUser,
 	}
-	apidep.SendMessage(request.Uid, 0, message.NewMessage(-1, comm.ActionNewContact, m))
+	apidep.SendMessage(request.Uid, 0, message.NewMessage(-1, message.ActionNotifyNewContact, m))
 	return nil
 }
 

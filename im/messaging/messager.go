@@ -52,7 +52,7 @@ func messageHandler(from int64, device int64, msg *message.Message) {
 			if msg.Action.Contains(message.ActionApi) {
 				api.Handle(from, device, msg)
 			} else {
-				client.EnqueueMessage(from, message.NewMessage(-1, message.ActionNotify, "unknown action"))
+				client.EnqueueMessage(from, message.NewMessage(-1, message.ActionNotifyError, "unknown action"))
 				logger.W("receive a unknown action message: " + string(msg.Action))
 			}
 		}
@@ -66,7 +66,7 @@ func messageHandler(from int64, device int64, msg *message.Message) {
 			logger.E("Messaging.MessageHandler goroutine pool is closed")
 			return
 		}
-		client.EnqueueMessage(from, message.NewMessage(-1, message.ActionNotify, "internal server error"))
+		client.EnqueueMessage(from, message.NewMessage(-1, message.ActionNotifyError, "internal server error"))
 		logger.E("async handle message error %v", err)
 	}
 }
@@ -105,7 +105,7 @@ func onHandleMessagePanic(i interface{}) {
 func unwrap(from int64, msg *message.Message, to interface{}) bool {
 	err := msg.DeserializeData(to)
 	if err != nil {
-		client.EnqueueMessage(from, message.NewMessage(msg.Seq, message.ActionNotify, "send message failed"))
+		client.EnqueueMessage(from, message.NewMessage(msg.Seq, message.ActionNotifyError, "send message failed"))
 		logger.E("sender chat senderMsg %v", err)
 		return false
 	}

@@ -7,6 +7,7 @@ import (
 	"go_im/im/dao/msgdao"
 	"go_im/im/dao/userdao"
 	"go_im/im/message"
+	"math"
 )
 
 type GroupMsgApi struct {
@@ -27,8 +28,11 @@ func (*GroupMsgApi) GetRecentGroupMessage(ctx *route.Context, request *RecentGro
 }
 
 func (*GroupMsgApi) GetGroupMessageHistory(ctx *route.Context, request *GroupMsgHistoryRequest) error {
-
-	ms, err := msgdao.GroupMsgDaoImpl.GetGroupMessage(request.Gid, request.BeforeSeq, 20)
+	before := request.BeforeSeq
+	if request.BeforeSeq <= 0 {
+		before = math.MaxInt64
+	}
+	ms, err := msgdao.GroupMsgDaoImpl.GetGroupMessage(request.Gid, before, 20)
 	if err != nil {
 		return comm.NewDbErr(err)
 	}

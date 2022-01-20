@@ -178,7 +178,7 @@ func (m *DefaultManager) DispatchMessage(gid int64, msg *message.UpChatMessage) 
 		return err
 	} else {
 		// notify sender, group message send successful
-		ack := message.NewMessage(0, message.ActionAckMessage, message.AckMessage{Mid: msg.Mid, Seq: seq})
+		ack := message.NewMessage(0, message.ActionAckNotify, message.AckMessage{Mid: msg.Mid, Seq: seq})
 		client.EnqueueMessage(msg.From, ack)
 	}
 

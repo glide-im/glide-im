@@ -111,6 +111,8 @@ func (g *Group) EnqueueMessage(msg *message.UpChatMessage) (int64, error) {
 	if mf.muted {
 		return 0, errors.New("a muted group member send message")
 	}
+
+	now := time.Now().Unix()
 	seq := atomic.AddInt64(&g.msgSequence, 1)
 	err := msgdao.AddGroupMessage(&msgdao.GroupMessage{
 		MID:     msg.Mid,
@@ -118,7 +120,7 @@ func (g *Group) EnqueueMessage(msg *message.UpChatMessage) (int64, error) {
 		To:      g.gid,
 		From:    msg.From,
 		Type:    msg.Type,
-		SendAt:  msg.CTime,
+		SendAt:  now,
 		Content: msg.Content,
 	})
 	if err != nil {
@@ -135,9 +137,10 @@ func (g *Group) EnqueueMessage(msg *message.UpChatMessage) (int64, error) {
 		Mid:     msg.Mid,
 		Seq:     seq,
 		From:    msg.From,
+		To:      g.gid,
 		Type:    msg.Type,
 		Content: msg.Content,
-		SendAt:  msg.CTime,
+		SendAt:  now,
 	}
 	if err != nil {
 		return 0, err
@@ -174,7 +177,7 @@ func (g *Group) checkMsgQueue() error {
 					atomic.AddInt32(&g.queued, -1)
 					switch m.Type {
 					case 1:
-						g.SendMessage(0, message.NewMessage(0, message.ActionNotify, ""))
+						g.SendMessage(0, message.NewMessage(0, message.ActionNotifyGroup, ""))
 					case 2:
 					case 3:
 					}

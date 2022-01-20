@@ -18,9 +18,13 @@ const (
 	ActionCSMessage         = "message.cs"
 	ActionMessageFailed     = "message.failed.send"
 
-	ActionNeedAuth   = "notify.auth"
-	ActionKickOut    = "notify.kickout"
-	ActionNewContact = "notify.contact"
+	ActionNotifyNeedAuth      = "notify.auth"
+	ActionNotifyKickOut       = "notify.kickout"
+	ActionNotifyNewContact    = "notify.contact"
+	ActionNotifyGroup         = "notify.group"
+	ActionNotifyAccountLogin  = "notify.login"
+	ActionNotifyAccountLogout = "notify.logout"
+	ActionNotifyError         = "notify.error"
 
 	ActionAckRequest  = "ack.request"
 	ActionAckGroupMsg = "ack.group.msg"
@@ -29,7 +33,6 @@ const (
 
 	ActionApi       = "api"
 	ActionHeartbeat = "heartbeat"
-	ActionNotify    = "notify"
 	ActionApiFailed = "api.failed"
 )
 

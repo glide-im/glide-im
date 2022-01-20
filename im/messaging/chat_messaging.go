@@ -13,7 +13,7 @@ import (
 func dispatchChatMessage(from int64, m *message.Message) {
 	if uid.IsTempId(from) {
 		logger.D("not sign in")
-		client.EnqueueMessage(from, message.NewMessage(0, message.ActionNeedAuth, ""))
+		client.EnqueueMessage(from, message.NewMessage(0, message.ActionNotifyNeedAuth, ""))
 		return
 	}
 	msg := new(message.UpChatMessage)

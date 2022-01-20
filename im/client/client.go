@@ -3,6 +3,7 @@ package client
 import (
 	"go_im/im/comm"
 	"go_im/im/conn"
+	"go_im/im/dao/uid"
 	"go_im/im/message"
 	"go_im/im/statistics"
 	"go_im/pkg/logger"
@@ -236,7 +237,7 @@ func (c *Client) handleError(err error) bool {
 	if conn.ErrClosed != err {
 		logger.E("handle message error: %s", err.Error())
 	}
-	if atomic.LoadInt64(&c.id) > 0 {
+	if !uid.IsTempId(atomic.LoadInt64(&c.id)) {
 		Manager.ClientLogout(atomic.LoadInt64(&c.id), c.device)
 	}
 	return true
@@ -252,7 +253,6 @@ func (c *Client) Exit() {
 	atomic.StoreInt32(&c.state, stateClosing)
 
 	if atomic.LoadInt32(&c.readClosed) != 1 {
-		atomic.StoreInt32(&c.readClosed, 1)
 		close(c.readClose)
 	}
 	statistics.SConnExit()

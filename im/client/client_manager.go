@@ -101,12 +101,13 @@ func (c *DefaultManager) ClientSignIn(id, uid_ int64, device int64) {
 			logger.D("multi device login mutex, uid=%d, device=%d", uid_, device)
 			existing.SetID(uid.GenTemp(), 0)
 			// "Your account is logged in on another device"
-			existing.EnqueueMessage(message.NewMessage(0, message.ActionKickOut, "Your account is logged in on another device"))
+			existing.EnqueueMessage(message.NewMessage(0, message.ActionNotifyKickOut, "Your account is logged in on another device"))
 			existing.Exit()
 			logged.remove(device)
 		}
 		if logged.size() > 0 {
-			EnqueueMessage(uid_, message.NewMessage(0, message.ActionNotify, "multi device login, device="+strconv.FormatInt(device, 10)))
+			msg := "multi device login, device=" + strconv.FormatInt(device, 10)
+			EnqueueMessage(uid_, message.NewMessage(0, message.ActionNotifyAccountLogin, msg))
 		}
 		logged.put(device, client)
 	} else {
