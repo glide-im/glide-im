@@ -32,9 +32,8 @@ jobs:
 
       - name: Build
         run: |
-          cd ./cmd/run/singleton/ || exit
-          chmod +x ./build.sh
-          ./build.sh
+          chmod +x ./cmd/run/singleton/build.sh
+          ./cmd/run/singleton/build.sh
 
       - name: Create Release
         id: create_release
@@ -48,7 +47,9 @@ jobs:
           prerelease: false
 
       - name: build TAR PACKAGE
-        run: tar -czvf go_im.tar.gz ./cmd/run/singleton/go_im
+        run: |
+            ls
+            tar -czvf go_im.tar.gz ./cmd/run/singleton/go_im
 
       - name: Upload Release Asset
         id: upload-release-asset
