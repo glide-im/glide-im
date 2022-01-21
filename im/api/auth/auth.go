@@ -52,7 +52,7 @@ var (
 
 var (
 	host = []string{
-		fmt.Sprintf("ws://%s:%d/ws", config.IMService.Service, config.IMService.Port),
+		fmt.Sprintf("ws://%s/ws", config.IMService.Service),
 	}
 )
 
