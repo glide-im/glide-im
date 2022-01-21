@@ -48,7 +48,7 @@ jobs:
           prerelease: false
 
       - name: build TAR PACKAGE
-        run: tar -czvf go_im.tar.gz go_im
+        run: tar -czvf go_im.tar.gz ./cmd/run/singleton/go_im
 
       - name: Upload Release Asset
         id: upload-release-asset
@@ -58,6 +58,6 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./go_im.tar.gz
-          asset_name: go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz
+          asset_path: ./cmd/run/singleton/go_im.tar.gz
+          asset_name: go_im_singleton_${{ steps.get_tag.outputs.TAG }}.tar.gz
           asset_content_type: application/gzip
