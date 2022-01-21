@@ -32,6 +32,7 @@ jobs:
 
       - name: Build
         run: |
+          cd ./cmd/run/singleton/ || exit
           chmod +x ./build.sh
           ./build.sh
 
@@ -60,18 +61,3 @@ jobs:
           asset_path: ./go_im.tar.gz
           asset_name: go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz
           asset_content_type: application/gzip
-
-      - name: Deploy
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          password: ${{ secrets.PASSWORD }}
-          port: ${{ secrets.PORT }}
-          script: |
-            cd /home/im_server
-            wget https://github.com/dengzii/go_im/releases/latest/download/go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz -O go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz
-            tar zxvf go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz
-            pkill go_im
-            nohup ./go_im >> log.output &
-            rm go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz
