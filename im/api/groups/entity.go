@@ -50,9 +50,8 @@ type GetGroupMemberRequest struct {
 
 type GroupMemberResponse struct {
 	Uid        int64
-	Nickname   string
 	RemarkName string
-	Type       int64
+	Type       int
 	Online     bool
 	Mute       bool
 }

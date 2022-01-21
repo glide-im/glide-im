@@ -17,12 +17,6 @@ type InfoListResponse struct {
 
 type UpdateProfileRequest struct {
 }
-
-type NewContactResponse struct {
-	Uid  int64
-	Type int8
-}
-
 type ContactResponse struct {
 	Id     int64
 	Type   int8

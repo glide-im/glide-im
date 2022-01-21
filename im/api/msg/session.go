@@ -9,10 +9,10 @@ import (
 )
 
 func (*MsgApi) ReadMessage(ctx *route.Context, request *ReadMessageRequest) error {
-	err := msgdao.SessionDaoImpl.CleanUserSessionUnread(ctx.Uid, request.To, request.To)
-	if err != nil {
-		return comm.NewDbErr(err)
-	}
+	//err := msgdao.SessionDaoImpl.CleanUserSessionUnread(ctx.Uid, request.To, request.To)
+	//if err != nil {
+	//	return comm.NewDbErr(err)
+	//}
 	return nil
 }
 
@@ -34,7 +34,9 @@ func (*MsgApi) GetOrCreateSession(ctx *route.Context, request *SessionRequest) e
 		Uid2:     session.Uid2,
 		LastMid:  session.LastMID,
 		UpdateAt: session.UpdateAt,
+		CreateAt: session.CreateAt,
 	}))
+
 	return nil
 }
 

@@ -71,7 +71,7 @@ func (m *GroupApi) GetGroupMember(ctx *route.Context, request *GetGroupMemberReq
 		ms = append(ms, &GroupMemberResponse{
 			Uid:        member.Uid,
 			RemarkName: member.Remark,
-			Type:       member.Type,
+			Type:       int(member.Type),
 		})
 	}
 	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, ms))
@@ -102,7 +102,12 @@ func (m *GroupApi) AddGroupMember(ctx *route.Context, request *AddMemberRequest)
 		return comm.NewUnexpectedErr("add group failed", err)
 	}
 	for _, i := range request.Uid {
-		n := message.NewMessage(0, comm.ActionInviteToGroup, InviteGroupMessage{Gid: request.Gid})
+		n := message.NewMessage(0, message.ActionNotifyNewContact, comm.NewContactMessage{
+			FromId:   ctx.Uid,
+			FromType: 0,
+			Id:       request.Gid,
+			Type:     userdao.ContactsTypeGroup,
+		})
 		apidep.SendMessageIfOnline(i, 0, n)
 	}
 	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, ""))

@@ -22,6 +22,7 @@ func initRoute() {
 	post("/api/group/members", groupApi.GetGroupMember)
 	post("/api/group/create", groupApi.CreateGroup)
 	post("/api/group/join", groupApi.JoinGroup)
+	post("/api/group/invite", groupApi.AddGroupMember)
 	post("/api/group/remove", groupApi.RemoveMember)
 
 	userApi := user.UserApi{}
@@ -51,7 +52,6 @@ func initRoute() {
 
 	post("/api/session/recent", msgApi.GetRecentSessions)
 	post("/api/session/get", msgApi.GetOrCreateSession)
-	post("/api/session/read", msgApi.ReadMessage)
 }
 
 func postNoAuth(path string, fn interface{}) {

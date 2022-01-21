@@ -4,8 +4,11 @@ import (
 	"go_im/im/api/apidep"
 	"go_im/im/api/comm"
 	"go_im/im/api/router"
+	"go_im/im/dao/msgdao"
 	"go_im/im/dao/userdao"
 	"go_im/im/message"
+	"go_im/pkg/logger"
+	"time"
 )
 
 func (a *UserApi) DeleteContact(ctx *route.Context, request *DeleteContactsRequest) error {
@@ -44,20 +47,26 @@ func (a *UserApi) AddContact(ctx *route.Context, request *AddContacts) error {
 		return errAlreadyContacts
 	}
 	// TODO 2021-11-29 use transaction
-	err = userdao.ContactsDao.AddContacts(ctx.Uid, request.Uid, contactsTypeUser)
+	err = userdao.ContactsDao.AddContacts(ctx.Uid, request.Uid, userdao.ContactsTypeUser)
 	if err != nil {
 		return comm.NewDbErr(err)
 	}
-	err = userdao.ContactsDao.AddContacts(request.Uid, ctx.Uid, contactsTypeUser)
+	err = userdao.ContactsDao.AddContacts(request.Uid, ctx.Uid, userdao.ContactsTypeUser)
 	if err != nil {
 		return comm.NewDbErr(err)
+	}
+	_, err = msgdao.SessionDaoImpl.CreateSession(ctx.Uid, request.Uid, time.Now().Unix())
+	if err != nil {
+		logger.E("create session error %v", err)
 	}
 
 	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, ""))
 
-	m := NewContactResponse{
-		Uid:  request.Uid,
-		Type: contactsTypeUser,
+	m := comm.NewContactMessage{
+		FromId:   ctx.Uid,
+		FromType: 0,
+		Id:       ctx.Uid,
+		Type:     userdao.ContactsTypeUser,
 	}
 	apidep.SendMessage(request.Uid, 0, message.NewMessage(-1, message.ActionNotifyNewContact, m))
 	return nil
@@ -73,7 +82,7 @@ func (a *UserApi) GetContactList(ctx *route.Context) error {
 
 	resp := []ContactResponse{}
 	for _, contact := range contacts {
-		if contact.Type == contactsTypeGroup {
+		if contact.Type == userdao.ContactsTypeGroup {
 			_ = apidep.GroupManager.MemberOnline(contact.Id, ctx.Uid)
 		}
 		resp = append(resp, ContactResponse{

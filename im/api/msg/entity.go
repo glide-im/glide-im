@@ -41,6 +41,7 @@ type SessionResponse struct {
 	Unread   int64
 	LastMid  int64
 	UpdateAt int64
+	CreateAt int64
 }
 
 type RecentChatMessageRequest struct {

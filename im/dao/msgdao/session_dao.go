@@ -95,6 +95,7 @@ func (s *sessionDaoImpl) GetSession(uid int64, uid2 int64) (*Session, error) {
 		SmUidUnread: getInt64FromMap(result, "sm_unread"),
 		LastMID:     getInt64FromMap(result, "l_mid"),
 		UpdateAt:    getInt64FromMap(result, "update"),
+		CreateAt:    getInt64FromMap(result, "create"),
 	}
 	return &se, nil
 }
@@ -138,6 +139,7 @@ func (s *sessionDaoImpl) CreateSession(uid1 int64, uid2 int64, updateAt int64) (
 		SmUidUnread: 0,
 		LastMID:     0,
 		UpdateAt:    updateAt,
+		CreateAt:    updateAt,
 	}
 	return &session, nil
 }
