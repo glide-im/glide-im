@@ -32,8 +32,10 @@ jobs:
 
       - name: Build
         run: |
-          chmod +x ./cmd/run/singleton/build.sh
-          ./cmd/run/singleton/build.sh
+            export CGO_ENABLED=0
+            export GOOS=linux
+            export GOARCH=amd64
+            go build -o go_im ./cmd/run/singleton/
 
       - name: Create Release
         id: create_release
@@ -47,9 +49,7 @@ jobs:
           prerelease: false
 
       - name: build TAR PACKAGE
-        run: |
-            ls
-            tar -czvf go_im.tar.gz ./cmd/run/singleton/go_im
+        run: tar -czvf go_im.tar.gz go_im
 
       - name: Upload Release Asset
         id: upload-release-asset
@@ -59,6 +59,6 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./cmd/run/singleton/go_im.tar.gz
+          asset_path: go_im.tar.gz
           asset_name: go_im_singleton_${{ steps.get_tag.outputs.TAG }}.tar.gz
           asset_content_type: application/gzip
