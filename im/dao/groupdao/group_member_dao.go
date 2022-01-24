@@ -6,6 +6,14 @@ import (
 	"strconv"
 )
 
+const (
+	GroupMemberTypeOwner = 1
+	GroupMemberTypeAdmin = 2
+	GroupMemberNormal    = 3
+
+	GroupFlagDefault = 0
+)
+
 type GroupMemberDaoImpl struct {
 }
 
@@ -68,7 +76,7 @@ func (GroupMemberDaoImpl) AddMember(gid int64, uid int64, typ int64, defaultFlag
 
 func (GroupMemberDaoImpl) RemoveMember(gid int64, uid int64) error {
 	query := db.DB.Where("gid = ? AND uid = ?", gid, uid).Delete(&GroupMember{})
-	return common.ResolveError(query)
+	return common.MustUpdate(query)
 }
 
 func (GroupMemberDaoImpl) GetMemberFlag(gid int64, uid int64) (int64, error) {
@@ -81,9 +89,25 @@ func (GroupMemberDaoImpl) GetMemberFlag(gid int64, uid int64) (int64, error) {
 	return flag, nil
 }
 
+func (GroupMemberDaoImpl) GetMemberType(gid int64, uid int64) (int64, error) {
+	mbId := GetMemberID(gid, uid)
+	var typ int64
+	query := db.DB.Model(&GroupMemberModel{}).Where("mb_id = ?", mbId).Select("type").Find(&typ)
+	if err := common.ResolveError(query); err != nil {
+		return 0, err
+	}
+	return typ, nil
+}
+
 func (GroupMemberDaoImpl) UpdateMemberFlag(gid int64, uid int64, flag int) error {
 	mbId := GetMemberID(gid, uid)
 	query := db.DB.Model(&GroupMemberModel{}).Where("mb_id = ?", mbId).Update("flag", flag)
+	return common.ResolveError(query)
+}
+
+func (GroupMemberDaoImpl) UpdateMemberType(gid int64, uid int64, typ int) error {
+	mbId := GetMemberID(gid, uid)
+	query := db.DB.Model(&GroupMemberModel{}).Where("mb_id = ?", mbId).Update("type", typ)
 	return common.ResolveError(query)
 }
 

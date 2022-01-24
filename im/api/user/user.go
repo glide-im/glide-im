@@ -62,7 +62,7 @@ func (a *UserApi) GetOnlineUser(msg *route.Context) error {
 		users = append(users, u{Uid: user.Uid, Account: user.Account, Avatar: user.Avatar, Nickname: user.Nickname})
 	}
 
-	m := message.NewMessage(msg.Seq, "api.ActionOnlineUser", users)
+	m := message.NewMessage(msg.Seq, comm.ActionSuccess, users)
 	msg.Response(m)
 	return nil
 }

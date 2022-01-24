@@ -27,6 +27,8 @@ type GroupMemberDao interface {
 	RemoveMember(gid int64, uid int64) error
 	UpdateMemberFlag(gid int64, uid int64, flag int) error
 	GetMemberFlag(gid int64, uid int64) (int64, error)
+	UpdateMemberType(gid int64, uid int64, flag int) error
+	GetMemberType(gid int64, uid int64) (int64, error)
 	GetMember(gid int64, uid int64) (*GroupMemberModel, error)
 }
 

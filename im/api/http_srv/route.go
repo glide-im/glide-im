@@ -22,8 +22,8 @@ func initRoute() {
 	post("/api/group/members", groupApi.GetGroupMember)
 	post("/api/group/create", groupApi.CreateGroup)
 	post("/api/group/join", groupApi.JoinGroup)
-	post("/api/group/invite", groupApi.AddGroupMember)
-	post("/api/group/remove", groupApi.RemoveMember)
+	post("/api/group/members/invite", groupApi.AddGroupMember)
+	post("/api/group/members/remove", groupApi.RemoveMember)
 
 	userApi := user.UserApi{}
 	post("/api/contacts/add", userApi.AddContact)

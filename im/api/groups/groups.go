@@ -4,6 +4,7 @@ import (
 	"go_im/im/api/apidep"
 	"go_im/im/api/comm"
 	"go_im/im/api/router"
+	"go_im/im/dao/common"
 	"go_im/im/dao/groupdao"
 	"go_im/im/dao/msgdao"
 	"go_im/im/dao/userdao"
@@ -32,7 +33,7 @@ func (m *GroupApi) CreateGroup(ctx *route.Context, request *CreateGroupRequest) 
 		return comm.NewDbErr(err)
 	}
 
-	err = groupdao.Dao.AddMember(dbGroup.Gid, ctx.Uid, MemberTypeAdmin, MemberFlagDefault)
+	err = groupdao.Dao.AddMember(dbGroup.Gid, ctx.Uid, groupdao.GroupMemberTypeOwner, groupdao.GroupFlagDefault)
 	if err != nil {
 		return comm.NewDbErr(err)
 	}
@@ -88,12 +89,35 @@ func (m *GroupApi) GetGroupInfo(ctx *route.Context, request *GroupInfoRequest) e
 }
 
 func (m *GroupApi) RemoveMember(ctx *route.Context, request *RemoveMemberRequest) error {
-	// TODO 2021-12-9 21:55:01
+	typ, err := groupdao.Dao.GetMemberType(request.Gid, ctx.Uid)
+	if err != nil {
+		return comm.NewDbErr(err)
+	}
+	if typ == groupdao.GroupMemberTypeAdmin || typ == groupdao.GroupMemberTypeOwner {
+		//goland:noinspection GoPreferNilSlice
+		notFind := []int64{}
+		for _, id := range request.Uid {
+			err = groupdao.Dao.RemoveMember(request.Gid, id)
+			if err == common.ErrNoRecordFound {
+				notFind = append(notFind, id)
+				continue
+			} else {
+				return comm.NewDbErr(err)
+			}
+		}
+		if len(notFind) == 0 {
+			ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, ""))
+		} else {
+			ctx.Response(message.NewMessage(ctx.Seq, comm.ActionFailed, notFind))
+		}
+	} else {
+		return ErrGroupNotExit
+	}
 	return nil
 }
 
 func (m *GroupApi) AddGroupMember(ctx *route.Context, request *AddMemberRequest) error {
-	err := addGroupMemberDb(request.Gid, ctx.Uid, MemberFlagDefault)
+	err := addGroupMemberDb(request.Gid, ctx.Uid, groupdao.GroupMemberNormal)
 	if err != nil {
 		return err
 	}
@@ -144,7 +168,7 @@ func (m *GroupApi) JoinGroup(ctx *route.Context, request *JoinGroupRequest) erro
 		return comm.NewDbErr(err)
 	}
 
-	err = addGroupMemberDb(request.Gid, ctx.Uid, MemberFlagDefault)
+	err = addGroupMemberDb(request.Gid, ctx.Uid, groupdao.GroupMemberNormal)
 	if err != nil {
 		return err
 	}
@@ -171,7 +195,7 @@ func addGroupMemberDb(gid int64, uid int64, typ int64) error {
 	if hasMember {
 		return ErrMemberAlreadyExist
 	}
-	err = groupdao.Dao.AddMember(gid, uid, typ, MemberFlagDefault)
+	err = groupdao.Dao.AddMember(gid, uid, typ, groupdao.GroupFlagDefault)
 	if err != nil {
 		return comm.NewDbErr(err)
 	}

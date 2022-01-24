@@ -7,11 +7,6 @@ import (
 	"go_im/pkg/db"
 )
 
-const (
-	GroupMemberUser  = 1
-	GroupMemberAdmin = 2
-)
-
 var GroupDao2 = new(groupDao)
 
 type groupDao struct{}
