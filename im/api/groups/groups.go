@@ -117,22 +117,28 @@ func (m *GroupApi) RemoveMember(ctx *route.Context, request *RemoveMemberRequest
 }
 
 func (m *GroupApi) AddGroupMember(ctx *route.Context, request *AddMemberRequest) error {
-	err := addGroupMemberDb(request.Gid, ctx.Uid, groupdao.GroupMemberNormal)
-	if err != nil {
-		return err
+	for _, uid := range request.Uid {
+		err := addGroupMemberDb(request.Gid, uid, groupdao.GroupMemberNormal)
+		if err != nil {
+			return err
+		}
 	}
-	err = apidep.GroupManager.PutMember(request.Gid, []int64{ctx.Uid})
+	err := apidep.GroupManager.PutMember(request.Gid, []int64{ctx.Uid})
 	if err != nil {
 		return comm.NewUnexpectedErr("add group failed", err)
 	}
-	for _, i := range request.Uid {
+	for _, uid := range request.Uid {
+		err = userdao.ContactsDao.AddContacts(uid, request.Gid, userdao.ContactsTypeGroup)
+		if err != nil {
+			return comm.NewDbErr(err)
+		}
 		n := message.NewMessage(0, message.ActionNotifyNewContact, comm.NewContactMessage{
 			FromId:   ctx.Uid,
 			FromType: 0,
 			Id:       request.Gid,
 			Type:     userdao.ContactsTypeGroup,
 		})
-		apidep.SendMessageIfOnline(i, 0, n)
+		apidep.SendMessageIfOnline(uid, 0, n)
 	}
 	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, ""))
 	return nil

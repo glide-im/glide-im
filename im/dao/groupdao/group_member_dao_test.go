@@ -12,14 +12,14 @@ func init() {
 }
 
 func TestGroupMemberDaoImpl_AddMember(t *testing.T) {
-	err := gmDao.AddMember(1, 4, 2)
+	err := gmDao.AddMember(14, 4, 2, 1)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestGroupMemberDaoImpl_GetMembers(t *testing.T) {
-	mbs, err := gmDao.GetMembers(1)
+	mbs, err := gmDao.GetMembers(15)
 	if err != nil {
 		t.Error(err)
 	}
