@@ -84,4 +84,5 @@ type AckNotify struct {
 type GroupNotify struct {
 	Gid  int64
 	Type int64
+	Data interface{}
 }

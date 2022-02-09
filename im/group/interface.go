@@ -12,7 +12,7 @@ func UpdateGroup(gid int64, update Update) error {
 }
 
 // DispatchNotifyMessage 发送通知消息
-func DispatchNotifyMessage(gid int64, message *message.Message) error {
+func DispatchNotifyMessage(gid int64, message *message.GroupNotify) error {
 	return Manager.DispatchNotifyMessage(gid, message)
 }
 

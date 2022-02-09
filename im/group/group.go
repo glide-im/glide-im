@@ -176,10 +176,8 @@ func (g *Group) checkMsgQueue() error {
 					g.lastMsgAt = time.Now()
 					atomic.AddInt32(&g.queued, -1)
 					switch m.Type {
-					case 1:
-						g.SendMessage(0, message.NewMessage(0, message.ActionNotifyGroup, ""))
-					case 2:
-					case 3:
+					default:
+						g.SendMessage(0, message.NewMessage(0, message.ActionNotifyGroup, m))
 					}
 					// 优先派送群通知消息
 					continue
@@ -214,7 +212,7 @@ func (g *Group) checkMsgQueue() error {
 }
 
 func (g *Group) SendMessage(from int64, message *message.Message) {
-	// logger.D("Group.SendMessage: %s", message)
+	logger.D("Group.SendMessage: %s", message)
 	g.mu.Lock()
 	for uid, mf := range g.members {
 		if !mf.online || uid == from {

@@ -26,11 +26,6 @@ type CreateGroupResponse struct {
 	Gid int64
 }
 
-type GroupAddMemberResponse struct {
-	Gid     int64
-	Members []*groupdao.GroupMember
-}
-
 type AddedGroupResponse struct {
 	Group *groupdao.Group
 	UcId  int64

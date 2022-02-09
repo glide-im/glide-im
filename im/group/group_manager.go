@@ -60,7 +60,7 @@ type IGroupManager interface {
 	UpdateGroup(gid int64, update Update) error
 
 	// DispatchNotifyMessage 发送通知消息
-	DispatchNotifyMessage(gid int64, message *message.Message) error
+	DispatchNotifyMessage(gid int64, message *message.GroupNotify) error
 
 	// DispatchMessage 发送聊天消息
 	DispatchMessage(gid int64, message *message.UpChatMessage) error
@@ -151,11 +151,11 @@ func (m *DefaultManager) UpdateGroup(gid int64, update Update) error {
 	return nil
 }
 
-func (m *DefaultManager) DispatchNotifyMessage(gid int64, msg *message.Message) error {
+func (m *DefaultManager) DispatchNotifyMessage(gid int64, msg *message.GroupNotify) error {
 	m.mu.Lock()
 	g := m.groups[gid]
 	m.mu.Unlock()
-	return g.EnqueueNotify(&message.GroupNotify{})
+	return g.EnqueueNotify(msg)
 }
 
 func (m *DefaultManager) DispatchMessage(gid int64, msg *message.UpChatMessage) error {

@@ -18,8 +18,16 @@ func TestGroupMemberDaoImpl_AddMember(t *testing.T) {
 	}
 }
 
+func TestGroupMemberDaoImpl_GetMemberType(t *testing.T) {
+	tp, err := gmDao.GetMemberType(17, 543602)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(tp)
+}
+
 func TestGroupMemberDaoImpl_GetMembers(t *testing.T) {
-	mbs, err := gmDao.GetMembers(15)
+	mbs, err := gmDao.GetMembers(16)
 	if err != nil {
 		t.Error(err)
 	}

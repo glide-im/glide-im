@@ -40,7 +40,7 @@ type GroupManagerInterface interface {
 	DissolveGroup(gid int64) error
 	MuteGroup(gid int64, mute bool) error
 	UpdateMember(gid int64, uid int64, flag int64) error
-	DispatchNotifyMessage(gid int64, message *message.Message) error
+	DispatchNotifyMessage(gid int64, message *message.GroupNotify) error
 }
 
 type groupInterface struct{}
@@ -117,6 +117,6 @@ func (g *groupInterface) MuteGroup(gid int64, mute bool) error {
 	return group.UpdateGroup(gid, group.Update{Flag: int64(f)})
 }
 
-func (g *groupInterface) DispatchNotifyMessage(gid int64, message *message.Message) error {
+func (g *groupInterface) DispatchNotifyMessage(gid int64, message *message.GroupNotify) error {
 	return group.DispatchNotifyMessage(gid, message)
 }

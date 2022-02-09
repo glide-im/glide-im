@@ -31,16 +31,6 @@ type Group struct {
 	CreateAt common.Timestamp `gorm:"type:datetime"`
 }
 
-type GroupMember struct {
-	Id     int64 `gorm:"primaryKey"`
-	Gid    int64
-	Uid    int64
-	Mute   int64
-	Remark string
-	Flag   int32
-	JoinAt common.Timestamp `gorm:"type:datetime"`
-}
-
 type GroupMessage struct {
 	GmId        int64 `gorm:"primaryKey"`
 	Cid         int64

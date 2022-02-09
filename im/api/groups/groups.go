@@ -10,6 +10,7 @@ import (
 	"go_im/im/dao/userdao"
 	"go_im/im/group"
 	"go_im/im/message"
+	"go_im/pkg/logger"
 )
 
 type Interface interface {
@@ -101,8 +102,12 @@ func (m *GroupApi) RemoveMember(ctx *route.Context, request *RemoveMemberRequest
 			if err == common.ErrNoRecordFound {
 				notFind = append(notFind, id)
 				continue
-			} else {
+			} else if err != nil {
 				return comm.NewDbErr(err)
+			}
+			err = dispatchGroupNotify(request.Gid, message.GroupNotifyTypeMemberRemoved, id)
+			if err != nil {
+				logger.E("remove member error:%v", err)
 			}
 		}
 		if len(notFind) == 0 {
@@ -122,12 +127,6 @@ func (m *GroupApi) AddGroupMember(ctx *route.Context, request *AddMemberRequest)
 		if err != nil {
 			return err
 		}
-	}
-	err := apidep.GroupManager.PutMember(request.Gid, []int64{ctx.Uid})
-	if err != nil {
-		return comm.NewUnexpectedErr("add group failed", err)
-	}
-	for _, uid := range request.Uid {
 		err = userdao.ContactsDao.AddContacts(uid, request.Gid, userdao.ContactsTypeGroup)
 		if err != nil {
 			return comm.NewDbErr(err)
@@ -139,6 +138,14 @@ func (m *GroupApi) AddGroupMember(ctx *route.Context, request *AddMemberRequest)
 			Type:     userdao.ContactsTypeGroup,
 		})
 		apidep.SendMessageIfOnline(uid, 0, n)
+		err = apidep.GroupManager.PutMember(request.Gid, []int64{uid})
+		if err != nil {
+			return comm.NewUnexpectedErr("add group failed", err)
+		}
+		err = dispatchGroupNotify(request.Gid, message.GroupNotifyTypeMemberAdded, uid)
+		if err != nil {
+			logger.E("notify add group member error: %v", err)
+		}
 	}
 	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, ""))
 	return nil
@@ -153,6 +160,10 @@ func (m *GroupApi) ExitGroup(ctx *route.Context, request *ExitGroupRequest) erro
 	err = groupdao.Dao.RemoveMember(request.Gid, ctx.Uid)
 	if err != nil {
 		return comm.NewDbErr(err)
+	}
+	err = dispatchGroupNotify(request.Gid, message.GroupNotifyTypeMemberRemoved, ctx.Uid)
+	if err != nil {
+		logger.E("exit group error: %v", err)
 	}
 	resp := message.NewMessage(ctx.Seq, comm.ActionSuccess, " group success")
 	ctx.Response(resp)
@@ -182,6 +193,10 @@ func (m *GroupApi) JoinGroup(ctx *route.Context, request *JoinGroupRequest) erro
 	if err != nil {
 		return comm.NewUnexpectedErr("add group failed", err)
 	}
+	err = dispatchGroupNotify(request.Gid, message.GroupNotifyTypeMemberAdded, ctx.Uid)
+	if err != nil {
+		logger.E("join group error:%v", err)
+	}
 	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, ""))
 	return nil
 }
@@ -206,4 +221,13 @@ func addGroupMemberDb(gid int64, uid int64, typ int64) error {
 		return comm.NewDbErr(err)
 	}
 	return nil
+}
+
+func dispatchGroupNotify(gid int64, typ int64, uid int64) error {
+	notify := message.GroupNotify{
+		Gid:  gid,
+		Type: typ,
+		Data: &message.GroupNotifyMemberAdded{Uid: []int64{uid}},
+	}
+	return apidep.GroupManager.DispatchNotifyMessage(gid, &notify)
 }

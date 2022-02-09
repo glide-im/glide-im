@@ -75,7 +75,7 @@ func (GroupMemberDaoImpl) AddMember(gid int64, uid int64, typ int64, defaultFlag
 }
 
 func (GroupMemberDaoImpl) RemoveMember(gid int64, uid int64) error {
-	query := db.DB.Where("gid = ? AND uid = ?", gid, uid).Delete(&GroupMember{})
+	query := db.DB.Where("gid = ? AND uid = ?", gid, uid).Delete(&GroupMemberModel{})
 	return common.MustUpdate(query)
 }
 
