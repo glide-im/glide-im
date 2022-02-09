@@ -77,7 +77,7 @@ func (m *MockGroupManager) MuteGroup(gid int64, mute bool) error {
 	return nil
 }
 
-func (m *MockGroupManager) DispatchNotifyMessage(gid int64, message *message.Message) error {
+func (m *MockGroupManager) DispatchNotifyMessage(gid int64, message *message.GroupNotify) error {
 	logger.D("DispatchNotifyMessage, gid=%d, message=%v", gid, message)
 	return nil
 }

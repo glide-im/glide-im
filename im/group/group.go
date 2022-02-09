@@ -90,6 +90,8 @@ func newGroup(gid int64) *Group {
 }
 
 func (g *Group) EnqueueNotify(msg *message.GroupNotify) error {
+	seq := atomic.AddInt64(&g.msgSequence, 1)
+	msg.Seq = seq
 	select {
 	case g.notify <- msg:
 		atomic.AddInt32(&g.queued, 1)

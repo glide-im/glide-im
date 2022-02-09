@@ -82,7 +82,10 @@ type AckNotify struct {
 }
 
 type GroupNotify struct {
-	Gid  int64
-	Type int64
-	Data interface{}
+	Mid       int64
+	Gid       int64
+	Type      int64
+	Seq       int64
+	Timestamp int64
+	Data      interface{}
 }

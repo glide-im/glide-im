@@ -11,6 +11,7 @@ import (
 	"go_im/im/group"
 	"go_im/im/message"
 	"go_im/pkg/logger"
+	"time"
 )
 
 type Interface interface {
@@ -103,6 +104,10 @@ func (m *GroupApi) RemoveMember(ctx *route.Context, request *RemoveMemberRequest
 				notFind = append(notFind, id)
 				continue
 			} else if err != nil {
+				return comm.NewDbErr(err)
+			}
+			err = userdao.ContactsDao.DelContacts(id, request.Gid, userdao.ContactsTypeGroup)
+			if err != nil {
 				return comm.NewDbErr(err)
 			}
 			err = dispatchGroupNotify(request.Gid, message.GroupNotifyTypeMemberRemoved, id)
@@ -224,10 +229,17 @@ func addGroupMemberDb(gid int64, uid int64, typ int64) error {
 }
 
 func dispatchGroupNotify(gid int64, typ int64, uid int64) error {
+	id, err := msgdao.GetMessageID()
+	if err != nil {
+		logger.E("get message id error:%v", err)
+		return err
+	}
 	notify := message.GroupNotify{
-		Gid:  gid,
-		Type: typ,
-		Data: &message.GroupNotifyMemberAdded{Uid: []int64{uid}},
+		Mid:       id,
+		Gid:       gid,
+		Timestamp: time.Now().Unix(),
+		Type:      typ,
+		Data:      &message.GroupNotifyMemberAdded{Uid: []int64{uid}},
 	}
 	return apidep.GroupManager.DispatchNotifyMessage(gid, &notify)
 }
