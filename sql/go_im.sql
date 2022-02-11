@@ -11,7 +11,7 @@
  Target Server Version : 80022
  File Encoding         : 65001
 
- Date: 12/01/2022 16:22:21
+ Date: 11/02/2022 18:05:00
 */
 
 SET NAMES utf8mb4;
@@ -23,16 +23,17 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS `im_chat_message`;
 CREATE TABLE `im_chat_message`  (
   `m_id` bigint NOT NULL AUTO_INCREMENT,
-  `session_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `cli_seq` bigint NULL DEFAULT NULL,
-  `from` bigint NULL DEFAULT NULL,
-  `to` bigint NULL DEFAULT NULL,
-  `type` int NULL DEFAULT NULL,
-  `send_at` bigint NULL DEFAULT NULL,
-  `create_at` bigint NULL DEFAULT NULL,
-  `content` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `session_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `cli_seq` bigint NOT NULL,
+  `from` bigint NOT NULL,
+  `to` bigint NOT NULL,
+  `type` int NOT NULL,
+  `send_at` bigint NOT NULL,
+  `create_at` bigint NOT NULL,
+  `content` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `status` int NOT NULL,
   PRIMARY KEY (`m_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 123432 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 123432 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for im_contacts
@@ -80,12 +81,14 @@ CREATE TABLE `im_group_member_msg_state`  (
 DROP TABLE IF EXISTS `im_group_message`;
 CREATE TABLE `im_group_message`  (
   `m_id` bigint NOT NULL AUTO_INCREMENT,
-  `seq` bigint NULL DEFAULT NULL,
-  `to` bigint NULL DEFAULT NULL,
-  `from` bigint NULL DEFAULT NULL,
-  `type` bigint NULL DEFAULT NULL,
-  `send_at` bigint NULL DEFAULT NULL,
-  `content` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `seq` bigint NOT NULL,
+  `to` bigint NOT NULL,
+  `from` bigint NOT NULL,
+  `type` bigint NOT NULL,
+  `send_at` bigint NOT NULL,
+  `content` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `status` int NOT NULL,
+  `recall_by` int NOT NULL,
   PRIMARY KEY (`m_id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1231241239 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
@@ -99,7 +102,7 @@ CREATE TABLE `im_group_message_state`  (
   `last_seq` bigint NULL DEFAULT NULL,
   `last_msg_at` bigint NULL DEFAULT NULL,
   PRIMARY KEY (`gid`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 19 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for im_group_model
@@ -113,7 +116,7 @@ CREATE TABLE `im_group_model`  (
   `flag` int NULL DEFAULT NULL,
   `create_at` bigint NULL DEFAULT NULL,
   PRIMARY KEY (`gid`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 19 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for im_group_msg_seq
@@ -135,21 +138,7 @@ CREATE TABLE `im_offline_message`  (
   `m_id` bigint NULL DEFAULT NULL,
   `uid` bigint NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 82 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Table structure for im_session
--- ----------------------------
-DROP TABLE IF EXISTS `im_session`;
-CREATE TABLE `im_session`  (
-  `session_id` char(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `uid` bigint NOT NULL,
-  `update_at` bigint NOT NULL,
-  `uid2` bigint NOT NULL,
-  `create_at` bigint NOT NULL,
-  `last_m_id` bigint NOT NULL,
-  PRIMARY KEY (`session_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 136 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for im_user
@@ -165,6 +154,6 @@ CREATE TABLE `im_user`  (
   `update_at` bigint NULL DEFAULT NULL,
   PRIMARY KEY (`uid`) USING BTREE,
   UNIQUE INDEX `account`(`account`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 543623 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 543629 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 SET FOREIGN_KEY_CHECKS = 1;

@@ -20,7 +20,7 @@ var messageHandlerFunMap = map[message.Action]func(from int64, msg *message.Mess
 	message.ActionChatMessageResend:  dispatchChatMessage,
 	message.ActionGroupMessage:       dispatchGroupMsg,
 	message.ActionCSMessage:          dispatchCustomerServiceMsg,
-	message.ActionAckMessage:         handleAckRequest,
+	message.ActionAckRequest:         handleAckRequest,
 	message.ActionAckGroupMsg:        handleAckGroupMsgRequest,
 }
 

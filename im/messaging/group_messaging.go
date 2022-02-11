@@ -23,9 +23,9 @@ func dispatchGroupMsg(from int64, msg *message.Message) {
 
 	var err error
 	if msg.Action == message.ActionGroupMessageRecall {
-		err = group.DispatchMessage(groupMsg.To, groupMsg)
-	} else {
 		err = group.DispatchRecallMessage(groupMsg.To, groupMsg)
+	} else {
+		err = group.DispatchMessage(groupMsg.To, groupMsg)
 	}
 	if err != nil {
 		logger.E("dispatch group message error: %v", err)
