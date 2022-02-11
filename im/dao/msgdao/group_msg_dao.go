@@ -99,6 +99,17 @@ func (groupMsgDaoImpl) GetGroupMessageSeqAfter(gid int64, seqAfter int64) ([]*Gr
 	return ms, nil
 }
 
+func (groupMsgDaoImpl) UpdateGroupMessageRecall(gid int64, mid int64, status int, by int64) error {
+	message := GroupMessage{
+		MID:      mid,
+		To:       gid,
+		Status:   status,
+		RecallBy: by,
+	}
+	updates := db.DB.Updates(&message)
+	return common.MustUpdate(updates)
+}
+
 func (groupMsgDaoImpl) AddGroupMessage(message *GroupMessage) error {
 	query := db.DB.Create(message)
 	if err := common.ResolveError(query); err != nil {

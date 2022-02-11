@@ -52,7 +52,7 @@ func initMock() {
 	_ = UpdateGroup(1, Update{Flag: FlagGroupCreate})
 }
 
-func TestDefaultManager_DispatchMessage(t *testing.T) {
+func TestDefaultManager_dispatch(t *testing.T) {
 
 	initMock()
 
@@ -75,7 +75,7 @@ func TestDefaultManager_DispatchMessage(t *testing.T) {
 
 	for i := 0; i < 4; i++ {
 		time.Sleep(time.Millisecond)
-		e := DispatchMessage(1, msg)
+		e := dispatch(1, msg)
 		if e != nil {
 			t.Error(e)
 		}
@@ -85,7 +85,7 @@ func TestDefaultManager_DispatchMessage(t *testing.T) {
 	time.Sleep(time.Second * 3)
 }
 
-func TestDefaultManager_DispatchMessage2(t *testing.T) {
+func TestDefaultManager_dispatch2(t *testing.T) {
 
 	db.Init()
 	dao.Init()
@@ -102,7 +102,7 @@ func TestDefaultManager_DispatchMessage2(t *testing.T) {
 		CTime:   time.Now().Unix(),
 	}
 	msg.Mid = 2
-	err := DispatchMessage(1, msg)
+	err := dispatch(1, msg)
 	if err != nil {
 		t.Error(err)
 	}
@@ -110,7 +110,7 @@ func TestDefaultManager_DispatchMessage2(t *testing.T) {
 	time.Sleep(time.Second * 2)
 
 	msg.Mid = 3
-	err = DispatchMessage(1, msg)
+	err = dispatch(1, msg)
 	if err != nil {
 		t.Error(err)
 	}
@@ -118,9 +118,13 @@ func TestDefaultManager_DispatchMessage2(t *testing.T) {
 	time.Sleep(time.Second * 2)
 
 	msg.Mid = 4
-	err = DispatchMessage(1, msg)
+	err = dispatch(1, msg)
 	if err != nil {
 		t.Error(err)
 	}
 	time.Sleep(time.Second * 3)
+}
+
+func dispatch(gid int64, chatMessage *message.UpChatMessage) error {
+	return DispatchMessage(gid, chatMessage)
 }

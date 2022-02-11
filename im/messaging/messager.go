@@ -12,6 +12,18 @@ import (
 // execPool 100 capacity goroutine pool, 假设每个消息处理需要10ms, 一个协程则每秒能处理100条消息
 var execPool *ants.Pool
 
+var messageHandlerFunMap = map[message.Action]func(from int64, msg *message.Message){
+	message.ActionGroupMessageRecall: dispatchGroupRecallMsg,
+	message.ActionChatMessageRecall:  dispatchChatRecallMessage,
+	message.ActionChatMessage:        dispatchChatMessage,
+	message.ActionChatMessageRetry:   dispatchChatMessage,
+	message.ActionChatMessageResend:  dispatchChatMessage,
+	message.ActionGroupMessage:       dispatchGroupMsg,
+	message.ActionCSMessage:          dispatchCustomerServiceMsg,
+	message.ActionAckMessage:         handleAckRequest,
+	message.ActionAckGroupMsg:        handleAckGroupMsgRequest,
+}
+
 func Init() {
 	client.MessageHandleFunc = messageHandler
 
@@ -31,23 +43,14 @@ func messageHandler(from int64, device int64, msg *message.Message) {
 	logger.D("new message: uid=%d, %v", from, msg)
 	err := execPool.Submit(func() {
 		statistics.SMsgInput()
+		h, ok := messageHandlerFunMap[msg.Action]
+		if ok {
+			h(from, msg)
+			return
+		}
 		switch msg.Action {
-		case message.ActionChatMessage:
-			dispatchChatMessage(from, msg)
-		case message.ActionChatMessageRetry:
-			dispatchChatMessage(from, msg)
-		case message.ActionChatMessageResend:
-			dispatchChatMessage(from, msg)
-		case message.ActionGroupMessage:
-			dispatchGroupMsg(from, msg)
-		case message.ActionCSMessage:
-			dispatchCustomerServiceMsg(from, msg)
 		case message.ActionHeartbeat:
 			handleHeartbeat(from, device, msg)
-		case message.ActionAckRequest:
-			handleAckRequest(from, msg)
-		case message.ActionAckGroupMsg:
-			handleAckGroupMsgRequest(from, msg)
 		default:
 			if msg.Action.Contains(message.ActionApi) {
 				api.Handle(from, device, msg)

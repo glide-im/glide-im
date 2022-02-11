@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/go-redis/redis"
 	"go_im/config"
-	"go_im/pkg/logger"
+	l "go_im/pkg/logger"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
@@ -63,5 +63,5 @@ func initRedis() {
 		MinIdleConns: 10,
 	})
 
-	logger.D("redis init: %s", Redis.Ping().Val())
+	l.D("redis init: %s", Redis.Ping().Val())
 }

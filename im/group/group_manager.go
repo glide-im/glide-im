@@ -63,7 +63,7 @@ type IGroupManager interface {
 	DispatchNotifyMessage(gid int64, message *message.GroupNotify) error
 
 	// DispatchMessage 发送聊天消息
-	DispatchMessage(gid int64, message *message.UpChatMessage) error
+	DispatchMessage(gid int64, action message.Action, message *message.UpChatMessage) error
 }
 
 // TODO 2021-11-20 大群小群优化
@@ -158,7 +158,7 @@ func (m *DefaultManager) DispatchNotifyMessage(gid int64, msg *message.GroupNoti
 	return g.EnqueueNotify(msg)
 }
 
-func (m *DefaultManager) DispatchMessage(gid int64, msg *message.UpChatMessage) error {
+func (m *DefaultManager) DispatchMessage(gid int64, action message.Action, msg *message.UpChatMessage) error {
 	//logger.D("GroupManager.HandleMessage: %v", msg)
 	m.mu.Lock()
 	g, ok := m.groups[gid]
@@ -166,13 +166,13 @@ func (m *DefaultManager) DispatchMessage(gid int64, msg *message.UpChatMessage) 
 	if !ok {
 		return errors.New("group not exist gid=" + strconv.FormatInt(gid, 10))
 	}
-	if g.mute {
+	if g.mute && action != message.ActionGroupMessageRecall {
 		return errors.New("group is muted")
 	}
 	if g.dissolved {
 		return errors.New("group is dissolved")
 	}
-	seq, err := g.EnqueueMessage(msg)
+	seq, err := g.EnqueueMessage(msg, action == message.ActionGroupMessageRecall)
 
 	if err != nil {
 		return err

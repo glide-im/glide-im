@@ -20,6 +20,8 @@ type ChatMessage struct {
 	CreateAt int64
 	// Content 消息内容
 	Content string
+	// Status 消息状态
+	Status int
 }
 
 // Session 会话, 记录会话的情况
@@ -52,10 +54,12 @@ type GroupMessage struct {
 	// To 群 ID
 	To int64
 	// From 发送者 ID
-	From    int64
-	Type    int
-	SendAt  int64
-	Content string
+	From     int64
+	Type     int
+	SendAt   int64
+	Content  string
+	Status   int
+	RecallBy int64
 }
 
 // GroupMemberMsgState 群成员确认收到消息记录, 用于计算离线消息的同步量

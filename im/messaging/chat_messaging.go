@@ -29,21 +29,34 @@ func dispatchChatMessage(from int64, m *message.Message) {
 			lg, sm = sm, lg
 		}
 		sessionId := strconv.FormatInt(lg, 10) + "_" + strconv.FormatInt(sm, 10)
-		dbMsg := msgdao.ChatMessage{
-			MID:       msg.Mid,
-			From:      from,
-			To:        msg.To,
-			Type:      msg.Type,
-			SendAt:    msg.CTime,
-			Content:   msg.Content,
-			CliSeq:    msg.CSeq,
-			SessionID: sessionId,
-		}
-		// 保存消息
-		_, err := msgdao.AddChatMessage(&dbMsg)
-		if err != nil {
-			logger.E("save chat message error %v", err)
-			return
+		if m.Action == message.ActionChatMessageRecall {
+			r := &message.Recall{}
+			err := message.UnmarshallJson(msg.Content, r)
+			if err != nil || r.RecallBy != from {
+				return
+			}
+			err = msgdao.ChatMsgDaoImpl.UpdateChatMessageStatus(r.Mid, r.RecallBy, msg.To, msgdao.ChatMessageStatusRecalled)
+			if err != nil {
+				logger.E("update message status error %v", err)
+				return
+			}
+		} else {
+			dbMsg := msgdao.ChatMessage{
+				MID:       msg.Mid,
+				From:      from,
+				To:        msg.To,
+				Type:      msg.Type,
+				SendAt:    msg.CTime,
+				Content:   msg.Content,
+				CliSeq:    msg.CSeq,
+				SessionID: sessionId,
+			}
+			// 保存消息
+			_, err := msgdao.AddChatMessage(&dbMsg)
+			if err != nil {
+				logger.E("save chat message error %v", err)
+				return
+			}
 		}
 	}
 
@@ -62,6 +75,10 @@ func dispatchChatMessage(from int64, m *message.Message) {
 	} else {
 		dispatchOnline(from, msg)
 	}
+}
+
+func dispatchChatRecallMessage(from int64, msg *message.Message) {
+	dispatchChatMessage(from, msg)
 }
 
 func ackNotifyMessage(from int64, mid int64) {

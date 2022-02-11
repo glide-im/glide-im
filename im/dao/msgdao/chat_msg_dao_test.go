@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+func TestChatMsgDaoImpl_UpdateChatMessageStatus(t *testing.T) {
+	err := instance.UpdateChatMessageStatus(687, 543602, 543624, 0)
+	t.Error(err)
+}
+
 func TestChatMsgDao_GetRecentChatMessagesBySessionID(t *testing.T) {
 	ms, err := instance.GetChatMessagesBySession(2, 1, 1010, 10)
 	if err != nil {

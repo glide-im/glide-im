@@ -101,7 +101,7 @@ func (g *Group) EnqueueNotify(msg *message.GroupNotify) error {
 	return g.checkMsgQueue()
 }
 
-func (g *Group) EnqueueMessage(msg *message.UpChatMessage) (int64, error) {
+func (g *Group) EnqueueMessage(msg *message.UpChatMessage, recall bool) (int64, error) {
 
 	g.mu.Lock()
 	mf, exist := g.members[msg.From]
@@ -110,10 +110,24 @@ func (g *Group) EnqueueMessage(msg *message.UpChatMessage) (int64, error) {
 	if !exist {
 		return 0, errors.New("not a group member")
 	}
-	if mf.muted {
+	if mf.muted && !recall {
 		return 0, errors.New("a muted group member send message")
 	}
 
+	if recall {
+		r := &message.Recall{}
+		err := message.UnmarshallJson(msg.Content, r)
+		if err != nil {
+			return 0, err
+		}
+		if r.RecallBy != msg.From && !mf.admin {
+			return 0, errors.New("illegal operation")
+		}
+		err = msgdao.GroupMsgDaoImpl.UpdateGroupMessageRecall(g.gid, r.Mid, msgdao.ChatMessageStatusRecalled, r.RecallBy)
+		if err != nil {
+			return 0, err
+		}
+	}
 	now := time.Now().Unix()
 	seq := atomic.AddInt64(&g.msgSequence, 1)
 	err := msgdao.AddGroupMessage(&msgdao.GroupMessage{
@@ -248,6 +262,11 @@ func (g *Group) updateMember(u MemberUpdate) error {
 		mf.admin = true
 	}
 	return nil
+}
+
+func (g *Group) GetMember(id int64) *memberInfo {
+	defer g.mu.LockUtilReturn()()
+	return g.members[id]
 }
 
 func (g *Group) PutMember(member int64, s *memberInfo) {

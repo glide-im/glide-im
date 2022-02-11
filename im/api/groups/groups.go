@@ -99,15 +99,15 @@ func (m *GroupApi) RemoveMember(ctx *route.Context, request *RemoveMemberRequest
 		//goland:noinspection GoPreferNilSlice
 		notFind := []int64{}
 		for _, id := range request.Uid {
+			err = userdao.ContactsDao.DelContacts(id, request.Gid, userdao.ContactsTypeGroup)
+			if err != nil {
+				return comm.NewDbErr(err)
+			}
 			err = groupdao.Dao.RemoveMember(request.Gid, id)
 			if err == common.ErrNoRecordFound {
 				notFind = append(notFind, id)
 				continue
 			} else if err != nil {
-				return comm.NewDbErr(err)
-			}
-			err = userdao.ContactsDao.DelContacts(id, request.Gid, userdao.ContactsTypeGroup)
-			if err != nil {
 				return comm.NewDbErr(err)
 			}
 			err = dispatchGroupNotify(request.Gid, message.GroupNotifyTypeMemberRemoved, id)

@@ -20,12 +20,22 @@ func dispatchGroupMsg(from int64, msg *message.Message) {
 		return
 	}
 	groupMsg.From = from
-	err := group.DispatchMessage(groupMsg.To, groupMsg)
+
+	var err error
+	if msg.Action == message.ActionGroupMessageRecall {
+		err = group.DispatchMessage(groupMsg.To, groupMsg)
+	} else {
+		err = group.DispatchRecallMessage(groupMsg.To, groupMsg)
+	}
 	if err != nil {
 		logger.E("dispatch group message error: %v", err)
 		notify := message.NewMessage(0, message.ActionMessageFailed, message.AckNotify{Mid: groupMsg.Mid})
 		client.EnqueueMessage(from, notify)
 	}
+}
+
+func dispatchGroupRecallMsg(from int64, msg *message.Message) {
+	dispatchGroupMsg(from, msg)
 }
 
 func handleAckGroupMsgRequest(from int64, msg *message.Message) {

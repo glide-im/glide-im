@@ -22,6 +22,7 @@ type GroupMsgDao interface {
 	GetLatestGroupMessage(gid int64, pageSize int) ([]*GroupMessage, error)
 	GetGroupMessage(gid int64, beforeSeq int64, pageSize int) ([]*GroupMessage, error)
 	GetGroupMessageSeqAfter(gid int64, seqAfter int64) ([]*GroupMessage, error)
+	UpdateGroupMessageRecall(gid int64, mid int64, status int, by int64) error
 
 	AddGroupMessage(message *GroupMessage) error
 	UpdateGroupMessageState(gid int64, lastMID int64, lastMsgAt int64, lastMsgSeq int64) error
@@ -39,7 +40,8 @@ type ChatMsgDao interface {
 	GetChatMessagesBySession(uid1, uid2 int64, beforeMid int64, pageSize int) ([]*ChatMessage, error)
 	GetRecentChatMessagesBySession(uid1, uid2 int64, pageSize int) ([]*ChatMessage, error)
 	GetRecentChatMessages(uid int64, afterTime int64) ([]*ChatMessage, error)
-	AddOrUpdateChatMessage(message *ChatMessage) (bool, error)
+	AddChatMessage(message *ChatMessage) (bool, error)
+	UpdateChatMessageStatus(mid int64, from, to int64, status int) error
 
 	GetChatMessageMidAfter(form, to int64, midAfter int64) ([]*ChatMessage, error)
 	GetChatMessageMidSpan(from, to int64, midStart, midEnd int64) ([]*ChatMessage, error)
@@ -137,7 +139,7 @@ func GetChatMessage(mid ...int64) ([]*ChatMessage, error) {
 	return instance.GetChatMessage(mid...)
 }
 func AddChatMessage(message *ChatMessage) (bool, error) {
-	return instance.AddOrUpdateChatMessage(message)
+	return instance.AddChatMessage(message)
 }
 func GetChatMessageMidAfter(from int64, to int64, midAfter int64) ([]*ChatMessage, error) {
 	return instance.GetChatMessageMidAfter(from, to, midAfter)

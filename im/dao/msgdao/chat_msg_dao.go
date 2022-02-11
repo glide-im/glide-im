@@ -8,6 +8,12 @@ import (
 
 var ChatMsgDaoImpl ChatMsgDao = chatMsgDaoImpl{}
 
+const (
+	ChatMessageStatusDefault  = 0
+	ChatMessageStatusRecalled = 1
+	ChatMessageStatusDisabled = 2
+)
+
 type chatMsgDaoImpl struct {
 }
 
@@ -58,7 +64,13 @@ func (chatMsgDaoImpl) GetChatMessage(mid ...int64) ([]*ChatMessage, error) {
 	return m, nil
 }
 
-func (chatMsgDaoImpl) AddOrUpdateChatMessage(message *ChatMessage) (bool, error) {
+func (chatMsgDaoImpl) UpdateChatMessageStatus(mid int64, from, to int64, status int) error {
+	u := ChatMessage{}
+	update := db.DB.Model(&u).Where("`m_id` = ? AND `from` = ? AND `to` = ?", mid, from, to).UpdateColumn("status", status)
+	return common.MustUpdate(update)
+}
+
+func (chatMsgDaoImpl) AddChatMessage(message *ChatMessage) (bool, error) {
 	var c int64
 	query := db.DB.Table("im_chat_message").Where("m_id = ?", message.MID).Count(&c)
 	if err := common.ResolveError(query); err != nil {
