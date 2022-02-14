@@ -136,11 +136,9 @@ func deserialize(data string, i interface{}) error {
 	return json.Unmarshal([]byte(data), i)
 }
 
-func postRt(router gin.IRoutes, path string, fn interface{}) {
-
+func getHandler(path string, fn interface{}) func(ctx *gin.Context) {
 	handleFunc, paramType, hasParam, validate := reflectHandleFunc(path, fn)
-
-	router.POST(path, func(context *gin.Context) {
+	return func(context *gin.Context) {
 		ctx := getContext(context)
 		if ctx == nil {
 			onParamValidateFailed(context, errors.New("authentication failed"))
@@ -171,7 +169,7 @@ func postRt(router gin.IRoutes, path string, fn interface{}) {
 			err := errV.(error)
 			onHandlerFuncErr(context, err, handlerParam)
 		}
-	})
+	}
 }
 
 func valOf(i ...interface{}) []reflect.Value {

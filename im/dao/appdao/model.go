@@ -1,7 +1,4 @@
-package app
-
-type Verify struct {
-}
+package appdao
 
 type ReleaseInfo struct {
 	VersionCode int64

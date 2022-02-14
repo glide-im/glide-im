@@ -1,6 +1,7 @@
 package http_srv
 
 import (
+	"go_im/im/api/app"
 	"go_im/im/api/auth"
 	"go_im/im/api/groups"
 	"go_im/im/api/msg"
@@ -10,6 +11,9 @@ import (
 func initRoute() {
 
 	// TODO 2021-11-15 完成其他 api 的 http 服务
+
+	appApi := app.AppApi{}
+	getNoAuth("api/app/release", appApi.GetReleaseInfo)
 
 	authApi := auth.AuthApi{}
 	postNoAuth("/api/auth/register", authApi.Register)
@@ -55,9 +59,11 @@ func initRoute() {
 }
 
 func postNoAuth(path string, fn interface{}) {
-	postRt(g, path, fn)
+	g.POST(path, getHandler(path, fn))
 }
-
+func getNoAuth(path string, fn interface{}) {
+	g.GET(path, getHandler(path, fn))
+}
 func post(path string, fn interface{}) {
-	postRt(useAuth(), path, fn)
+	useAuth().POST(path, getHandler(path, fn))
 }
