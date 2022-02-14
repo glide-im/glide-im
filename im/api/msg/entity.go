@@ -11,16 +11,19 @@ type MessageResponse struct {
 	SendAt   int64
 	CreateAt int64
 	Content  string
+	Status   int
 }
 
 type GroupMessageResponse struct {
-	Mid     int64
-	Sender  int64
-	Gid     int64
-	Seq     int64
-	Type    int
-	SendAt  int64
-	Content string
+	Mid      int64
+	Sender   int64
+	Gid      int64
+	Seq      int64
+	Type     int
+	SendAt   int64
+	Content  string
+	Status   int
+	RecallBy int64
 }
 
 type GroupMessageStateResponse struct {

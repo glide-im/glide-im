@@ -93,12 +93,14 @@ func (*GroupMsgApi) GetGroupMessageState(ctx *route.Context, request *GroupMsgSt
 
 func dbGroupMsg2ResponseMsg(m *msgdao.GroupMessage) *GroupMessageResponse {
 	return &GroupMessageResponse{
-		Mid:     m.MID,
-		Sender:  m.From,
-		Seq:     m.Seq,
-		Gid:     m.To,
-		Type:    m.Type,
-		SendAt:  m.SendAt,
-		Content: m.Content,
+		Mid:      m.MID,
+		Sender:   m.From,
+		Seq:      m.Seq,
+		Gid:      m.To,
+		Type:     m.Type,
+		SendAt:   m.SendAt,
+		Content:  m.Content,
+		Status:   m.Status,
+		RecallBy: m.RecallBy,
 	}
 }

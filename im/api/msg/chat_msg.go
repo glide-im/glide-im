@@ -122,5 +122,6 @@ func messageModel2MessageResponse(m *msgdao.ChatMessage) *MessageResponse {
 		SendAt:   m.SendAt,
 		CreateAt: m.CreateAt,
 		Content:  m.Content,
+		Status:   m.Status,
 	}
 }
