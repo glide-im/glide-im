@@ -72,7 +72,7 @@ jobs:
           port: ${{ secrets.PORT }}
           script: |
             cd /srv/glideim
-            wget https://github.91chi.fun//https://github.com/dengzii/go_im/releases/latest/download/go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz -O go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz
+            wget https://github.91chi.fun//https://github.com/dengzii/go_im/releases/latest/download/go_im_singleton_${{ steps.get_tag.outputs.TAG }}.tar.gz -O go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz
             tar zxvf go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz
             pkill go_im
             nohup ./go_im >> log.output &
