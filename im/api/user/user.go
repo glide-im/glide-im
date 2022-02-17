@@ -7,7 +7,6 @@ import (
 	"go_im/im/api/router"
 	"go_im/im/dao/userdao"
 	"go_im/im/message"
-	"go_im/pkg/logger"
 )
 
 type UserApi struct{}
@@ -51,16 +50,6 @@ func (a *UserApi) GetOnlineUser(msg *route.Context) error {
 	}
 	allClient := apidep.ClientManager.AllClient()
 	users := make([]u, len(allClient))
-
-	for _, k := range allClient {
-		us, err := userdao.UserDao2.GetUser(k)
-		if err != nil || len(us) == 0 {
-			logger.D("get online uid=%d error, error=%v", k, err)
-			continue
-		}
-		user := us[0]
-		users = append(users, u{Uid: user.Uid, Account: user.Account, Avatar: user.Avatar, Nickname: user.Nickname})
-	}
 
 	m := message.NewMessage(msg.Seq, comm.ActionSuccess, users)
 	msg.Response(m)

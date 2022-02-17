@@ -1,4 +1,4 @@
-package test
+package main
 
 import (
 	"bytes"
@@ -48,13 +48,14 @@ var dialer = websocket.Dialer{
 	WriteBufferSize:  1024,
 }
 
-var host = "192.168.1.162"
+//var host = "192.168.1.162"
+var host = "127.0.0.1"
 var connToServerInterval = time.Millisecond * 10
 var loginAfterConnInterval = time.Millisecond * 300
-var totalUser = 2000
-var msgPeerClient = 100
+var totalUser = 10000
+var msgPeerClient = 200
 var msgSendIntervalFn = func() {
-	sleepRndMilleSec(100, 200)
+	sleepRndMilleSec(20, 100)
 }
 
 func RunClientMsg() {
@@ -63,8 +64,8 @@ func RunClientMsg() {
 	//initUsers(totalUser)
 	initUserNoDB(totalUser)
 
-	logger.D("uids=%v", uids)
-	logger.D("user init complete")
+	slog("uids=%v", uids)
+	slog("user init complete")
 
 	wgConn := sync.WaitGroup{}
 	for _, uid_ := range uids {
@@ -77,13 +78,16 @@ func RunClientMsg() {
 		}()
 	}
 	wgConn.Wait()
-	logger.D("connection establish complete, %d/%d", len(conns), totalUser)
+	slog("connection establish complete, %d/%d", len(conns), totalUser)
 
 	time.Sleep(time.Second * 1)
 	go func() {
 		tick := time.Tick(time.Second)
+		count := totalUser * msgPeerClient
 		for range tick {
-			logger.D("Send:%d  Receive:%d", atomic.LoadInt64(sendMsg), atomic.LoadInt64(receiveMsg))
+			sent := atomic.LoadInt64(sendMsg)
+			p := float64(sent) / float64(count)
+			slog("Send:%d Receive:%d  Progress:%d%%", sent, atomic.LoadInt64(receiveMsg), int64(p*100))
 		}
 	}()
 
@@ -98,7 +102,7 @@ func RunClientMsg() {
 		}()
 	}
 	wgMsg.Wait()
-	logger.D("msg send complete")
+	slog("msg send complete")
 
 	time.Sleep(time.Second * 1)
 	connClosed = true
@@ -111,12 +115,12 @@ func RunClientMsg() {
 			_ = c.Close()
 		}()
 	}
-	logger.D("done")
+	slog("done")
 	_, _ = http.Get("http://" + host + ":8080/statistic")
 	time.Sleep(time.Second * 3)
 	_, _ = http.Get("http://" + host + ":8080/done")
 
-	exportMessageDelayChart()
+	//exportMessageDelayChart()
 }
 
 func connect(uid int64) {
@@ -124,12 +128,12 @@ func connect(uid int64) {
 	con, _, err := dialer.Dial("ws://"+host+":8080/ws", nil)
 
 	if err != nil {
-		logger.W(err.Error())
+		slog("err:%v", err.Error())
 		return
 	}
 
 	con.SetCloseHandler(func(code int, text string) error {
-		logger.W(text)
+		slog("err:%v", text)
 		return nil
 	})
 	go func() {

@@ -1,9 +1,10 @@
-package test
+package main
 
 import (
 	"bytes"
 	"fmt"
 	"github.com/wcharczuk/go-chart"
+	"go_im/im/dao/msgdao"
 	"go_im/im/messaging"
 	"go_im/im/statistics"
 	"go_im/pkg/db"
@@ -15,8 +16,14 @@ import (
 
 var cTestPoints = 1
 
+func main() {
+	RunAnalysisServer()
+}
+
 func RunAnalysisServer() {
 
+	msgdao.MockChatMsg(time.Millisecond * 5)
+	msgdao.MockCommDao()
 	db.Init()
 	messaging.Init()
 
@@ -29,7 +36,7 @@ func RunAnalysisServer() {
 
 			}
 		}()
-		Run()
+		RunTestServer()
 	}()
 
 	go func() {
@@ -43,7 +50,7 @@ func RunAnalysisServer() {
 		tm := 0
 		for range tick {
 			tm++
-			logger.D("%d", tm)
+			slog("%d", tm)
 		}
 	}()
 	<-done
@@ -62,6 +69,7 @@ func (d *doneHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reques
 	d.times += 1
 	if d.times >= cTestPoints {
 		genStatisticsChart()
+		slog("analysis image generated.")
 		d.done <- struct{}{}
 	}
 }
@@ -162,18 +170,36 @@ func exportChart(datas map[string][]int64) {
 	}
 
 	buffer := bytes.NewBuffer([]byte{})
-	_ = graph.Render(chart.PNG, buffer)
-
+	err := graph.Render(chart.PNG, buffer)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 	now := time.Now().Format("01-02_15_04_05")
 	dir := "./analysis/" + now
-	_ = os.MkdirAll(dir, os.ModePerm)
-
+	err = os.MkdirAll(dir, os.ModePerm)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 	f, err := os.Create(dir + "/" + "cps" + ".png")
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
-	_, _ = f.WriteAt(buffer.Bytes(), 0)
-	_ = f.Close()
+	_, err = f.WriteAt(buffer.Bytes(), 0)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	err = f.Close()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 
+}
+
+func slog(format string, s ...interface{}) {
+	if len(s) == 0 {
+		logger.Zap.Sugar().Debugf(format)
+	} else {
+		logger.Zap.Sugar().Debugf(format, s...)
+	}
 }

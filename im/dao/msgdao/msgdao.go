@@ -40,6 +40,7 @@ type ChatMsgDao interface {
 	GetChatMessagesBySession(uid1, uid2 int64, beforeMid int64, pageSize int) ([]*ChatMessage, error)
 	GetRecentChatMessagesBySession(uid1, uid2 int64, pageSize int) ([]*ChatMessage, error)
 	GetRecentChatMessages(uid int64, afterTime int64) ([]*ChatMessage, error)
+	//AddChatMessage return update success(exist message) and error
 	AddChatMessage(message *ChatMessage) (bool, error)
 	UpdateChatMessageStatus(mid int64, from, to int64, status int) error
 
@@ -96,7 +97,7 @@ func GetIncrUserMsgSeq(uid int64) (int64, error) {
 /////////////////
 
 func GetMessageID() (int64, error) {
-	return instance.GetMessageID()
+	return Comm.GetMessageID()
 }
 
 /////////////////
@@ -136,23 +137,23 @@ func GetGroupMemberMsgState(gid int64, uid int64) (*GroupMemberMsgState, error) 
 ///////////////////////////////////////
 
 func GetChatMessage(mid ...int64) ([]*ChatMessage, error) {
-	return instance.GetChatMessage(mid...)
+	return ChatMsgDaoImpl.GetChatMessage(mid...)
 }
 func AddChatMessage(message *ChatMessage) (bool, error) {
-	return instance.AddChatMessage(message)
+	return ChatMsgDaoImpl.AddChatMessage(message)
 }
 func GetChatMessageMidAfter(from int64, to int64, midAfter int64) ([]*ChatMessage, error) {
-	return instance.GetChatMessageMidAfter(from, to, midAfter)
+	return ChatMsgDaoImpl.GetChatMessageMidAfter(from, to, midAfter)
 }
 func GetChatMessageMidSpan(from, to int64, midStart, midEnd int64) ([]*ChatMessage, error) {
-	return instance.GetChatMessageMidSpan(from, to, midStart, midEnd)
+	return ChatMsgDaoImpl.GetChatMessageMidSpan(from, to, midStart, midEnd)
 }
 func AddOfflineMessage(uid int64, mid int64) error {
-	return instance.AddOfflineMessage(uid, mid)
+	return ChatMsgDaoImpl.AddOfflineMessage(uid, mid)
 }
 func GetOfflineMessage(uid int64) ([]*OfflineMessage, error) {
-	return instance.GetOfflineMessage(uid)
+	return ChatMsgDaoImpl.GetOfflineMessage(uid)
 }
 func DelOfflineMessage(uid int64, mid []int64) error {
-	return instance.DelOfflineMessage(uid, mid)
+	return ChatMsgDaoImpl.DelOfflineMessage(uid, mid)
 }

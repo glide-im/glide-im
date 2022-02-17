@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+const (
+	ContactsTypeUser  = 1
+	ContactsTypeGroup = 2
+)
+
 var UserInfoDao = &UserInfoDaoImpl{}
 
 type UserInfoDaoImpl struct{}
