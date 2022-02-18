@@ -18,7 +18,8 @@ func (f *fakeConn) Write(data []byte) error {
 
 func (f *fakeConn) Read() ([]byte, error) {
 	time.Sleep(time.Second * time.Duration(3+rand.Int63n(2)))
-	return message.NewMessage(0, message.ActionHeartbeat, "").Serialize()
+	newMessage := message.NewMessage(0, message.ActionHeartbeat, "")
+	return codec.Encode(newMessage)
 }
 
 func (f *fakeConn) Close() error {

@@ -113,7 +113,11 @@ func exportChart(datas map[string][]int64) {
 			}
 			if ct != 0 {
 				if name == "online user" {
-					ct = ct / int64(len(data)%10)
+					o := int64(len(data) % 10)
+					if o == 0 {
+						o = 1
+					}
+					ct = ct / o
 				}
 				d = append(d, ct)
 			}

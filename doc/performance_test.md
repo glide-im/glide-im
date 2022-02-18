@@ -4,7 +4,7 @@
 
 **测试结果**
 
-测试案例只测试了单聊, 支持约 3000/s 消息吞吐量, 这只是下限, 由于测试环境限制, 性能上限并未测出.
+测试案例只测试了单聊, 支持约 30000/s 消息吞吐量, 这只是下限, 由于测试环境限制, 性能上限并未测出.
 
 ![performance.png](https://github.com/Glide-IM/Glide-IM/raw/master/_art/msg_io.png)
 

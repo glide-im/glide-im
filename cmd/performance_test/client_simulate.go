@@ -14,6 +14,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"runtime"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -21,19 +22,17 @@ import (
 )
 
 var uids []int64
-var msgTo = map[int64]int64{}
 
 var rLock = sync.RWMutex{}
 var conns = map[int64]*websocket.Conn{}
 
 var sentMessage = map[string]int64{}
-var sentMsgMu = sync.Mutex{}
+var sentMsgMu = sync.RWMutex{}
 
 var messageDelay []int64
 
 var sendMsg *int64
 var receiveMsg *int64
-var connClosed = false
 
 func init() {
 	var s int64 = 0
@@ -49,87 +48,95 @@ var dialer = websocket.Dialer{
 }
 
 //var host = "192.168.1.162"
+
 var host = "127.0.0.1"
-var connToServerInterval = time.Millisecond * 10
-var loginAfterConnInterval = time.Millisecond * 300
-var totalUser = 10000
-var msgPeerClient = 200
-var msgSendIntervalFn = func() {
-	sleepRndMilleSec(20, 100)
-}
+var onlinePeerSecond = time.Millisecond * 20
+var loginAfterConnected = time.Millisecond * 100
+var totalUser = 60000
+var msgPeerClient = 400
 
 func RunClientMsg() {
 
 	db.Init()
-	//initUsers(totalUser)
-	initUserNoDB(totalUser)
+	for i := 0; i < totalUser; i++ {
+		uids = append(uids, uid.GenUid())
+	}
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
 
 	slog("uids=%v", uids)
-	slog("user init complete")
+	slog("uid init complete, start simulation")
 
-	wgConn := sync.WaitGroup{}
-	for _, uid_ := range uids {
-		wgConn.Add(1)
-		time.Sleep(connToServerInterval)
-		id := uid_
-		go func() {
-			connect(id)
-			wgConn.Done()
-		}()
-	}
-	wgConn.Wait()
-	slog("connection establish complete, %d/%d", len(conns), totalUser)
-
-	time.Sleep(time.Second * 1)
 	go func() {
 		tick := time.Tick(time.Second)
 		count := totalUser * msgPeerClient
 		for range tick {
+			time.Unix(1, 1)
 			sent := atomic.LoadInt64(sendMsg)
-			p := float64(sent) / float64(count)
-			slog("Send:%d Receive:%d  Progress:%d%%", sent, atomic.LoadInt64(receiveMsg), int64(p*100))
+			progress := float64(sent) / float64(count)
+			conn := len(conns)
+			slog("Conn:%d\tSend:%d\tReceive:%d\tProgress:%d%%", conn, sent, atomic.LoadInt64(receiveMsg), int64(progress*100))
 		}
 	}()
 
-	wgMsg := sync.WaitGroup{}
-	for i, conn := range conns {
-		id := i
-		c := conn
-		wgMsg.Add(1)
+	wgConn := sync.WaitGroup{}
+	for _, uid_ := range uids {
+		wgConn.Add(1)
+		time.Sleep(onlinePeerSecond)
+		id := uid_
 		go func() {
-			startMsg(id, msgPeerClient, c)
-			wgMsg.Done()
+			closed := make(chan interface{})
+			conn := connect(id, closed)
+			rLock.Lock()
+			conns[id] = conn
+			rLock.Unlock()
+			//defer func() {
+			//	e := recover()
+			//	if e != nil {
+			//		slog("err:%v", e)
+			//	}
+			//	wgConn.Done()
+			//}()
+			startMsg(msgPeerClient, conn, 100, 50)
+			//rLock.RLock()
+			//delete(conns, id)
+			//rLock.RUnlock()
+			exit(id, conn)
+			closed <- struct{}{}
+			wgConn.Done()
 		}()
 	}
-	wgMsg.Wait()
-	slog("msg send complete")
+	wgConn.Wait()
 
-	time.Sleep(time.Second * 1)
-	connClosed = true
-	for _, conn := range conns {
-		c := conn
-		go func() {
-			m := message.NewMessage(0, "api.test.signout", "")
-			_ = c.WriteJSON(m)
-			time.Sleep(time.Millisecond * 100)
-			_ = c.Close()
-		}()
-	}
-	slog("done")
+	slog("msg send complete")
 	_, _ = http.Get("http://" + host + ":8080/statistic")
 	time.Sleep(time.Second * 3)
 	_, _ = http.Get("http://" + host + ":8080/done")
-
-	//exportMessageDelayChart()
+	exportMessageDelayChart()
 }
 
-func connect(uid int64) {
+func exit(id int64, conn *websocket.Conn) {
+	if conn == nil {
+		rLock.RLock()
+		conn = conns[id]
+		rLock.RUnlock()
+	}
+	if conn == nil {
+		return
+	}
+	m := message.NewMessage(0, "api.test.signout", "")
+	_ = conn.WriteJSON(m)
+	time.Sleep(time.Millisecond * 100)
+	_ = conn.Close()
+}
+
+func connect(uid int64, closed chan interface{}) *websocket.Conn {
 
 	con, _, err := dialer.Dial("ws://"+host+":8080/ws", nil)
 
 	if err != nil {
 		slog("err:%v", err.Error())
-		return
+		return nil
 	}
 
 	con.SetCloseHandler(func(code int, text string) error {
@@ -137,50 +144,52 @@ func connect(uid int64) {
 		return nil
 	})
 	go func() {
-		for !connClosed {
-			_, b, e := con.ReadMessage()
-			if e != nil && !connClosed {
-				logger.W(e.Error())
+		for {
+			select {
+			case <-closed:
 				break
-			} else {
-				atomic.AddInt64(receiveMsg, 1)
-				handleReceivedMessage(b)
+			default:
+				_, b, e := con.ReadMessage()
+				if e != nil {
+					v, ok := <-closed
+					if v != nil && ok {
+						break
+					}
+					logger.W(e.Error())
+					break
+				} else {
+					atomic.AddInt64(receiveMsg, 1)
+					handleReceivedMessage(b)
+				}
 			}
 		}
 	}()
 
-	time.Sleep(loginAfterConnInterval)
+	time.Sleep(loginAfterConnected)
 	login := message.NewMessage(1, "api.test.login", test.TestLoginRequest{
 		Uid:    uid,
 		Device: 2,
 	})
 	_ = con.WriteJSON(login)
-	rLock.Lock()
-	conns[uid] = con
-	rLock.Unlock()
-}
-
-type Message struct {
-	Action string
-	Data   string
+	return con
 }
 
 func handleReceivedMessage(b []byte) {
 	recvTime := time.Now()
 	go func() {
-		m := Message{}
+		m := message.Message{}
 		er := json.Unmarshal(b, &m)
 		if er != nil {
 			return
 		}
 		m2 := &message.DownChatMessage{}
-		er = json.Unmarshal([]byte(m.Data), m2)
+		er = m.DeserializeData(m2)
 		if er != nil {
 			return
 		}
-		sentMsgMu.Lock()
+		sentMsgMu.RLock()
 		v, ok := sentMessage[m2.Content]
-		sentMsgMu.Unlock()
+		sentMsgMu.RUnlock()
 		if ok {
 			messageDelay = append(messageDelay, recvTime.UnixNano()-v)
 			sentMsgMu.Lock()
@@ -190,11 +199,26 @@ func handleReceivedMessage(b []byte) {
 	}()
 }
 
-func startMsg(uid int64, count int, conn *websocket.Conn) {
-	to := msgTo[uid]
+var c = message.JsonCodec{}
+
+func startMsg(count int, conn *websocket.Conn, end, start int32) {
 
 	for i := 0; i < count; i++ {
-		msgSendIntervalFn()
+		//msgSendIntervalFn()
+		n := rand.Int31n(end - start)
+		n = start + n
+		time.Sleep(time.Duration(n) * time.Millisecond)
+
+		rLock.RLock()
+		var to int64 = 0
+		for k := range conns {
+			to = k
+			break
+		}
+		if to == 0 {
+			panic("conn is empty")
+		}
+		rLock.RUnlock()
 		u := strconv.FormatInt(time.Now().UnixNano(), 10) + genRndString(10)
 		m := &message.UpChatMessage{
 			Mid:     1,
@@ -205,7 +229,7 @@ func startMsg(uid int64, count int, conn *websocket.Conn) {
 			CTime:   time.Now().Unix(),
 		}
 		msg := message.NewMessage(0, message.ActionChatMessage, m)
-		s, _ := msg.Serialize()
+		s, _ := c.Encode(msg)
 		er := conn.WriteMessage(websocket.TextMessage, s)
 		go func() {
 			sentMsgMu.Lock()
@@ -232,40 +256,6 @@ func genRndString(length int) string {
 		res = res + table[idx:idx+1]
 	}
 	return res
-}
-
-func initUsers(userCount int) {
-
-	for i := 0; i < userCount; i++ {
-		uids = append(uids, uid.GenUid())
-	}
-	wg := sync.WaitGroup{}
-	m1 := sync.Mutex{}
-
-	for i := 0; i < userCount; i++ {
-		wg.Add(1)
-		i2 := i
-		go func() {
-			from := uids[i2]
-			to := uids[rand.Int63n(int64(userCount))]
-			m1.Lock()
-			msgTo[from] = to
-			m1.Unlock()
-			wg.Done()
-		}()
-	}
-	wg.Wait()
-}
-
-func initUserNoDB(count int) {
-	for i := 0; i < count; i++ {
-		uids = append(uids, uid.GenUid())
-	}
-	for i := 0; i < count; i++ {
-		from := uids[i]
-		to := uids[rand.Int63n(int64(count))]
-		msgTo[from] = to
-	}
 }
 
 func sleepRndMilleSec(start int32, end int32) {
@@ -333,6 +323,6 @@ func exportMessageDelayChart() {
 		fmt.Println(err.Error())
 		return
 	}
-	_, _ = f.WriteAt(buffer.Bytes(), 0)
+	_, _ = f.Write(buffer.Bytes())
 	_ = f.Close()
 }

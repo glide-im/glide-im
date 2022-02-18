@@ -132,10 +132,6 @@ func getContext(ctx *gin.Context) *route.Context {
 	return info
 }
 
-func deserialize(data string, i interface{}) error {
-	return json.Unmarshal([]byte(data), i)
-}
-
 func getHandler(path string, fn interface{}) func(ctx *gin.Context) {
 	handleFunc, paramType, hasParam, validate := reflectHandleFunc(path, fn)
 	return func(context *gin.Context) {

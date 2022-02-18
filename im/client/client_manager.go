@@ -134,6 +134,7 @@ func (c *DefaultManager) ClientLogout(uid_ int64, device int64) {
 	logDevice.SetID(uid.GenTemp(), 0)
 	logDevice.Exit()
 	cl.remove(device)
+	statistics.SConnExit()
 }
 
 func (c *DefaultManager) EnqueueMessage(uid int64, device int64, msg *message.Message) {

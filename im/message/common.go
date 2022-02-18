@@ -77,19 +77,6 @@ type Message struct {
 	Data   Data
 }
 
-func (m *Message) Deserialize(data []byte) error {
-	return json.Unmarshal(data, m)
-}
-
-func (m *Message) Serialize() ([]byte, error) {
-	return json.Marshal(m)
-}
-
-func (m *Message) SetData(v interface{}) error {
-	m.Data.des = v
-	return nil
-}
-
 func (m *Message) DeserializeData(v interface{}) error {
 	s, ok := m.Data.des.([]byte)
 	if ok {
@@ -99,13 +86,13 @@ func (m *Message) DeserializeData(v interface{}) error {
 }
 
 func (m *Message) String() string {
-	return fmt.Sprintf("Message{Seq=%d, Action=%s, Data=%s}", m.Seq, m.Action, m.Data)
+	return fmt.Sprintf("Message{Seq=%d, Action=%s, Data=%s}", m.Seq, m.Action)
 }
 
 func NewMessage(seq int64, action Action, data interface{}) *Message {
 	ret := new(Message)
 	ret.Seq = seq
 	ret.Action = action
-	_ = ret.SetData(data)
+	ret.Data.des = data
 	return ret
 }

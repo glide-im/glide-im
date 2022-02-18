@@ -1,6 +1,7 @@
 package client
 
 import (
+	"github.com/panjf2000/ants/v2"
 	"go_im/im/comm"
 	"go_im/im/conn"
 	"go_im/im/dao/uid"
@@ -19,6 +20,22 @@ var tw = timingwheel.NewTimingWheel(time.Millisecond*500, 3, 20)
 
 // HeartbeatDuration 心跳间隔, 默认5分钟
 const HeartbeatDuration = time.Minute * 5
+
+var pool *ants.Pool
+
+func init() {
+	var err error
+	pool, err = ants.NewPool(10_0000,
+		ants.WithNonblocking(true),
+		ants.WithPanicHandler(func(i interface{}) {
+			logger.E("")
+		}),
+		ants.WithPreAlloc(true),
+	)
+	if err != nil {
+		panic(err)
+	}
+}
 
 const (
 	stateInit = iota
@@ -101,7 +118,7 @@ func (c *Client) Closed() bool {
 // EnqueueMessage 放入下行消息队列
 func (c *Client) EnqueueMessage(message *message.Message) {
 	atomic.AddInt64(&c.queuedMessage, 1)
-	go func() {
+	err := pool.Submit(func() {
 		defer func() {
 			atomic.AddInt64(&c.queuedMessage, -1)
 			e := recover()
@@ -127,7 +144,10 @@ func (c *Client) EnqueueMessage(message *message.Message) {
 			// 消息 chan 缓冲溢出, 这条消息将被丢弃
 			logger.E("message chan is full, id=%d", c.id)
 		}
-	}()
+	})
+	if err != nil {
+		logger.E("message not enqueue:%v", err)
+	}
 }
 
 // readMessage 开始从 Connection 中读取消息
@@ -204,7 +224,7 @@ func (c *Client) writeMessage() {
 				}
 				continue
 			}
-			b, err := m.Serialize()
+			b, err := codec.Encode(m)
 			if err != nil {
 				logger.E("serialize output message", err)
 				continue
@@ -255,7 +275,6 @@ func (c *Client) Exit() {
 	if atomic.LoadInt32(&c.readClosed) != 1 {
 		close(c.readClose)
 	}
-	statistics.SConnExit()
 }
 
 func (c *Client) getID() (int64, int64) {

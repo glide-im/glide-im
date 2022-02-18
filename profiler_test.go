@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-// go test -v -run=TestServerPerf -cpuprofile="cpu.out"
+// go test -v -run=TestServerPerf -cpuprofile="cpu2.out"
 func TestServerPerf(t *testing.T) {
 
 }

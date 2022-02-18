@@ -8,6 +8,10 @@ import (
 
 var messageReader MessageReader
 
+var codec message.Codec = message.ProtobufCodec{}
+
+//var codec message.Codec = message.JsonCodec{}
+
 // recyclePool 回收池, 减少临时对象, 回收复用 readerRes
 var recyclePool sync.Pool
 
@@ -87,6 +91,6 @@ func (d *defaultReader) Read(conn conn.Connection) (*message.Message, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = m.Deserialize(bytes)
+	err = codec.Decode(bytes, m)
 	return &m, err
 }
