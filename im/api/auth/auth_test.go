@@ -36,8 +36,7 @@ func logErr(t *testing.T, err error) {
 
 func TestAuthApi_AuthToken(t *testing.T) {
 	err := authApi.AuthToken(getContext(2, 0), &AuthTokenRequest{
-		Token:  "RN9fXQtAoplDCX8uSiajitgFgCZlrcpX",
-		Device: 1,
+		Token: "RN9fXQtAoplDCX8uSiajitgFgCZlrcpX",
 	})
 	logErr(t, err)
 }

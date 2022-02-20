@@ -46,9 +46,9 @@ func dispatchChatMessage(from int64, m *message.Message) {
 				From:      from,
 				To:        msg.To,
 				Type:      msg.Type,
-				SendAt:    msg.CTime,
+				SendAt:    msg.SendAt,
 				Content:   msg.Content,
-				CliSeq:    msg.CSeq,
+				CliSeq:    msg.Seq,
 				SessionID: sessionId,
 			}
 			// 保存消息
@@ -103,12 +103,12 @@ func dispatchOnline(from int64, msg *message.UpChatMessage) {
 
 	receiverMsg := message.DownChatMessage{
 		Mid:     msg.Mid,
-		CSeq:    msg.CSeq,
+		Seq:     msg.Seq,
 		From:    from,
 		To:      msg.To,
 		Type:    msg.Type,
 		Content: msg.Content,
-		CTime:   msg.CTime,
+		SendAt:  msg.SendAt,
 	}
 
 	dispatchMsg := message.NewMessage(-1, message.ActionChatMessage, receiverMsg)

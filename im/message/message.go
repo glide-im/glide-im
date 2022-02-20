@@ -4,29 +4,29 @@ package message
 type UpChatMessage struct {
 	// Mid 消息ID
 	Mid int64
-	// CSeq 发送者消息 seq
-	CSeq int64
+	// Seq 发送者消息 seq
+	Seq int64
 	// From internal
 	From int64
 	// To 接收者 ID
 	To int64
 	// Type 消息类型
-	Type int
+	Type int32
 	// Content 消息内容
 	Content string
-	// CTime 发送时间
-	CTime int64
+	// SendAt 发送时间
+	SendAt int64
 }
 
 // DownChatMessage 表示服务端分发给接受者的聊天消息
 type DownChatMessage struct {
 	Mid     int64
-	CSeq    int64
+	Seq     int64
 	From    int64
 	To      int64
-	Type    int
+	Type    int32
 	Content string
-	CTime   int64
+	SendAt  int64
 }
 
 // DownGroupMessage 下行群消息
@@ -35,7 +35,7 @@ type DownGroupMessage struct {
 	// Seq 群消息 Seq
 	Seq     int64
 	To      int64
-	Type    int
+	Type    int32
 	From    int64
 	Content string
 	SendAt  int64

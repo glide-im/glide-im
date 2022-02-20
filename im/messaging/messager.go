@@ -7,6 +7,7 @@ import (
 	"go_im/im/message"
 	"go_im/im/statistics"
 	"go_im/pkg/logger"
+	"strings"
 )
 
 // execPool 100 capacity goroutine pool, 假设每个消息处理需要10ms, 一个协程则每秒能处理100条消息
@@ -43,7 +44,7 @@ func messageHandler(from int64, device int64, msg *message.Message) {
 	logger.D("new message: uid=%d, %v", from, msg)
 	err := execPool.Submit(func() {
 		statistics.SMsgInput()
-		h, ok := messageHandlerFunMap[msg.Action]
+		h, ok := messageHandlerFunMap[message.Action(msg.Action)]
 		if ok {
 			h(from, msg)
 			return
@@ -52,7 +53,7 @@ func messageHandler(from int64, device int64, msg *message.Message) {
 		case message.ActionHeartbeat:
 			handleHeartbeat(from, device, msg)
 		default:
-			if msg.Action.Contains(message.ActionApi) {
+			if strings.HasPrefix(msg.Action, message.ActionApi) {
 				api.Handle(from, device, msg)
 			} else {
 				client.EnqueueMessage(from, message.NewMessage(-1, message.ActionNotifyError, "unknown action"))

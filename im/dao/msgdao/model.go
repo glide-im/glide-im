@@ -13,7 +13,7 @@ type ChatMessage struct {
 	// To 接收者ID
 	To int64
 	// Type 消息类型
-	Type int
+	Type int32
 	// SendAt 客户端发送时间
 	SendAt int64
 	// CreateAt 消息创建时间
@@ -55,7 +55,7 @@ type GroupMessage struct {
 	To int64
 	// From 发送者 ID
 	From     int64
-	Type     int
+	Type     int32
 	SendAt   int64
 	Content  string
 	Status   int

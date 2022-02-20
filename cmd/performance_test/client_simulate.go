@@ -222,11 +222,11 @@ func startMsg(count int, conn *websocket.Conn, end, start int32) {
 		u := strconv.FormatInt(time.Now().UnixNano(), 10) + genRndString(10)
 		m := &message.UpChatMessage{
 			Mid:     1,
-			CSeq:    1,
+			Seq:     1,
 			To:      to,
 			Type:    1,
 			Content: u,
-			CTime:   time.Now().Unix(),
+			SendAt:  time.Now().Unix(),
 		}
 		msg := message.NewMessage(0, message.ActionChatMessage, m)
 		s, _ := c.Encode(msg)

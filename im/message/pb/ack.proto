@@ -1,0 +1,25 @@
+syntax = "proto3";
+package com.github.dengzii.im.msg.proto;
+
+option go_package = "/pb_msg";
+
+message AckRequest {
+  int64  seq = 1;
+  int64  mid = 2;
+  int64   from = 3;
+}
+
+message AckGroupMessage {
+  int64  gid = 1;
+  int64  mid = 2;
+  int64   seq = 3;
+}
+
+message AckMessage {
+  int64  seq = 1;
+  int64  mid = 2;
+}
+
+message AckNotify {
+  int64  mid = 2;
+}

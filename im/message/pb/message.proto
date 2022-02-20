@@ -1,10 +1,41 @@
 syntax = "proto3";
 package com.github.dengzii.im.msg.proto;
 
-option go_package = "/pb";
+option go_package = "/pb_msg";
 
-message SearchRequest {
-  string query = 1;
-  int32 page_number = 2;
-  int32 result_per_page = 3;
+message PbCommMessage {
+  int64 ver = 1;
+  int64 seq = 2;
+  string action = 3;
+  bytes data = 4;
+}
+
+message ChatMessage {
+  int64 mid = 1;
+  int64 seq = 2;
+  int64 from = 3;
+  int64 to = 4;
+  int32 type = 5;
+  string content = 6;
+  int64 sendAt = 7;
+}
+
+message GroupMessage {
+  int64 mid = 1;
+  int64 seq = 2;
+  int64 from = 3;
+  int64 to = 4;
+  int32 type = 5;
+  string content = 6;
+  int64 sendAt = 7;
+}
+
+message GroupNotify {
+  int64 mid = 1;
+  int64 gid = 2;
+  int64 seq = 3;
+  int64 timestamp = 4;
+  int32 type = 5;
+  bytes data = 6;
+
 }

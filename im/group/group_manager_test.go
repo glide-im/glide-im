@@ -65,12 +65,12 @@ func TestDefaultManager_dispatch(t *testing.T) {
 
 	msg := &message.UpChatMessage{
 		Mid:     1,
-		CSeq:    1,
+		Seq:     1,
 		From:    1,
 		To:      1,
 		Type:    1,
 		Content: "HelloWorld",
-		CTime:   time.Now().Unix(),
+		SendAt:  time.Now().Unix(),
 	}
 
 	for i := 0; i < 4; i++ {
@@ -94,12 +94,12 @@ func TestDefaultManager_dispatch2(t *testing.T) {
 
 	msg := &message.UpChatMessage{
 		Mid:     1,
-		CSeq:    1,
+		Seq:     1,
 		From:    1,
 		To:      1,
 		Type:    1,
 		Content: "HelloWorld",
-		CTime:   time.Now().Unix(),
+		SendAt:  time.Now().Unix(),
 	}
 	msg.Mid = 2
 	err := dispatch(1, msg)
