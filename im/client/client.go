@@ -25,7 +25,7 @@ var pool *ants.Pool
 
 func init() {
 	var err error
-	pool, err = ants.NewPool(10_0000,
+	pool, err = ants.NewPool(50_0000,
 		ants.WithNonblocking(true),
 		ants.WithPanicHandler(func(i interface{}) {
 			logger.E("")

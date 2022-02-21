@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"github.com/panjf2000/ants/v2"
 	"github.com/wcharczuk/go-chart"
 	"go_im/im/api/test"
 	"go_im/im/dao/uid"
@@ -51,8 +52,21 @@ var dialer = websocket.Dialer{
 var host = "127.0.0.1"
 var onlinePeerSecond = time.Millisecond * 20
 var loginAfterConnected = time.Millisecond * 100
-var totalUser = 8000
-var msgPeerClient = 850
+var totalUser = 4000
+var msgPeerClient = 800
+
+var pool100K *ants.Pool
+var pool30K *ants.Pool
+
+func init() {
+	var err error
+	pool100K, err = ants.NewPool(10_0000, ants.WithNonblocking(true))
+	if err != nil {
+	}
+	pool30K, err = ants.NewPool(30000, ants.WithNonblocking(true))
+	if err != nil {
+	}
+}
 
 func RunClientMsg() {
 
@@ -152,7 +166,7 @@ func connect(uid int64, closed chan interface{}) *websocket.Conn {
 			case <-closed:
 				break
 			default:
-				_, b, e := con.ReadMessage()
+				_, _, e := con.ReadMessage()
 				if e != nil {
 					v, ok := <-closed
 					if v != nil && ok {
@@ -162,7 +176,7 @@ func connect(uid int64, closed chan interface{}) *websocket.Conn {
 					break
 				} else {
 					atomic.AddInt64(receiveMsg, 1)
-					handleReceivedMessage(b)
+					//handleReceivedMessage(b)
 				}
 			}
 		}
@@ -183,7 +197,7 @@ func connect(uid int64, closed chan interface{}) *websocket.Conn {
 
 func handleReceivedMessage(b []byte) {
 	recvTime := time.Now()
-	go func() {
+	err := pool100K.Submit(func() {
 		m := message.NewEmptyMessage()
 		er := c.Decode(b, m)
 		if er != nil {
@@ -203,7 +217,10 @@ func handleReceivedMessage(b []byte) {
 			delete(sentMessage, m2.Content)
 			sentMsgMu.Unlock()
 		}
-	}()
+	})
+	if err != nil {
+		panic(err)
+	}
 }
 
 func startMsg(count int, conn *websocket.Conn, end, start int32) {
@@ -232,16 +249,19 @@ func startMsg(count int, conn *websocket.Conn, end, start int32) {
 			panic(err)
 		}
 		er := conn.WriteMessage(websocket.BinaryMessage, msgBytes)
-		go func() {
-			sentMsgMu.Lock()
-			sentMessage[u] = time.Now().UnixNano()
-			sentMsgMu.Unlock()
-		}()
 		if er != nil {
-			logger.E(er.Error())
+			logger.E("%v", er.Error())
 			break
 		} else {
 			atomic.AddInt64(sendMsg, 1)
+		}
+		err = pool30K.Submit(func() {
+			sentMsgMu.Lock()
+			sentMessage[u] = time.Now().UnixNano()
+			sentMsgMu.Unlock()
+		})
+		if err != nil {
+			logger.E("%v", err)
 		}
 	}
 }

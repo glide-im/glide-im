@@ -1,13 +1,13 @@
 package client
 
 import (
-	"go_im/im/comm"
 	"go_im/im/conn"
 	"go_im/im/dao/uid"
 	"go_im/im/message"
 	"go_im/im/statistics"
 	"go_im/pkg/logger"
 	"strconv"
+	"sync"
 )
 
 // Manager 客户端管理入口
@@ -216,23 +216,26 @@ func (d *devices) size() int {
 }
 
 type clients struct {
-	*comm.Mutex
+	m       sync.RWMutex
 	clients map[int64]*devices
 }
 
 func newClients() *clients {
 	ret := new(clients)
-	ret.Mutex = new(comm.Mutex)
+	ret.m = sync.RWMutex{}
 	ret.clients = make(map[int64]*devices)
 	return ret
 }
 
 func (g *clients) size() int {
+	g.m.RLock()
+	defer g.m.RUnlock()
 	return len(g.clients)
 }
 
 func (g *clients) get(uid int64) *devices {
-	defer g.LockUtilReturn()()
+	g.m.RLock()
+	defer g.m.RUnlock()
 	cl, ok := g.clients[uid]
 	if ok && cl.size() != 0 {
 		return cl
@@ -241,12 +244,15 @@ func (g *clients) get(uid int64) *devices {
 }
 
 func (g *clients) contains(uid int64) bool {
+	g.m.RLock()
+	defer g.m.RUnlock()
 	_, ok := g.clients[uid]
 	return ok
 }
 
 func (g *clients) add(uid int64, device int64, c IClient) {
-	defer g.LockUtilReturn()()
+	g.m.Lock()
+	defer g.m.Unlock()
 	cs, ok := g.clients[uid]
 	if ok {
 		cs.put(device, c)
@@ -258,7 +264,8 @@ func (g *clients) add(uid int64, device int64, c IClient) {
 }
 
 func (g *clients) delete(uid int64, device int64) {
-	defer g.LockUtilReturn()()
+	g.m.Lock()
+	defer g.m.Unlock()
 	d, ok := g.clients[uid]
 	if ok {
 		d.remove(device)

@@ -29,7 +29,7 @@ func Init() {
 	client.MessageHandleFunc = messageHandler
 
 	var err error
-	execPool, err = ants.NewPool(100_0000,
+	execPool, err = ants.NewPool(50_0000,
 		ants.WithNonblocking(true),
 		ants.WithPanicHandler(onHandleMessagePanic),
 		ants.WithPreAlloc(true),

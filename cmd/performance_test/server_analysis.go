@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-var cTestPoints = 1
+var cTestPoints = 2
 
 func main() {
 	RunAnalysisServer()
