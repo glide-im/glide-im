@@ -51,3 +51,12 @@ type CommMessage struct {
 	Action string
 	Data   Data
 }
+
+func NewMessage(seq int64, action string, data interface{}) CommMessage {
+	return CommMessage{
+		Ver:    0,
+		Seq:    seq,
+		Action: action,
+		Data:   Data{des: data},
+	}
+}

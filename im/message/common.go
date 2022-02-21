@@ -10,11 +10,9 @@ type Message struct {
 }
 
 func NewMessage(seq int64, action Action, data interface{}) *Message {
-	ret := new(Message)
-	ret.Seq = seq
-	ret.Action = string(action)
-	ret.Data = json2.NewData(data)
-	return ret
+	return &Message{
+		json2.NewMessage(seq, string(action), data),
+	}
 }
 
 func (m *Message) DeserializeData(v interface{}) error {
@@ -22,5 +20,5 @@ func (m *Message) DeserializeData(v interface{}) error {
 }
 
 func (m *Message) String() string {
-	return fmt.Sprintf("Message{Seq=%d, Action=%s, Data=%s}", m.Seq, m.Action)
+	return fmt.Sprintf("Message{Seq=%d, Action=%s, Data=%s}", m.Seq, m.Action, m.Data)
 }

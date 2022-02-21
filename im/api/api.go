@@ -13,6 +13,7 @@ import (
 	"go_im/im/api/user"
 	"go_im/im/message"
 	"go_im/pkg/logger"
+	"strings"
 )
 
 var Handler ApiHandler = NewDefaultRouter()
@@ -109,15 +110,15 @@ func (a *Routers) handle(uid int64, device int64, message *message.Message) erro
 }
 
 const (
-	actionLogin    message.Action = "api.user.login"
-	actionRegister                = "api.user.register"
-	actionAuth                    = "api.user.auth"
-	actionEcho                    = "api.app.echo"
+	actionLogin    string = "api.user.login"
+	actionRegister        = "api.user.register"
+	actionAuth            = "api.user.auth"
+	actionEcho            = "api.app.echo"
 )
 
 func (a *Routers) intercept(uid int64, device int64, message *message.Message) error {
 
-	if message.Action.Contains("api.test") {
+	if strings.HasPrefix(message.Action, "api.test") {
 		return nil
 	}
 

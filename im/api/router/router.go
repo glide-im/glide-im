@@ -27,8 +27,8 @@ type path struct {
 	index int
 }
 
-func newPath(action message.Action) path {
-	split := strings.Split(string(action), ".")
+func newPath(action string) path {
+	split := strings.Split(action, ".")
 	return path{
 		split: split,
 		index: 0,
@@ -48,7 +48,7 @@ type Context struct {
 	Uid    int64
 	Device int64
 	Seq    int64
-	Action message.Action
+	Action string
 	R      func(message *message.Message)
 }
 

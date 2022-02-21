@@ -200,7 +200,7 @@ func (c *Client) readMessage() {
 STOP:
 	c.hb.Cancel()
 	atomic.StoreInt32(&c.readClosed, 1)
-	close(done)
+	done <- struct{}{}
 	id, device := c.getID()
 	logger.D("client read closed, id=%d, device=%d", id, device)
 }

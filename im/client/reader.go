@@ -8,9 +8,8 @@ import (
 
 var messageReader MessageReader
 
-var codec message.Codec = message.ProtobufCodec{}
-
-//var codec message.Codec = message.JsonCodec{}
+//var codec message.Codec = message.ProtobufCodec{}
+var codec message.Codec = message.JsonCodec{}
 
 // recyclePool 回收池, 减少临时对象, 回收复用 readerRes
 var recyclePool sync.Pool
@@ -53,25 +52,22 @@ type MessageReader interface {
 type defaultReader struct{}
 
 func (d *defaultReader) ReadCh(conn conn.Connection) (<-chan *readerRes, chan<- struct{}) {
-	c := make(chan *readerRes)
+	c := make(chan *readerRes, 5)
 	done := make(chan struct{})
 	// TODO 2021-12-3 IO重构
 	go func() {
 		for {
 			select {
-			case _, ok := <-done:
-				if !ok {
-					goto DONE
-				} else {
-					goto CLOSE
-				}
+			case <-done:
+				goto CLOSE
 			default:
 				m, err := d.Read(conn)
 				res := recyclePool.Get().(*readerRes)
+				res.err = err
 				if err != nil {
+					c <- res
 					goto DONE
 				}
-				res.err = err
 				res.m = m
 				c <- res
 			}
@@ -86,11 +82,11 @@ func (d *defaultReader) ReadCh(conn conn.Connection) (<-chan *readerRes, chan<- 
 
 func (d *defaultReader) Read(conn conn.Connection) (*message.Message, error) {
 	// TODO 2021-12-3 校验数据包
-	m := message.Message{}
+	m := &message.Message{}
 	bytes, err := conn.Read()
 	if err != nil {
 		return nil, err
 	}
 	err = codec.Decode(bytes, m)
-	return &m, err
+	return m, err
 }

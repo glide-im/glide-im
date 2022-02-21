@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/wcharczuk/go-chart"
@@ -52,7 +51,7 @@ var dialer = websocket.Dialer{
 var host = "127.0.0.1"
 var onlinePeerSecond = time.Millisecond * 20
 var loginAfterConnected = time.Millisecond * 100
-var totalUser = 60000
+var totalUser = 10
 var msgPeerClient = 400
 
 func RunClientMsg() {
@@ -178,7 +177,7 @@ func handleReceivedMessage(b []byte) {
 	recvTime := time.Now()
 	go func() {
 		m := message.Message{}
-		er := json.Unmarshal(b, &m)
+		er := c.Decode(b, &m)
 		if er != nil {
 			return
 		}
@@ -229,8 +228,11 @@ func startMsg(count int, conn *websocket.Conn, end, start int32) {
 			SendAt:  time.Now().Unix(),
 		}
 		msg := message.NewMessage(0, message.ActionChatMessage, m)
-		s, _ := c.Encode(msg)
-		er := conn.WriteMessage(websocket.TextMessage, s)
+		jsonMsg, err := c.Encode(msg)
+		if err != nil {
+			panic(err)
+		}
+		er := conn.WriteMessage(websocket.TextMessage, jsonMsg)
 		go func() {
 			sentMsgMu.Lock()
 			sentMessage[u] = time.Now().UnixNano()

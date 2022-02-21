@@ -7,7 +7,7 @@ type MessageResponse struct {
 	CliSeq   int64
 	From     int64
 	To       int64
-	Type     int
+	Type     int32
 	SendAt   int64
 	CreateAt int64
 	Content  string
@@ -19,7 +19,7 @@ type GroupMessageResponse struct {
 	Sender   int64
 	Gid      int64
 	Seq      int64
-	Type     int
+	Type     int32
 	SendAt   int64
 	Content  string
 	Status   int
