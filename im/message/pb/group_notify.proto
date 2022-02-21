@@ -1,0 +1,12 @@
+syntax = "proto3";
+package com.github.dengzii.im.msg.proto;
+
+option go_package = "/pb_msg";
+
+message GroupNotifyMemberAdded {
+  repeated int64 uid = 1;
+}
+
+message GroupNotifyMemberRemove {
+  repeated int64 uid = 1;
+}

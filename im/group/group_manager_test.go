@@ -63,19 +63,11 @@ func TestDefaultManager_dispatch(t *testing.T) {
 
 	initUserMock(1, uid...)
 
-	msg := &message.UpChatMessage{
-		Mid:     1,
-		Seq:     1,
-		From:    1,
-		To:      1,
-		Type:    1,
-		Content: "HelloWorld",
-		SendAt:  time.Now().Unix(),
-	}
+	msg := message.NewChatMessage(1, 1, 1, 1, 1, "HelloWorld", time.Now().Unix())
 
 	for i := 0; i < 4; i++ {
 		time.Sleep(time.Millisecond)
-		e := dispatch(1, msg)
+		e := dispatch(1, &msg)
 		if e != nil {
 			t.Error(e)
 		}
@@ -92,15 +84,8 @@ func TestDefaultManager_dispatch2(t *testing.T) {
 	initMock()
 	initUserMock(1, 1, 2, 3, 4)
 
-	msg := &message.UpChatMessage{
-		Mid:     1,
-		Seq:     1,
-		From:    1,
-		To:      1,
-		Type:    1,
-		Content: "HelloWorld",
-		SendAt:  time.Now().Unix(),
-	}
+	msg1 := message.NewChatMessage(1, 1, 1, 1, 1, "", time.Now().Unix())
+	msg := &msg1
 	msg.Mid = 2
 	err := dispatch(1, msg)
 	if err != nil {
@@ -125,6 +110,6 @@ func TestDefaultManager_dispatch2(t *testing.T) {
 	time.Sleep(time.Second * 3)
 }
 
-func dispatch(gid int64, chatMessage *message.UpChatMessage) error {
+func dispatch(gid int64, chatMessage *message.ChatMessage) error {
 	return DispatchMessage(gid, chatMessage)
 }

@@ -60,7 +60,7 @@ type Group struct {
 	dissolved bool
 
 	// messages 群消息队列
-	messages chan *message.DownGroupMessage
+	messages chan *message.ChatMessage
 	// notify 群通知队列
 	notify chan *message.GroupNotify
 
@@ -80,7 +80,7 @@ func newGroup(gid int64) *Group {
 	ret.mu = comm.NewMutex()
 	ret.members = map[int64]*memberInfo{}
 	ret.startup = strconv.FormatInt(time.Now().Unix(), 10)
-	ret.messages = make(chan *message.DownGroupMessage, 100)
+	ret.messages = make(chan *message.ChatMessage, 100)
 	ret.notify = make(chan *message.GroupNotify, 10)
 	ret.checkActive = tw.After(messageQueueSleep)
 	ret.queueRunning = 0
@@ -101,7 +101,7 @@ func (g *Group) EnqueueNotify(msg *message.GroupNotify) error {
 	return g.checkMsgQueue()
 }
 
-func (g *Group) EnqueueMessage(msg *message.UpChatMessage, recall bool) (int64, error) {
+func (g *Group) EnqueueMessage(msg *message.ChatMessage, recall bool) (int64, error) {
 
 	g.mu.Lock()
 	mf, exist := g.members[msg.From]
@@ -149,15 +149,10 @@ func (g *Group) EnqueueMessage(msg *message.UpChatMessage, recall bool) (int64, 
 		return 0, err
 	}
 
-	dMsg := &message.DownGroupMessage{
-		Mid:     msg.Mid,
-		Seq:     seq,
-		From:    msg.From,
-		To:      g.gid,
-		Type:    msg.Type,
-		Content: msg.Content,
-		SendAt:  now,
-	}
+	dMsg := msg
+	msg.Seq = seq
+	msg.To = g.gid
+	msg.SendAt = now
 	if err != nil {
 		return 0, err
 	}

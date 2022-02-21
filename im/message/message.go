@@ -1,96 +1,71 @@
 package message
 
-// UpChatMessage 上行消息, 表示服务端收到发送者的消息
-type UpChatMessage struct {
-	// Mid 消息ID
-	Mid int64
-	// Seq 发送者消息 seq
-	Seq int64
-	// From internal
-	From int64
-	// To 接收者 ID
-	To int64
-	// Type 消息类型
-	Type int32
-	// Content 消息内容
-	Content string
-	// SendAt 发送时间
-	SendAt int64
+import (
+	"go_im/im/message/pb/pb_msg"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
+)
+
+// ChatMessage 上行消息, 表示服务端收到发送者的消息
+type ChatMessage struct {
+	pb_msg.ChatMessage
 }
 
-// DownChatMessage 表示服务端分发给接受者的聊天消息
-type DownChatMessage struct {
-	Mid     int64
-	Seq     int64
-	From    int64
-	To      int64
-	Type    int32
-	Content string
-	SendAt  int64
-}
-
-// DownGroupMessage 下行群消息
-type DownGroupMessage struct {
-	Mid int64
-	// Seq 群消息 Seq
-	Seq     int64
-	To      int64
-	Type    int32
-	From    int64
-	Content string
-	SendAt  int64
-}
-
-// CustomerServiceMessage 表示客服消息
-type CustomerServiceMessage struct {
-	// sender's id
-	Sender int64
-	// receiver's id
-	Receiver int64
-	// customer service id
-	CsId int64
-
-	ChatId      int64
-	UserChatId  int64
-	MessageType int8
-	Message     string
-	SendAt      int64
-}
-
-// AckRequest 接收者回复给服务端确认收到消息
-type AckRequest struct {
-	Seq  int64
-	Mid  int64
-	From int64
-}
-
-type AckGroupMessage struct {
-	Gid int64
-	Mid int64
-	Seq int64
+func NewChatMessage(mid, seq, from, to int64, typ int32, content string, sendAt int64) ChatMessage {
+	return ChatMessage{
+		pb_msg.ChatMessage{
+			Mid:     mid,
+			Seq:     seq,
+			From:    from,
+			To:      to,
+			Type:    typ,
+			Content: content,
+			SendAt:  sendAt,
+		},
+	}
 }
 
 // AckMessage 服务端通知发送者的服务端收到消息
 type AckMessage struct {
-	Mid int64
-	Seq int64
+	pb_msg.AckMessage
+}
+
+func NewAckMessage(mid int64, seq int64) AckMessage {
+	return AckMessage{
+		pb_msg.AckMessage{Mid: mid, Seq: seq},
+	}
 }
 
 // AckNotify 服务端下发给发送者的消息送达通知
 type AckNotify struct {
-	Mid int64
+	pb_msg.AckNotify
+}
+
+func NewAckNotify(mid int64) AckNotify {
+	return AckNotify{
+		pb_msg.AckNotify{Mid: mid},
+	}
 }
 
 type GroupNotify struct {
-	Mid       int64
-	Gid       int64
-	Type      int64
-	Seq       int64
-	Timestamp int64
-	Data      interface{}
+	pb_msg.GroupNotify
 }
 
-type Recall struct {
-	RecallBy int64
-	Mid      int64
+func NewGroupNotify(mid, gid int64, seq int64, typ int64, timestamp int64, data interface{}) *GroupNotify {
+	notify := &GroupNotify{
+		pb_msg.GroupNotify{
+			Mid:       mid,
+			Gid:       gid,
+			Type:      int32(typ),
+			Seq:       seq,
+			Timestamp: timestamp,
+			Data:      &anypb.Any{},
+		},
+	}
+	message, ok := data.(proto.Message)
+	if !ok {
+		return notify
+	}
+	_ = notify.Data.MarshalFrom(message)
+	return notify
 }

@@ -9,7 +9,7 @@ import (
 var messageReader MessageReader
 
 //var codec message.Codec = message.ProtobufCodec{}
-var codec message.Codec = message.JsonCodec{}
+var codec message.Codec = message.DefaultCodec
 
 // recyclePool 回收池, 减少临时对象, 回收复用 readerRes
 var recyclePool sync.Pool
@@ -82,11 +82,11 @@ func (d *defaultReader) ReadCh(conn conn.Connection) (<-chan *readerRes, chan<- 
 
 func (d *defaultReader) Read(conn conn.Connection) (*message.Message, error) {
 	// TODO 2021-12-3 校验数据包
-	m := &message.Message{}
 	bytes, err := conn.Read()
 	if err != nil {
 		return nil, err
 	}
+	m := message.NewEmptyMessage()
 	err = codec.Decode(bytes, m)
 	return m, err
 }

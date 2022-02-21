@@ -1,0 +1,1 @@
+go test -v -run=TestRunAnalysisServer -cpuprofile="cpu.out"

@@ -1,24 +1,34 @@
 package message
 
 import (
+	"errors"
 	"fmt"
-	json2 "go_im/im/message/json"
+	"go_im/im/message/pb"
+	"go_im/im/message/pb/pb_msg"
+	"google.golang.org/protobuf/proto"
 )
 
 type Message struct {
-	json2.CommMessage
+	*pb_msg.CommMessage
 }
 
 func NewMessage(seq int64, action Action, data interface{}) *Message {
-	return &Message{
-		json2.NewMessage(seq, string(action), data),
-	}
+	message := Message{pb.NewMessage(seq, string(action), data)}
+	return &message
+}
+
+func NewEmptyMessage() *Message {
+	return &Message{&pb_msg.CommMessage{Data: &pb_msg.Any{}}}
 }
 
 func (m *Message) DeserializeData(v interface{}) error {
-	return m.Data.Deserialize(v)
+	pbMsg, ok := v.(proto.Message)
+	if !ok {
+		return errors.New("not proto.Message")
+	}
+	return m.Data.UnmarshalTo(pbMsg)
 }
 
 func (m *Message) String() string {
-	return fmt.Sprintf("Message{Seq=%d, Action=%s, Data=%s}", m.Seq, m.Action, m.Data)
+	return fmt.Sprintf("Message{Seq=%d, Action=%s, Data=%v}", m.Seq, m.Action, m.Data)
 }

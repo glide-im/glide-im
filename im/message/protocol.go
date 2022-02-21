@@ -6,6 +6,10 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+var ProtoBuffCodec = protobufCodec{}
+var JsonCodec = jsonCodec{}
+var DefaultCodec = ProtoBuffCodec
+
 func UnmarshallJson(json_ string, i interface{}) error {
 	return json.Unmarshal([]byte(json_), i)
 }
@@ -15,10 +19,10 @@ type Codec interface {
 	Encode(i interface{}) ([]byte, error)
 }
 
-type ProtobufCodec struct {
+type protobufCodec struct {
 }
 
-func (p ProtobufCodec) Decode(data []byte, i interface{}) error {
+func (p protobufCodec) Decode(data []byte, i interface{}) error {
 	message, ok := i.(proto.Message)
 	if !ok {
 		return errors.New("illegal argument, not implement proto.Message")
@@ -26,7 +30,7 @@ func (p ProtobufCodec) Decode(data []byte, i interface{}) error {
 	return proto.Unmarshal(data, message)
 }
 
-func (p ProtobufCodec) Encode(i interface{}) ([]byte, error) {
+func (p protobufCodec) Encode(i interface{}) ([]byte, error) {
 	message, ok := i.(proto.Message)
 	if !ok {
 		return nil, errors.New("illegal argument, not implement proto.Message")
@@ -34,13 +38,13 @@ func (p ProtobufCodec) Encode(i interface{}) ([]byte, error) {
 	return proto.Marshal(message)
 }
 
-type JsonCodec struct {
+type jsonCodec struct {
 }
 
-func (j JsonCodec) Decode(data []byte, i interface{}) error {
+func (j jsonCodec) Decode(data []byte, i interface{}) error {
 	return json.Unmarshal(data, i)
 }
 
-func (j JsonCodec) Encode(i interface{}) ([]byte, error) {
+func (j jsonCodec) Encode(i interface{}) ([]byte, error) {
 	return json.Marshal(i)
 }

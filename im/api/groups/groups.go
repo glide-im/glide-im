@@ -234,12 +234,7 @@ func dispatchGroupNotify(gid int64, typ int64, uid int64) error {
 		logger.E("get message id error:%v", err)
 		return err
 	}
-	notify := message.GroupNotify{
-		Mid:       id,
-		Gid:       gid,
-		Timestamp: time.Now().Unix(),
-		Type:      typ,
-		Data:      &message.GroupNotifyMemberAdded{Uid: []int64{uid}},
-	}
-	return apidep.GroupManager.DispatchNotifyMessage(gid, &notify)
+	n := message.NewGroupNotifyAdded([]int64{uid})
+	notify := message.NewGroupNotify(id, gid, 0, typ, time.Now().Unix(), &n)
+	return apidep.GroupManager.DispatchNotifyMessage(gid, notify)
 }

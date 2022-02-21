@@ -1,0 +1,9 @@
+syntax = "proto3";
+package com.github.dengzii.im.api.proto;
+
+option go_package = "/test";
+
+message TestLoginRequest {
+  int64 uid = 1;
+  int64 device = 2;
+}

@@ -137,7 +137,14 @@ func (r *Rt) invokeHandleFunc(info *Context, data interface{}) error {
 			reqParam = reflect.ValueOf(p).Interface()
 		} else {
 			// TODO replace single json serializer as interface or other.
-			r.tryUnmarshal(reqParam, data)
+			m, ok := data.(*message.Message)
+			if !ok {
+				return errors.New("not type of *message.Message")
+			}
+			err := m.DeserializeData(reqParam)
+			if err != nil {
+				return err
+			}
 		}
 		handleFuncArg = append(handleFuncArg, reqParam)
 	}
@@ -247,7 +254,7 @@ func (r *Router) Handle(uid int64, device int64, msg *message.Message) error {
 		apidep.SendMessageIfOnline(ctx.Uid, ctx.Device, message)
 	}
 	p := newPath(msg.Action)
-	return r.root.handle(p, ctx, msg.Data.Bytes())
+	return r.root.handle(p, ctx, msg)
 }
 
 func (r *Router) String() string {

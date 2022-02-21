@@ -1,62 +1,78 @@
 package json
 
-import (
-	"encoding/json"
-	"go_im/pkg/logger"
-)
-
-type Data struct {
-	des interface{}
+// ChatMessage 上行消息, 表示服务端收到发送者的消息
+type ChatMessage struct {
+	// Mid 消息ID
+	Mid int64
+	// Seq 发送者消息 seq
+	Seq int64
+	// From internal
+	From int64
+	// To 接收者 ID
+	To int64
+	// Type 消息类型
+	Type int32
+	// Content 消息内容
+	Content string
+	// SendAt 发送时间
+	SendAt int64
 }
 
-func NewData(d interface{}) Data {
-	return Data{
-		des: d,
-	}
+// DownGroupMessage 下行群消息
+type DownGroupMessage struct {
+	ChatMessage
 }
 
-func (d *Data) UnmarshalJSON(bytes []byte) error {
-	d.des = bytes
-	return nil
+// CustomerServiceMessage 表示客服消息
+type CustomerServiceMessage struct {
+	// sender's id
+	Sender int64
+	// receiver's id
+	Receiver int64
+	// customer service id
+	CsId int64
+
+	ChatId      int64
+	UserChatId  int64
+	MessageType int8
+	Message     string
+	SendAt      int64
 }
 
-func (d *Data) MarshalJSON() ([]byte, error) {
-	return json.Marshal(d.des)
+// AckRequest 接收者回复给服务端确认收到消息
+type AckRequest struct {
+	Seq  int64
+	Mid  int64
+	From int64
 }
 
-func (d *Data) Bytes() []byte {
-	bytes, ok := d.des.([]byte)
-	if ok {
-		return bytes
-	}
-	marshalJSON, err := d.MarshalJSON()
-	if err != nil {
-		logger.E("message data marshal json error %v", err)
-		return nil
-	}
-	return marshalJSON
+type AckGroupMessage struct {
+	Gid int64
+	Mid int64
+	Seq int64
 }
 
-func (d *Data) Deserialize(i interface{}) error {
-	s, ok := d.des.([]byte)
-	if ok {
-		return json.Unmarshal(s, i)
-	}
-	return nil
+// AckMessage 服务端通知发送者的服务端收到消息
+type AckMessage struct {
+	Mid int64
+	Seq int64
 }
 
-type CommMessage struct {
-	Ver    int64
-	Seq    int64
-	Action string
-	Data   Data
+// AckNotify 服务端下发给发送者的消息送达通知
+type AckNotify struct {
+	Mid int64
 }
 
-func NewMessage(seq int64, action string, data interface{}) CommMessage {
-	return CommMessage{
-		Ver:    0,
-		Seq:    seq,
-		Action: action,
-		Data:   Data{des: data},
-	}
+type GroupNotify struct {
+	Mid       int64
+	Gid       int64
+	Type      int64
+	Seq       int64
+	Timestamp int64
+	Data      interface{}
+}
+
+type Recall struct {
+	RecallBy int64
+	Mid      int64
 }

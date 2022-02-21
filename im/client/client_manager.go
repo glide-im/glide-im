@@ -143,6 +143,13 @@ func (c *DefaultManager) EnqueueMessage(uid int64, device int64, msg *message.Me
 		// offline
 		return
 	}
+	if device != 0 {
+		d := ds.get(device)
+		if d == nil {
+			return
+		}
+		d.EnqueueMessage(msg)
+	}
 	ds.foreach(func(deviceId int64, c IClient) {
 		if device != 0 && deviceId != device {
 			return

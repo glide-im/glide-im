@@ -63,7 +63,7 @@ type IGroupManager interface {
 	DispatchNotifyMessage(gid int64, message *message.GroupNotify) error
 
 	// DispatchMessage 发送聊天消息
-	DispatchMessage(gid int64, action message.Action, message *message.UpChatMessage) error
+	DispatchMessage(gid int64, action message.Action, message *message.ChatMessage) error
 }
 
 // TODO 2021-11-20 大群小群优化
@@ -158,7 +158,7 @@ func (m *DefaultManager) DispatchNotifyMessage(gid int64, msg *message.GroupNoti
 	return g.EnqueueNotify(msg)
 }
 
-func (m *DefaultManager) DispatchMessage(gid int64, action message.Action, msg *message.UpChatMessage) error {
+func (m *DefaultManager) DispatchMessage(gid int64, action message.Action, msg *message.ChatMessage) error {
 	//logger.D("GroupManager.HandleMessage: %v", msg)
 	m.mu.Lock()
 	g, ok := m.groups[gid]
@@ -178,7 +178,7 @@ func (m *DefaultManager) DispatchMessage(gid int64, action message.Action, msg *
 		return err
 	} else {
 		// notify sender, group message send successful
-		ack := message.NewMessage(0, message.ActionAckNotify, message.AckMessage{Mid: msg.Mid, Seq: seq})
+		ack := message.NewMessage(0, message.ActionAckNotify, message.NewAckMessage(msg.Mid, seq))
 		client.EnqueueMessage(msg.From, ack)
 	}
 

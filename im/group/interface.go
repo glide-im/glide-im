@@ -17,10 +17,10 @@ func DispatchNotifyMessage(gid int64, message *message.GroupNotify) error {
 }
 
 // DispatchMessage 发送聊天消息
-func DispatchMessage(gid int64, msg *message.UpChatMessage) error {
+func DispatchMessage(gid int64, msg *message.ChatMessage) error {
 	return Manager.DispatchMessage(gid, message.ActionChatMessage, msg)
 }
 
-func DispatchRecallMessage(gid int64, msg *message.UpChatMessage) error {
+func DispatchRecallMessage(gid int64, msg *message.ChatMessage) error {
 	return Manager.DispatchMessage(gid, message.ActionGroupMessageRecall, msg)
 }

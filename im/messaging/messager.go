@@ -13,7 +13,7 @@ import (
 // execPool 100 capacity goroutine pool, 假设每个消息处理需要10ms, 一个协程则每秒能处理100条消息
 var execPool *ants.Pool
 
-var messageHandlerFunMap = map[message.Action]func(from int64, msg *message.Message){
+var messageHandlerFunMap = map[message.Action]func(from int64, device int64, msg *message.Message){
 	message.ActionGroupMessageRecall: dispatchGroupRecallMsg,
 	message.ActionChatMessageRecall:  dispatchChatRecallMessage,
 	message.ActionChatMessage:        dispatchChatMessage,
@@ -46,7 +46,7 @@ func messageHandler(from int64, device int64, msg *message.Message) {
 		statistics.SMsgInput()
 		h, ok := messageHandlerFunMap[message.Action(msg.Action)]
 		if ok {
-			h(from, msg)
+			h(from, device, msg)
 			return
 		}
 		switch msg.Action {
@@ -80,7 +80,7 @@ func handleHeartbeat(from int64, device int64, msg *message.Message) {
 }
 
 // handleAckRequest 处理接收者收到消息发回来的确认消息
-func handleAckRequest(from int64, msg *message.Message) {
+func handleAckRequest(from int64, device int64, msg *message.Message) {
 	ackMsg := new(message.AckRequest)
 	if !unwrap(from, msg, ackMsg) {
 		return
@@ -91,7 +91,7 @@ func handleAckRequest(from int64, msg *message.Message) {
 }
 
 // dispatchCustomerServiceMsg 分发客服消息
-func dispatchCustomerServiceMsg(from int64, msg *message.Message) {
+func dispatchCustomerServiceMsg(from int64, device int64, msg *message.Message) {
 	csMsg := new(message.CustomerServiceMessage)
 	if !unwrap(from, msg, csMsg) {
 		return

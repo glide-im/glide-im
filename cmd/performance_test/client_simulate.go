@@ -21,7 +21,7 @@ import (
 )
 
 var uids []int64
-
+var c = message.DefaultCodec
 var rLock = sync.RWMutex{}
 var conns = map[int64]*websocket.Conn{}
 
@@ -51,8 +51,8 @@ var dialer = websocket.Dialer{
 var host = "127.0.0.1"
 var onlinePeerSecond = time.Millisecond * 20
 var loginAfterConnected = time.Millisecond * 100
-var totalUser = 10
-var msgPeerClient = 400
+var totalUser = 8000
+var msgPeerClient = 850
 
 func RunClientMsg() {
 
@@ -96,7 +96,7 @@ func RunClientMsg() {
 			//	}
 			//	wgConn.Done()
 			//}()
-			startMsg(msgPeerClient, conn, 100, 50)
+			startMsg(msgPeerClient, conn, 80, 50)
 			//rLock.RLock()
 			//delete(conns, id)
 			//rLock.RUnlock()
@@ -123,8 +123,12 @@ func exit(id int64, conn *websocket.Conn) {
 	if conn == nil {
 		return
 	}
-	m := message.NewMessage(0, "api.test.signout", "")
-	_ = conn.WriteJSON(m)
+	m := message.NewMessage(0, "api.test.signout", nil)
+	msgBytes, err := c.Encode(m)
+	if err != nil {
+		panic(err)
+	}
+	_ = conn.WriteMessage(websocket.BinaryMessage, msgBytes)
 	time.Sleep(time.Millisecond * 100)
 	_ = conn.Close()
 }
@@ -165,23 +169,27 @@ func connect(uid int64, closed chan interface{}) *websocket.Conn {
 	}()
 
 	time.Sleep(loginAfterConnected)
-	login := message.NewMessage(1, "api.test.login", test.TestLoginRequest{
+	login := message.NewMessage(1, "api.test.login", &test.TestLoginRequest{
 		Uid:    uid,
 		Device: 2,
 	})
-	_ = con.WriteJSON(login)
+	lBytes, err := c.Encode(login)
+	if err != nil {
+		return nil
+	}
+	_ = con.WriteMessage(websocket.BinaryMessage, lBytes)
 	return con
 }
 
 func handleReceivedMessage(b []byte) {
 	recvTime := time.Now()
 	go func() {
-		m := message.Message{}
-		er := c.Decode(b, &m)
+		m := message.NewEmptyMessage()
+		er := c.Decode(b, m)
 		if er != nil {
 			return
 		}
-		m2 := &message.DownChatMessage{}
+		m2 := &message.ChatMessage{}
 		er = m.DeserializeData(m2)
 		if er != nil {
 			return
@@ -197,8 +205,6 @@ func handleReceivedMessage(b []byte) {
 		}
 	}()
 }
-
-var c = message.JsonCodec{}
 
 func startMsg(count int, conn *websocket.Conn, end, start int32) {
 
@@ -219,20 +225,13 @@ func startMsg(count int, conn *websocket.Conn, end, start int32) {
 		}
 		rLock.RUnlock()
 		u := strconv.FormatInt(time.Now().UnixNano(), 10) + genRndString(10)
-		m := &message.UpChatMessage{
-			Mid:     1,
-			Seq:     1,
-			To:      to,
-			Type:    1,
-			Content: u,
-			SendAt:  time.Now().Unix(),
-		}
-		msg := message.NewMessage(0, message.ActionChatMessage, m)
-		jsonMsg, err := c.Encode(msg)
+		m := message.NewChatMessage(1, 1, 0, to, 1, u, time.Now().Unix())
+		msg := message.NewMessage(0, message.ActionChatMessage, &m)
+		msgBytes, err := c.Encode(msg)
 		if err != nil {
 			panic(err)
 		}
-		er := conn.WriteMessage(websocket.TextMessage, jsonMsg)
+		er := conn.WriteMessage(websocket.BinaryMessage, msgBytes)
 		go func() {
 			sentMsgMu.Lock()
 			sentMessage[u] = time.Now().UnixNano()

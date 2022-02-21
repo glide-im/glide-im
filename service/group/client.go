@@ -36,7 +36,7 @@ func (c *Client) DispatchNotifyMessage(gid int64, message *message.Message) erro
 	return c.Call(getContext(gid), "UpdateMember", nil, nil)
 }
 
-func (c *Client) DispatchMessage(gid int64, message *message.UpChatMessage) error {
+func (c *Client) DispatchMessage(gid int64, message *message.ChatMessage) error {
 	return c.Call(getContext(gid), "UpdateMember", nil, nil)
 }
 
@@ -47,7 +47,7 @@ func NewClientByRouter(srvId string, rtOpts *rpc.ClientOptions) (*Client, error)
 	if err != nil {
 		return nil, err
 	}
-	group.Manager = ret
+	//group.Manager = ret
 	return ret, nil
 }
 

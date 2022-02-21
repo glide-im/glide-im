@@ -10,13 +10,13 @@ import (
 )
 
 // dispatchChatMessage 分发用户单聊消息
-func dispatchChatMessage(from int64, m *message.Message) {
+func dispatchChatMessage(from int64, device int64, m *message.Message) {
 	if uid.IsTempId(from) {
 		logger.D("not sign in")
 		client.EnqueueMessage(from, message.NewMessage(0, message.ActionNotifyNeedAuth, ""))
 		return
 	}
-	msg := new(message.UpChatMessage)
+	msg := new(message.ChatMessage)
 	if !unwrap(from, m, msg) {
 		return
 	}
@@ -61,7 +61,7 @@ func dispatchChatMessage(from int64, m *message.Message) {
 	}
 
 	// 告诉客户端服务端已收到
-	ackChatMessage(from, msg.Mid)
+	ackChatMessage(from, device, msg.Mid)
 
 	// 对方不在线, 下发确认包
 	// TODO 2022-1-17 处理假在线, 假链接
@@ -77,20 +77,20 @@ func dispatchChatMessage(from int64, m *message.Message) {
 	}
 }
 
-func dispatchChatRecallMessage(from int64, msg *message.Message) {
-	dispatchChatMessage(from, msg)
+func dispatchChatRecallMessage(from int64, device int64, msg *message.Message) {
+	dispatchChatMessage(from, device, msg)
 }
 
 func ackNotifyMessage(from int64, mid int64) {
-	ackNotify := message.AckNotify{Mid: mid}
-	msg := message.NewMessage(0, message.ActionAckNotify, ackNotify)
+	ackNotify := message.NewAckNotify(mid)
+	msg := message.NewMessage(0, message.ActionAckNotify, &ackNotify)
 	client.EnqueueMessage(from, msg)
 }
 
-func ackChatMessage(from int64, mid int64) {
-	ackMsg := message.AckMessage{Mid: mid}
-	ack := message.NewMessage(0, message.ActionAckMessage, ackMsg)
-	client.EnqueueMessage(from, ack)
+func ackChatMessage(from int64, device int64, mid int64) {
+	ackMsg := message.NewAckMessage(mid, 0)
+	ack := message.NewMessage(0, message.ActionAckMessage, &ackMsg)
+	client.EnqueueMessageToDevice(from, device, ack)
 }
 
 // dispatchOffline 接收者不在线, 离线推送
@@ -99,18 +99,10 @@ func dispatchOffline(from int64, message *message.Message) {
 }
 
 // dispatchOnline 接收者在线, 直接投递消息
-func dispatchOnline(from int64, msg *message.UpChatMessage) {
+func dispatchOnline(from int64, msg *message.ChatMessage) {
 
-	receiverMsg := message.DownChatMessage{
-		Mid:     msg.Mid,
-		Seq:     msg.Seq,
-		From:    from,
-		To:      msg.To,
-		Type:    msg.Type,
-		Content: msg.Content,
-		SendAt:  msg.SendAt,
-	}
-
+	receiverMsg := msg
+	msg.From = from
 	dispatchMsg := message.NewMessage(-1, message.ActionChatMessage, receiverMsg)
 	client.EnqueueMessage(msg.To, dispatchMsg)
 }
