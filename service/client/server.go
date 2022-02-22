@@ -45,10 +45,7 @@ func (s *Server) EnqueueMessage(ctx context.Context, request *pb.EnqueueMessageR
 }
 
 func unwrapMessage(pbMsg *pb.Message) *message.Message {
-	return &message.Message{
-		Seq:    pbMsg.Seq,
-		Action: message.Action(pbMsg.Action),
-	}
+	return &message.Message{}
 }
 
 func newResponse(ok bool, msg string) *pb.Response {

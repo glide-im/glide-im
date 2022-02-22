@@ -40,7 +40,6 @@ func (c *Client) Echo(uid int64, message *message.Message) *pb.Response {
 	m := pb.Message{
 		Seq:    message.Seq,
 		Action: string(message.Action),
-		Data:   message.Data,
 	}
 	arg := &pb.HandleRequest{
 		Uid:     uid,
@@ -62,7 +61,6 @@ func (c *Client) Handle(uid int64, device int64, message *message.Message) {
 	m := pb.Message{
 		Seq:    message.Seq,
 		Action: string(message.Action),
-		Data:   message.Data,
 	}
 	arg := &pb.HandleRequest{
 		Uid:     uid,

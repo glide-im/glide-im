@@ -50,6 +50,7 @@ type CommMessage struct {
 	Seq    int64
 	Action string
 	Data   Data
+	Extra  map[string]string
 }
 
 func NewMessage(seq int64, action string, data interface{}) CommMessage {

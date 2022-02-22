@@ -9,6 +9,7 @@ message CommMessage {
   int64 seq = 2;
   string action = 3;
   optional google.protobuf.Any  data = 4;
+  map<string, string> extra = 5;
 }
 
 message ChatMessage {
