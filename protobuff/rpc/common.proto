@@ -1,7 +1,7 @@
 syntax = "proto3";
 package pro.glide;
 
-option go_package = "/pb";
+option go_package = "/pb_rpc";
 
 message Message {
   int64 seq = 1;

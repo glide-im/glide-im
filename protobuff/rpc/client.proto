@@ -1,0 +1,30 @@
+syntax = "proto3";
+package pro.glide;
+
+option go_package = "/pb_rpc";
+
+import 'common.proto';
+
+message GatewaySignInRequest{
+  int64  old = 2;
+  int64  uid = 1;
+  int64 device = 3;
+}
+
+message UidRequest{
+  int64  uid = 1;
+}
+
+message GatewayLogoutRequest {
+  int64  uid = 1;
+  int64 device = 3;
+}
+
+message EnqueueMessageRequest{
+  int64 uid = 1;
+  Message message = 2;
+}
+
+message AllClientResponse {
+  repeated int64 uid = 1;
+}

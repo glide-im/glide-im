@@ -27,11 +27,11 @@ func E(format string, logs ...interface{}) {
 }
 
 func I(format string, args ...interface{}) {
-	sugar.Infof(format, args...)
+	//sugar.Infof(format, args...)
 }
 
 func D(format string, args ...interface{}) {
-	sugar.Debugf(format, args...)
+	//sugar.Debugf(format, args...)
 }
 
 func W(format string, args ...interface{}) {

@@ -1,7 +1,7 @@
 package message
 
 import (
-	"go_im/im/message/pb/pb_msg"
+	"go_im/protobuff/pb_im"
 )
 
 const (
@@ -14,24 +14,24 @@ const (
 )
 
 type GroupNotifyMemberAdded struct {
-	pb_msg.GroupNotifyMemberAdded
+	pb_im.GroupNotifyMemberAdded
 }
 
 func NewGroupNotifyAdded(uid []int64) GroupNotifyMemberAdded {
 	return GroupNotifyMemberAdded{
-		pb_msg.GroupNotifyMemberAdded{
+		pb_im.GroupNotifyMemberAdded{
 			Uid: uid,
 		},
 	}
 }
 
 type GroupNotifyMemberRemove struct {
-	pb_msg.GroupNotifyMemberRemove
+	pb_im.GroupNotifyMemberRemove
 }
 
 func NewGroupNotifyRemove(uid []int64) GroupNotifyMemberRemove {
 	return GroupNotifyMemberRemove{
-		pb_msg.GroupNotifyMemberRemove{
+		pb_im.GroupNotifyMemberRemove{
 			Uid: uid,
 		},
 	}

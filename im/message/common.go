@@ -4,12 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"go_im/im/message/pb"
-	"go_im/im/message/pb/pb_msg"
+	"go_im/protobuff/pb_im"
 	"google.golang.org/protobuf/proto"
 )
 
 type Message struct {
-	*pb_msg.CommMessage
+	*pb_im.CommMessage
 }
 
 func NewMessage(seq int64, action Action, data interface{}) *Message {
@@ -18,7 +18,7 @@ func NewMessage(seq int64, action Action, data interface{}) *Message {
 }
 
 func NewEmptyMessage() *Message {
-	return &Message{&pb_msg.CommMessage{Data: &pb_msg.Any{}}}
+	return &Message{&pb_im.CommMessage{Data: &pb_im.Any{}}}
 }
 
 func (m *Message) DeserializeData(v interface{}) error {

@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 	"go_im/im/api"
-	"go_im/im/message"
+	"go_im/protobuff/pb_rpc"
 	"go_im/service/pb"
 	"go_im/service/rpc"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -13,19 +13,13 @@ type Server struct {
 	*rpc.BaseServer
 }
 
-func (s *Server) Handle(ctx context.Context, r *pb.HandleRequest, resp *emptypb.Empty) error {
+func (s *Server) Handle(ctx context.Context, r *pb_rpc.ApiHandleRequest, resp *emptypb.Empty) error {
 
-	api.Handle(r.Uid, 0, &message.Message{
-		Seq:    r.GetMessage().GetSeq(),
-		Action: message.Action(r.GetMessage().GetAction()),
-		Data:   r.GetMessage().GetData(),
-	})
+	api.Handle(r.GetUid(), r.GetDevice(), r.GetMessage())
 	return nil
 }
 
-func (s *Server) Echo(ctx context.Context, r *pb.HandleRequest, resp *pb.Response) error {
-	resp.Ok = true
-	resp.Message = r.Message.Data
+func (s *Server) Echo(ctx context.Context, r *pb_rpc.ApiHandleRequest, resp *pb.Response) error {
 	return nil
 }
 

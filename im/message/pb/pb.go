@@ -1,14 +1,14 @@
 package pb
 
 import (
-	"go_im/im/message/pb/pb_msg"
 	"go_im/pkg/logger"
+	"go_im/protobuff/pb_im"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func NewMessage(seq int64, action string, data interface{}) *pb_msg.CommMessage {
-	message := &pb_msg.CommMessage{
+func NewMessage(seq int64, action string, data interface{}) *pb_im.CommMessage {
+	message := &pb_im.CommMessage{
 		Ver:    0,
 		Seq:    seq,
 		Action: action,

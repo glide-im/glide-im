@@ -7,6 +7,7 @@ import (
 	"go_im/service/pb"
 	"go_im/service/route"
 	"go_im/service/rpc"
+	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -37,13 +38,13 @@ func NewClientByRouter(srvId string, rtOpts *rpc.ClientOptions) (*Client, error)
 }
 
 func (c *Client) Echo(uid int64, message *message.Message) *pb.Response {
-	m := pb.Message{
-		Seq:    message.Seq,
-		Action: string(message.Action),
-	}
+	//m := pb.Message{
+	//	Seq:    message.Seq,
+	//	Action: string(message.Action),
+	//}
 	arg := &pb.HandleRequest{
-		Uid:     uid,
-		Message: &m,
+		Uid: uid,
+		//Message: &m.,
 	}
 
 	resp := &pb.Response{
@@ -58,16 +59,18 @@ func (c *Client) Echo(uid int64, message *message.Message) *pb.Response {
 }
 
 func (c *Client) Handle(uid int64, device int64, message *message.Message) {
-	m := pb.Message{
-		Seq:    message.Seq,
-		Action: string(message.Action),
-	}
-	arg := &pb.HandleRequest{
-		Uid:     uid,
-		Message: &m,
-	}
+	ctx := context.WithValue(context.Background(), "from_gate", "node_id")
 
-	err := c.Call(context.Background(), "Handle", arg, &emptypb.Empty{})
+	any, err2 := anypb.New(message)
+	if err2 != nil {
+		return
+	}
+	request := pb.HandleRequest{
+		Uid:     uid,
+		Device:  device,
+		Message: any,
+	}
+	err := c.Call(ctx, "Handle", &request, &emptypb.Empty{})
 	if err != nil {
 		panic(err)
 	}

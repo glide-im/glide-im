@@ -1,5 +1,5 @@
 syntax = "proto3";
-package com.github.dengzii.im.api.proto;
+package pro.glide;
 
 option go_package = "/test";
 
