@@ -1,9 +1,9 @@
-package group
+package group_messaging
 
 import (
 	"context"
 	"go_im/im/message"
-	"go_im/service/pb"
+	"go_im/protobuff/pb_rpc"
 	"go_im/service/rpc"
 )
 
@@ -35,9 +35,6 @@ func NewServer(options *rpc.ServerOptions) *Server {
 	return s
 }
 
-func unwrapMessage(pbMsg *pb.Message) *message.Message {
-	return &message.Message{
-		Seq:    pbMsg.Seq,
-		Action: message.Action(pbMsg.Action),
-	}
+func unwrapMessage(pbMsg *pb_rpc.Message) *message.Message {
+	return &message.Message{}
 }

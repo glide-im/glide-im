@@ -1,4 +1,4 @@
-package api
+package api_service
 
 import (
 	"go_im/im/client"

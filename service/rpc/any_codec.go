@@ -5,7 +5,6 @@ import (
 	ggProto "github.com/gogo/protobuf/proto"
 	"github.com/smallnest/rpcx/protocol"
 	"github.com/smallnest/rpcx/share"
-	"go_im/service/pb"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -23,20 +22,20 @@ func init() {
 
 func (c PB4AnyWrapperCodec) Encode(i interface{}) ([]byte, error) {
 
-	if m, ok := i.(ggProto.Marshaler); ok {
-		return m.Marshal()
-	}
-	if m, ok := i.(proto.Message); ok {
-		a, ok2 := i.(*pb.Any)
-		if ok2 {
-			return proto.Marshal(a)
-		}
-		any, err := anypb.New(m)
-		if err != nil {
-			return nil, err
-		}
-		return proto.Marshal(any)
-	}
+	//if m, ok := i.(ggProto.Marshaler); ok {
+	//	return m.Marshal()
+	//}
+	//if m, ok := i.(proto.Message); ok {
+	//	a, ok2 := i.(*pb.Any)
+	//	if ok2 {
+	//		return proto.Marshal(a)
+	//	}
+	//	any, err := anypb.New(m)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	return proto.Marshal(any)
+	//}
 
 	return nil, fmt.Errorf("%T is not a pb.Message", i)
 }

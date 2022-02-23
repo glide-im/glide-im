@@ -1,12 +1,17 @@
-package api
+package api_service
 
 import (
 	"context"
 	"go_im/im/api"
+	"go_im/im/message"
 	"go_im/protobuff/pb_rpc"
-	"go_im/service/pb"
 	"go_im/service/rpc"
 	"google.golang.org/protobuf/types/known/emptypb"
+)
+
+const (
+	DefaultServiceName = "im_api_rpc_service"
+	DefaultListenPort  = 8081
 )
 
 type Server struct {
@@ -15,11 +20,10 @@ type Server struct {
 
 func (s *Server) Handle(ctx context.Context, r *pb_rpc.ApiHandleRequest, resp *emptypb.Empty) error {
 
-	api.Handle(r.GetUid(), r.GetDevice(), r.GetMessage())
-	return nil
+	return api.Handle(r.GetUid(), r.GetDevice(), &message.Message{CommMessage: r.GetMessage()})
 }
 
-func (s *Server) Echo(ctx context.Context, r *pb_rpc.ApiHandleRequest, resp *pb.Response) error {
+func (s *Server) Echo(ctx context.Context, r *pb_rpc.ApiHandleRequest, resp *pb_rpc.Response) error {
 	return nil
 }
 

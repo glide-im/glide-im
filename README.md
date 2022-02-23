@@ -14,7 +14,9 @@
 
 **性能**
 
-支持 20w 活跃用户同时聊天, [查看性能测试数据](https://github.com/Glide-IM/Glide-IM/tree/master/doc/performace_test.md).
+支持约 20w 活跃用户同时聊天(100Mbps)
+
+[查看测试数据](https://github.com/Glide-IM/Glide-IM/blob/master/doc/performance_test.md)
 
 **功能**
 
@@ -26,10 +28,6 @@
 
 * [ ] 分布式部署(已完成,优化中)
 * [ ] 客服聊天
-
-## SDK
-
-计划中...
 
 ## 讨论群
 

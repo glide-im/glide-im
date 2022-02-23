@@ -1,0 +1,54 @@
+[Etcd]
+Servers = [
+    "127.0.0.1:2379",
+    "127.0.0.1:2381",
+    "127.0.0.1:2383"
+]
+
+[Api]
+[Api.Server]
+    Addr = "0.0.0.0"
+    Port = 7071
+    Network = "tcp"
+    Name = "im_api"
+[Api.Client]
+    Addr = "0.0.0.0"
+    Port = 7071
+    Network = "tcp"
+    Name = "im_api"
+
+[Gateway]
+[Gateway.Server]
+    Addr = "0.0.0.0"
+    Port = 7072
+    Network = "tcp"
+    Name = "im_Gateway"
+[Gateway.Client]
+    Addr = "0.0.0.0"
+    Port = 7072
+    Network = "tcp"
+    Name = "im_Gateway"
+
+[GroupMessaging]
+[GroupMessaging.Server]
+    Addr = "0.0.0.0"
+    Port = 7073
+    Network = "tcp"
+    Name = "im_group_messaging"
+[GroupMessaging.Client]
+    Addr = "0.0.0.0"
+    Port = 7073
+    Network = "tcp"
+    Name = "im_group_messaging"
+
+[MessageRouter]
+[MessageRouter.Server]
+    Addr = "0.0.0.0"
+    Port = 7074
+    Network = "tcp"
+    Name = "im_message_router"
+[MessageRouter.Client]
+    Addr = "0.0.0.0"
+    Port = 7074
+    Network = "tcp"
+    Name = "im_message_router"

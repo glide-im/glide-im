@@ -1,4 +1,4 @@
-package client
+package gateway_service
 
 import (
 	"github.com/stretchr/testify/assert"

@@ -54,7 +54,10 @@ func messageHandler(from int64, device int64, msg *message.Message) {
 			handleHeartbeat(from, device, msg)
 		default:
 			if strings.HasPrefix(msg.Action, message.ActionApi) {
-				api.Handle(from, device, msg)
+				err := api.Handle(from, device, msg)
+				if err != nil {
+					logger.E("handle api message error %v", err)
+				}
 			} else {
 				client.EnqueueMessage(from, message.NewMessage(-1, message.ActionNotifyError, "unknown action"))
 				logger.W("receive a unknown action message: " + string(msg.Action))

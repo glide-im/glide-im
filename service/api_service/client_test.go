@@ -1,9 +1,7 @@
-package api
+package api_service
 
 import (
-	"github.com/stretchr/testify/assert"
 	"go_im/im/message"
-	"go_im/service/route"
 	"go_im/service/rpc"
 	"testing"
 	"time"
@@ -28,10 +26,6 @@ func TestNewClient(t *testing.T) {
 	time.Sleep(time.Second * 3)
 }
 
-func TestRegisterToRoute(t *testing.T) {
-	assert.Nil(t, route.RegisterService("client", etcd))
-}
-
 func TestNewClientByRouter(t *testing.T) {
 	cli, _ := NewClientByRouter("api", &rpc.ClientOptions{
 		Name:        "route",
@@ -40,11 +34,7 @@ func TestNewClientByRouter(t *testing.T) {
 	defer cli.Close()
 
 	for i := 0; i < 5; i++ {
-		r := cli.Echo(1, &message.Message{
-			Seq:    1,
-			Action: "api.app.echo",
-			Data:   "this is data",
-		})
+		r := cli.Echo(1, &message.Message{})
 		t.Log(r.Ok, r.Message)
 	}
 }

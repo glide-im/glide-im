@@ -19,12 +19,12 @@ import (
 var Handler ApiHandler = NewDefaultRouter()
 
 type ApiHandler interface {
-	Handle(uid int64, device int64, message *message.Message)
+	Handle(uid int64, device int64, message *message.Message) error
 }
 
 // Handle 处理一个 api 消息
-func Handle(uid int64, device int64, message *message.Message) {
-	Handler.Handle(uid, device, message)
+func Handle(uid int64, device int64, message *message.Message) error {
+	return Handler.Handle(uid, device, message)
 }
 
 // RunHttpServer 启动 http 服务器, 以 HTTP 服务方式访问 api
@@ -91,13 +91,14 @@ func (a *Routers) init() {
 	a.router = rt
 }
 
-func (a *Routers) Handle(uid int64, device int64, message *message.Message) {
+func (a *Routers) Handle(uid int64, device int64, message *message.Message) error {
 
 	logger.D("%v", message)
 	err := a.handle(uid, device, message)
 	if err != nil {
 		a.onError(uid, device, message, err)
 	}
+	return nil
 }
 
 func (a *Routers) handle(uid int64, device int64, message *message.Message) error {

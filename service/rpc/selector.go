@@ -1,11 +1,10 @@
-package route
+package rpc
 
 import (
 	"context"
 	"github.com/smallnest/rpcx/client"
 	"github.com/smallnest/rpcx/share"
 	"go_im/pkg/logger"
-	"go_im/service/rpc"
 )
 
 type selector struct {
@@ -18,7 +17,7 @@ func newSelector() *selector {
 	s := map[string]string{}
 	return &selector{
 		services: s,
-		round:    rpc.NewServerSelector(),
+		round:    NewServerSelector(),
 		tags:     map[string]string{},
 	}
 }
@@ -27,14 +26,14 @@ func (r *selector) Select(ctx context.Context, servicePath, serviceMethod string
 
 	m := ctx.Value(share.ReqMetaDataKey).(map[string]string)
 
-	if target, ok := m[ExtraTarget]; ok {
+	if target, ok := m["ExtraTarget"]; ok {
 		if _, ok := r.services[target]; ok {
 			return target
 		}
 		logger.E("unknown service addr, ExtraTarget:", target)
 	}
 
-	if tag, ok := m[ExtraTag]; ok {
+	if tag, ok := m["ExtraTag"]; ok {
 		if path, ok := r.tags[tag]; ok {
 			if _, ok := r.services[path]; ok {
 				logger.D("route by tag: %s=%s", tag, path)
