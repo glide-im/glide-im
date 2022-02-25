@@ -8,29 +8,16 @@ import (
 	"go_im/pkg/logger"
 	"strconv"
 	"sync"
+	"sync/atomic"
 )
 
-// Manager 客户端管理入口
-var Manager IClientManager = NewDefaultManager()
-
 type CommonInterface interface {
-	// ClientSignIn 给一个已存在的客户端设置一个新的 id, 若 uid 已存在, 则新增一个 device 共享这个 id
 	ClientSignIn(oldUid int64, uid int64, device int64)
 
-	// ClientLogout 指定 uid, device 的客户端退出
 	ClientLogout(uid int64, device int64)
 
 	// EnqueueMessage 尝试将消息放入指定 uid 的客户端
 	EnqueueMessage(uid int64, device int64, message *message.Message)
-
-	// IsDeviceOnline 返回指定 uid 的用户设备是否在线
-	IsDeviceOnline(uid, device int64) bool
-
-	// IsOnline 返回指定 uid 的用户是否在线
-	IsOnline(uid int64) bool
-
-	// AllClient 返回所有的客户端 id
-	AllClient() []int64
 }
 
 // IClientManager 管理所有客户端的创建, 消息派发, 退出等
@@ -46,18 +33,9 @@ type IClientManager interface {
 	CommonInterface
 }
 
-// EnqueueMessage Manager.EnqueueMessage 的快捷方法, 预留一个位置对消息入队列进行一些预处理
-func EnqueueMessage(uid int64, message *message.Message) {
-	//
-	Manager.EnqueueMessage(uid, 0, message)
-}
-
-func EnqueueMessageToDevice(uid int64, device int64, message *message.Message) {
-	Manager.EnqueueMessage(uid, device, message)
-}
-
 type DefaultManager struct {
-	clients *clients
+	clients     *clients
+	clientCount int64
 }
 
 func NewDefaultManager() *DefaultManager {
@@ -74,6 +52,7 @@ func (c *DefaultManager) ClientConnected(conn conn.Connection) int64 {
 	ret := newClient(conn)
 	ret.SetID(connUid, 0)
 	c.clients.add(connUid, 0, ret)
+	atomic.AddInt64(&c.clientCount, 1)
 	// 开始处理连接的消息
 	ret.Run()
 	return connUid
@@ -81,9 +60,10 @@ func (c *DefaultManager) ClientConnected(conn conn.Connection) int64 {
 
 func (c *DefaultManager) AddClient(uid int64, cs IClient) {
 	c.clients.add(uid, 0, cs)
+	atomic.AddInt64(&c.clientCount, 1)
 }
 
-// ClientSignIn 客户端登录, id 为连接时使用的临时标识, uid 为用户标识, device 用于区分不同设备
+// ClientSignIn 客户端登录, id 为连接时使用的临时标识, uid 为z用户标识, device 用于区分不同设备
 func (c *DefaultManager) ClientSignIn(id, uid_ int64, device int64) {
 	logger.D("client sign in origin-id=%d, uid=%d", id, uid_)
 	tempDs := c.clients.get(id)
@@ -104,6 +84,7 @@ func (c *DefaultManager) ClientSignIn(id, uid_ int64, device int64) {
 			existing.EnqueueMessage(message.NewMessage(0, message.ActionNotifyKickOut, "Your account is logged in on another device"))
 			existing.Exit()
 			logged.remove(device)
+			atomic.AddInt64(&c.clientCount, 1)
 		}
 		if logged.size() > 0 {
 			msg := "multi device login, device=" + strconv.FormatInt(device, 10)
@@ -134,6 +115,7 @@ func (c *DefaultManager) ClientLogout(uid_ int64, device int64) {
 	logDevice.SetID(uid.GenTemp(), 0)
 	logDevice.Exit()
 	cl.remove(device)
+	atomic.AddInt64(&c.clientCount, -1)
 	statistics.SConnExit()
 }
 
@@ -162,7 +144,7 @@ func (c *DefaultManager) EnqueueMessage(uid int64, device int64, msg *message.Me
 	})
 }
 
-func (c *DefaultManager) IsOnline(uid int64) bool {
+func (c *DefaultManager) isOnline(uid int64) bool {
 	ds := c.clients.get(uid)
 	if ds == nil {
 		return false
@@ -170,7 +152,7 @@ func (c *DefaultManager) IsOnline(uid int64) bool {
 	return ds.size() > 0
 }
 
-func (c *DefaultManager) IsDeviceOnline(uid, device int64) bool {
+func (c *DefaultManager) isDeviceOnline(uid, device int64) bool {
 	ds := c.clients.get(uid)
 	if ds == nil {
 		return false
@@ -178,7 +160,7 @@ func (c *DefaultManager) IsDeviceOnline(uid, device int64) bool {
 	return ds.get(device) != nil
 }
 
-func (c *DefaultManager) AllClient() []int64 {
+func (c *DefaultManager) allClient() []int64 {
 	var ret []int64
 	for k := range c.clients.clients {
 		if k > 0 {

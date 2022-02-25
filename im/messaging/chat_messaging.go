@@ -65,7 +65,7 @@ func dispatchChatMessage(from int64, device int64, m *message.Message) {
 
 	// 对方不在线, 下发确认包
 	// TODO 2022-1-17 处理假在线, 假链接
-	if !client.Manager.IsOnline(msg.To) {
+	if !client.IsOnline(msg.To) {
 		ackNotifyMessage(from, msg.Mid)
 		err := msgdao.AddOfflineMessage(msg.To, msg.Mid)
 		if err != nil {

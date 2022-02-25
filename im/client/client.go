@@ -13,9 +13,6 @@ import (
 	"time"
 )
 
-// MessageHandleFunc 所有客户端消息都传递到该函数处理
-var MessageHandleFunc func(from int64, device int64, message *message.Message) = nil
-
 var tw = timingwheel.NewTimingWheel(time.Millisecond*500, 3, 20)
 
 // HeartbeatDuration 心跳间隔, 默认5分钟
@@ -176,7 +173,7 @@ func (c *Client) readMessage() {
 		case msg, ok := <-readChan:
 			if !ok {
 				//if Manager.IsDeviceOnline(c.id, c.device) {
-				//	Manager.ClientLogout(c.id, c.device)
+				//	Manager.Logout(c.id, c.device)
 				//}
 				//goto STOP
 				continue
@@ -258,7 +255,7 @@ func (c *Client) handleError(err error) bool {
 		logger.E("handle message error: %s", err.Error())
 	}
 	if !uid.IsTempId(atomic.LoadInt64(&c.id)) {
-		Manager.ClientLogout(atomic.LoadInt64(&c.id), c.device)
+		Logout(atomic.LoadInt64(&c.id), c.device)
 	}
 	return true
 }

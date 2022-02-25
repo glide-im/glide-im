@@ -8,11 +8,11 @@ import (
 type TestApi struct{}
 
 func (t *TestApi) TestLogin(info *route.Context, request *TestLoginRequest) error {
-	client.Manager.ClientSignIn(info.Uid, request.Uid, request.Device)
+	client.SignIn(info.Uid, request.Uid, request.Device)
 	return nil
 }
 
 func (t *TestApi) TestSignOut(info *route.Context) error {
-	client.Manager.ClientLogout(info.Uid, 2)
+	client.Logout(info.Uid, 2)
 	return nil
 }

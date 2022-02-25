@@ -17,18 +17,13 @@ func SendMessage(uid int64, device int64, m *message.Message) {
 }
 
 func SendMessageIfOnline(uid int64, device int64, m *message.Message) {
-	if ClientManager.IsDeviceOnline(uid, device) {
-		SendMessage(uid, device, m)
-	}
+	SendMessage(uid, device, m)
 }
 
 type ClientManagerInterface interface {
 	ClientSignIn(oldUid int64, uid int64, device int64)
 	ClientLogout(uid int64, device int64)
 	EnqueueMessage(uid int64, device int64, message *message.Message)
-	IsDeviceOnline(uid, device int64) bool
-	IsOnline(uid int64) bool
-	AllClient() []int64
 }
 
 type GroupManagerInterface interface {

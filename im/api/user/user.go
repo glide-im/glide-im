@@ -2,7 +2,6 @@ package user
 
 import (
 	"errors"
-	"go_im/im/api/apidep"
 	"go_im/im/api/comm"
 	"go_im/im/api/router"
 	"go_im/im/dao/userdao"
@@ -48,7 +47,8 @@ func (a *UserApi) GetOnlineUser(msg *route.Context) error {
 		Avatar   string
 		Nickname string
 	}
-	allClient := apidep.ClientManager.AllClient()
+	//goland:noinspection GoPreferNilSlice
+	allClient := []u{}
 	users := make([]u, len(allClient))
 
 	m := message.NewMessage(msg.Seq, comm.ActionSuccess, users)
