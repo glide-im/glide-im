@@ -40,7 +40,7 @@ func main() {
 	}
 	api.Handler = apiService
 
-	server := gateway_service.NewServer(&rpc.ServerOptions{
+	server := gateway.NewServer(&rpc.ServerOptions{
 		Name:        config.Gateway.Server.Name,
 		Network:     config.Gateway.Server.Network,
 		Addr:        config.Gateway.Server.Addr,

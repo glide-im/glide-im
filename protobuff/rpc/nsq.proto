@@ -1,0 +1,15 @@
+syntax = "proto3";
+package pro.glide;
+
+option go_package = "/pb_rpc";
+import public 'message.proto';
+
+message NSQUserMessage {
+  int64 uid = 1;
+  CommMessage message = 2;
+}
+
+message NSQGroupMessage {
+  int64 gid = 1;
+  CommMessage message = 2;
+}

@@ -11,19 +11,19 @@ type Server struct {
 	*rpc.BaseServer
 }
 
-func (s *Server) UpdateMember(ctx context.Context, request interface{}, replay interface{}) error {
+func (s *Server) UpdateMember(ctx context.Context, request *pb_rpc.CommMessage, replay *pb_rpc.Response) error {
 	panic("implement me")
 }
 
-func (s *Server) UpdateGroup(ctx context.Context, request interface{}, replay interface{}) error {
+func (s *Server) UpdateGroup(ctx context.Context, request *pb_rpc.CommMessage, replay *pb_rpc.Response) error {
 	panic("implement me")
 }
 
-func (s *Server) DispatchNotifyMessage(ctx context.Context, request interface{}, replay interface{}) error {
+func (s *Server) DispatchNotifyMessage(ctx context.Context, request *pb_rpc.CommMessage, replay *pb_rpc.Response) error {
 	panic("implement me")
 }
 
-func (s *Server) DispatchMessage(ctx context.Context, request interface{}, replay interface{}) error {
+func (s *Server) DispatchMessage(ctx context.Context, request *pb_rpc.CommMessage, replay *pb_rpc.Response) error {
 	panic("implement me")
 }
 
@@ -35,6 +35,6 @@ func NewServer(options *rpc.ServerOptions) *Server {
 	return s
 }
 
-func unwrapMessage(pbMsg *pb_rpc.Message) *message.Message {
+func unwrapMessage(pbMsg *pb_rpc.CommMessage) *message.Message {
 	return &message.Message{}
 }

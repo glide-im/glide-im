@@ -1,4 +1,4 @@
-package gateway_service
+package gateway
 
 import (
 	"context"
@@ -30,21 +30,21 @@ func NewServer(options *rpc.ServerOptions) *Server {
 }
 
 func (s *Server) ClientSignIn(ctx context.Context, request *pb_rpc.GatewaySignInRequest, reply *pb_rpc.Response) error {
-	client.Manager.ClientSignIn(request.GetOld(), request.GetUid(), request.GetDevice())
+	client.SignIn(request.GetOld(), request.GetUid(), request.GetDevice())
 	return nil
 }
 
 func (s *Server) ClientLogout(ctx context.Context, request *pb_rpc.GatewayLogoutRequest, reply *pb_rpc.Response) error {
-	client.Manager.ClientLogout(request.GetUid(), request.GetDevice())
+	client.Logout(request.GetUid(), request.GetDevice())
 	return nil
 }
 
 func (s *Server) EnqueueMessage(ctx context.Context, request *pb_rpc.EnqueueMessageRequest, reply *pb_rpc.Response) error {
-	client.Manager.EnqueueMessage(request.GetUid(), 0, unwrapMessage(request.Message))
+	client.EnqueueMessageToDevice(request.GetUid(), 0, unwrapMessage(request.Message))
 	return nil
 }
 
-func unwrapMessage(pb_rpcMsg *pb_rpc.Message) *message.Message {
+func unwrapMessage(pb_rpcMsg *pb_rpc.CommMessage) *message.Message {
 	return &message.Message{}
 }
 

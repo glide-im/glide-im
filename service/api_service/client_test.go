@@ -25,16 +25,3 @@ func TestNewClient(t *testing.T) {
 	client.Handle(0, 0, message.NewMessage(1, "api.app.echo", ""))
 	time.Sleep(time.Second * 3)
 }
-
-func TestNewClientByRouter(t *testing.T) {
-	cli, _ := NewClientByRouter("api", &rpc.ClientOptions{
-		Name:        "route",
-		EtcdServers: etcd,
-	})
-	defer cli.Close()
-
-	for i := 0; i < 5; i++ {
-		r := cli.Echo(1, &message.Message{})
-		t.Log(r.Ok, r.Message)
-	}
-}

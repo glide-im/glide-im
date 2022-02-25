@@ -1,4 +1,4 @@
-package gateway_service
+package gateway
 
 import (
 	"go_im/im/client"
@@ -35,14 +35,6 @@ func (m *manager) ClientSignIn(oldUid int64, uid int64, device int64) {
 	m.m.ClientSignIn(oldUid, uid, device)
 }
 
-func (m *manager) IsOnline(uid int64) bool {
-	return true
-}
-
-func (m *manager) IsDeviceOnline(uid, device int64) bool {
-	return true
-}
-
 func (m *manager) ClientLogout(uid int64, device int64) {
 
 	m.m.ClientLogout(uid, device)
@@ -50,8 +42,4 @@ func (m *manager) ClientLogout(uid int64, device int64) {
 
 func (m *manager) EnqueueMessage(uid int64, device int64, message *message.Message) {
 	m.m.EnqueueMessage(uid, device, message)
-}
-
-func (m *manager) AllClient() []int64 {
-	return m.m.AllClient()
 }

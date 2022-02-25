@@ -3,12 +3,6 @@ package pro.glide;
 
 option go_package = "/pb_rpc";
 
-message Message {
-  int64 seq = 1;
-  string action = 2;
-  string data = 3;
-}
-
 message Response {
   bool ok = 1;
   string message = 2;

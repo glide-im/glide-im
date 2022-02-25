@@ -1,13 +1,11 @@
 package main
 
 import (
-	"go_im/im/client"
 	"go_im/im/dao"
 	"go_im/im/group"
 	"go_im/pkg/db"
 	"go_im/service"
 	"go_im/service/api_service"
-	"go_im/service/gateway_service"
 	"go_im/service/group_messaging"
 	"go_im/service/rpc"
 )
@@ -21,15 +19,6 @@ func main() {
 		panic(err)
 	}
 	etcd := config.Etcd.Servers
-
-	clientGateway, err := gateway_service.NewClient(&rpc.ClientOptions{
-		Name:        config.Gateway.Client.Name,
-		EtcdServers: etcd,
-	})
-	if err != nil {
-		panic(err)
-	}
-	client.Manager = clientGateway
 
 	groupManager, err := group_messaging.NewClient(&rpc.ClientOptions{
 		Name:        config.GroupMessaging.Client.Name,

@@ -1,4 +1,4 @@
-package gateway_service
+package gateway
 
 import (
 	"context"
@@ -38,7 +38,7 @@ func (c *Client) ClientSignIn(id int64, uid int64, device int64) {
 		Device: device,
 	}
 	resp := &pb_rpc.Response{}
-	err := c.Call(getTagContext(id, device), "ClientSignIn", req, resp)
+	err := c.Call(getTagContext(id, device), "SignIn", req, resp)
 	if err != nil {
 
 	}
@@ -46,7 +46,7 @@ func (c *Client) ClientSignIn(id int64, uid int64, device int64) {
 
 func (c *Client) ClientLogout(uid int64, device int64) {
 	resp := &pb_rpc.Response{}
-	err := c.Call(getTagContext(uid, device), "ClientLogout", &pb_rpc.GatewayLogoutRequest{Uid: uid, Device: device}, resp)
+	err := c.Call(getTagContext(uid, device), "Logout", &pb_rpc.GatewayLogoutRequest{Uid: uid, Device: device}, resp)
 	if err != nil {
 
 	}
@@ -64,15 +64,11 @@ func (c *Client) EnqueueMessage(uid int64, device int64, message *message.Messag
 	}
 }
 
-func (c *Client) IsOnline(uid int64) bool {
+func (c *Client) isDeviceOnline(uid, device int64) bool {
 	return true
 }
 
-func (c *Client) IsDeviceOnline(uid, device int64) bool {
-	return true
-}
-
-func (c *Client) AllClient() []int64 {
+func (c *Client) allClient() []int64 {
 	// TODO
 	return nil
 }

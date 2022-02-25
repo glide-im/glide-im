@@ -3,7 +3,7 @@ package pro.glide;
 
 option go_package = "/pb_rpc";
 
-import 'common.proto';
+import 'message.proto';
 
 message GatewaySignInRequest{
   int64  old = 2;
@@ -22,7 +22,7 @@ message GatewayLogoutRequest {
 
 message EnqueueMessageRequest{
   int64 uid = 1;
-  Message message = 2;
+  CommMessage message = 2;
 }
 
 message AllClientResponse {

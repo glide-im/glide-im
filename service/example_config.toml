@@ -5,6 +5,9 @@ Servers = [
     "127.0.0.1:2383"
 ]
 
+[Nsq]
+Lookup = "127.0.0.1:4171"
+
 [Api]
 [Api.Server]
     Addr = "0.0.0.0"
