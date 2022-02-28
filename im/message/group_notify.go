@@ -1,7 +1,7 @@
 package message
 
 import (
-	"go_im/protobuff/pb_im"
+	"go_im/protobuff/gen/pb_im"
 )
 
 const (

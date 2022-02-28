@@ -26,3 +26,12 @@ func NewProducer(c *NSQProducerConfig) (*NSQProducer, error) {
 func (p *NSQProducer) Publish(topic string, m []byte) error {
 	return p.producer.Publish(topic, m)
 }
+
+func (p *NSQProducer) Ping() error {
+	return p.producer.Ping()
+}
+
+func (p *NSQProducer) Stop() error {
+	p.producer.Stop()
+	return nil
+}

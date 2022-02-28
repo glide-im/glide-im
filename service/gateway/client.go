@@ -5,7 +5,7 @@ import (
 	"go_im/im/client"
 	"go_im/im/conn"
 	"go_im/im/message"
-	"go_im/protobuff/pb_rpc"
+	"go_im/protobuff/gen/pb_rpc"
 	"go_im/service/rpc"
 )
 

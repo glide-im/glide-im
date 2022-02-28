@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"go_im/im/message/pb"
-	"go_im/protobuff/pb_im"
+	"go_im/protobuff/gen/pb_im"
 	"google.golang.org/protobuf/proto"
 )
 

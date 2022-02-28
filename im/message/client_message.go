@@ -2,7 +2,7 @@ package message
 
 import (
 	"go_im/im/message/json"
-	"go_im/protobuff/pb_im"
+	"go_im/protobuff/gen/pb_im"
 )
 
 // CustomerServiceMessage 表示客服消息

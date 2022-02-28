@@ -2,8 +2,7 @@ syntax = "proto3";
 package pro.glide;
 option go_package = "/pb_rpc";
 
-import public 'google/protobuf/any.proto';
-import public 'message.proto';
+import 'message.proto';
 
 message ApiHandleRequest {
   int64 uid = 1;

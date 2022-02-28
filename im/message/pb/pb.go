@@ -2,7 +2,7 @@ package pb
 
 import (
 	"go_im/pkg/logger"
-	"go_im/protobuff/pb_im"
+	"go_im/protobuff/gen/pb_im"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )

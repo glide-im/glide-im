@@ -4,7 +4,7 @@ import (
 	"context"
 	"go_im/im/api"
 	"go_im/im/message"
-	"go_im/protobuff/pb_rpc"
+	"go_im/protobuff/gen/pb_rpc"
 	"go_im/service/rpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 )

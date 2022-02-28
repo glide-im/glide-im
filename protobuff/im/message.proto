@@ -2,7 +2,7 @@ syntax = "proto3";
 package pro.glide;
 option go_package = "/pb_im";
 
-import public 'google/protobuf/any.proto';
+import public 'any.proto';
 
 message CommMessage {
   int64 ver = 1;

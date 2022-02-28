@@ -18,7 +18,9 @@ type NSQConsumer struct {
 
 func NewConsumer(c *NSQConsumerConfig) (*NSQConsumer, error) {
 	config := nsq.NewConfig()
-	config.LookupdPollTimeout = 15 * time.Second
+	//config.ReadTimeout = time.Second
+	config.DialTimeout = time.Second
+	config.LookupdPollInterval = time.Second * 10
 	consumer, err := nsq.NewConsumer(c.Topic, c.Channel, config)
 	if err != nil {
 		return nil, err
@@ -36,4 +38,9 @@ func (c *NSQConsumer) Connect() error {
 
 func (c *NSQConsumer) AddHandler(handler nsq.Handler) {
 	c.c.AddHandler(handler)
+}
+
+func (c *NSQConsumer) Disconnect() error {
+	c.c.Stop()
+	return nil
 }
