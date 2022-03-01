@@ -8,6 +8,6 @@ import (
 
 func TestRunHttpServer(t *testing.T) {
 	db.Init()
-	apidep.ClientManager = apidep.MockClientManager{}
+	apidep.ClientInterface = apidep.MockClientManager{}
 	_ = RunHttpServer("0.0.0.0", 8080)
 }

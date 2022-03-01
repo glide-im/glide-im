@@ -24,13 +24,14 @@ func RunTestServer() {
 	}
 	server = conn.NewWsServer(op)
 
+	cm := client.NewDefaultManager()
 	server.SetConnHandler(func(conn conn.Connection) {
-		client.Manager.ClientConnected(conn)
+		cm.ClientConnected(conn)
 	})
 
-	client.Manager = client.NewDefaultManager()
+	client.SetInterfaceImpl(cm)
 	manager := group.NewDefaultManager()
-	group.Manager = manager
+	group.SetInterfaceImpl(manager)
 	manager.Init()
 
 	err := server.Run("0.0.0.0", 8080)

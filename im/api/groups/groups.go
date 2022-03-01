@@ -43,15 +43,15 @@ func (m *GroupApi) CreateGroup(ctx *route.Context, request *CreateGroupRequest) 
 	//if err != nil {
 	//	return comm.NewDbErr(err)
 	//}
-	err = apidep.GroupManager.CreateGroup(dbGroup.Gid)
+	err = apidep.GroupInterface.CreateGroup(dbGroup.Gid)
 	if err != nil {
 		return comm.NewUnexpectedErr("create group failed", err)
 	}
-	err = apidep.GroupManager.PutMember(dbGroup.Gid, []int64{ctx.Uid})
+	err = apidep.GroupInterface.PutMember(dbGroup.Gid, []int64{ctx.Uid})
 	if err != nil {
 		return comm.NewUnexpectedErr("add group member failed", err)
 	}
-	err = apidep.GroupManager.UpdateMember(dbGroup.Gid, ctx.Uid, group.FlagMemberSetAdmin)
+	err = apidep.GroupInterface.UpdateMember(dbGroup.Gid, ctx.Uid, group.FlagMemberSetAdmin)
 	if err != nil {
 		return comm.NewUnexpectedErr("create group failed", err)
 	}
@@ -143,7 +143,7 @@ func (m *GroupApi) AddGroupMember(ctx *route.Context, request *AddMemberRequest)
 			Type:     userdao.ContactsTypeGroup,
 		})
 		apidep.SendMessageIfOnline(uid, 0, n)
-		err = apidep.GroupManager.PutMember(request.Gid, []int64{uid})
+		err = apidep.GroupInterface.PutMember(request.Gid, []int64{uid})
 		if err != nil {
 			return comm.NewUnexpectedErr("add group failed", err)
 		}
@@ -158,7 +158,7 @@ func (m *GroupApi) AddGroupMember(ctx *route.Context, request *AddMemberRequest)
 
 func (m *GroupApi) ExitGroup(ctx *route.Context, request *ExitGroupRequest) error {
 
-	err := apidep.GroupManager.RemoveMember(request.Gid, ctx.Uid)
+	err := apidep.GroupInterface.RemoveMember(request.Gid, ctx.Uid)
 	if err != nil {
 		return comm.NewUnexpectedErr("exit group failed", err)
 	}
@@ -194,7 +194,7 @@ func (m *GroupApi) JoinGroup(ctx *route.Context, request *JoinGroupRequest) erro
 	if err != nil {
 		return err
 	}
-	err = apidep.GroupManager.PutMember(request.Gid, []int64{ctx.Uid})
+	err = apidep.GroupInterface.PutMember(request.Gid, []int64{ctx.Uid})
 	if err != nil {
 		return comm.NewUnexpectedErr("add group failed", err)
 	}
@@ -236,5 +236,5 @@ func dispatchGroupNotify(gid int64, typ int64, uid int64) error {
 	}
 	n := message.NewGroupNotifyAdded([]int64{uid})
 	notify := message.NewGroupNotify(id, gid, 0, typ, time.Now().Unix(), &n)
-	return apidep.GroupManager.DispatchNotifyMessage(gid, notify)
+	return apidep.GroupInterface.DispatchNotifyMessage(gid, notify)
 }

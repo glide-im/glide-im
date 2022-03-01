@@ -255,7 +255,10 @@ func (c *Client) handleError(err error) bool {
 		logger.E("handle message error: %s", err.Error())
 	}
 	if !uid.IsTempId(atomic.LoadInt64(&c.id)) {
-		Logout(atomic.LoadInt64(&c.id), c.device)
+		err = Logout(atomic.LoadInt64(&c.id), c.device)
+		if err != nil {
+			logger.E("%v", err)
+		}
 	}
 	return true
 }

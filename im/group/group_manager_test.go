@@ -12,16 +12,11 @@ import (
 
 var dispatchCount int32 = 0
 
-type MockClientManager struct {
-}
-
-func (m *MockClientManager) EnqueueMessage(uid int64, device int64, message *message.Message) {
-	logger.D("%d, %d, %s", uid, device, message.Data)
-	atomic.AddInt32(&dispatchCount, 1)
-}
-
 func initDepMock() {
-	EnqueueMessage = &MockClientManager{}
+	enqueueMessage = func(uid int64, device int64, message *message.Message) {
+		logger.D("%d, %d, %s", uid, device, message.Data)
+		atomic.AddInt32(&dispatchCount, 1)
+	}
 }
 
 func initUserMock(gid int64, uid ...int64) {
@@ -46,9 +41,7 @@ func initUserMock(gid int64, uid ...int64) {
 func initMock() {
 
 	initDepMock()
-
-	Manager = NewDefaultManager()
-
+	SetInterfaceImpl(NewDefaultManager())
 	_ = UpdateGroup(1, Update{Flag: FlagGroupCreate})
 }
 

@@ -30,11 +30,16 @@ func Run() {
 	messaging.Init()
 	server = conn.NewWsServer(op)
 
+	cm := client.NewDefaultManager()
 	server.SetConnHandler(func(conn conn.Connection) {
-		client.Manager.ClientConnected(conn)
+		cm.ClientConnected(conn)
 	})
 
-	group.Manager.(*group.DefaultManager).Init()
+	client.SetInterfaceImpl(cm)
+
+	manager := group.NewDefaultManager()
+	group.SetInterfaceImpl(manager)
+	manager.Init()
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)

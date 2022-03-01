@@ -2,7 +2,6 @@ package gateway
 
 import (
 	"context"
-	"fmt"
 	"go_im/im/client"
 	"go_im/im/message"
 	"go_im/protobuff/gen/pb_rpc"
@@ -19,24 +18,16 @@ func NewServer(options *rpc.ServerOptions) *Server {
 	s := &Server{
 		BaseServer: rpc.NewBaseServer(options),
 	}
-	var err error
-	myAddr := fmt.Sprintf("%s@%s:%d", options.Network, options.Addr, options.Port)
-	client.Manager, err = newManager(options.EtcdServers, myAddr)
-	if err != nil {
-		return nil
-	}
 	s.Register(options.Name, s)
 	return s
 }
 
 func (s *Server) ClientSignIn(ctx context.Context, request *pb_rpc.GatewaySignInRequest, reply *pb_rpc.Response) error {
-	client.SignIn(request.GetOld(), request.GetUid(), request.GetDevice())
-	return nil
+	return client.SignIn(request.GetOld(), request.GetUid(), request.GetDevice())
 }
 
 func (s *Server) ClientLogout(ctx context.Context, request *pb_rpc.GatewayLogoutRequest, reply *pb_rpc.Response) error {
-	client.Logout(request.GetUid(), request.GetDevice())
-	return nil
+	return client.Logout(request.GetUid(), request.GetDevice())
 }
 
 func (s *Server) EnqueueMessage(ctx context.Context, request *pb_rpc.EnqueueMessageRequest, reply *pb_rpc.Response) error {

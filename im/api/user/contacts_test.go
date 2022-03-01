@@ -13,7 +13,7 @@ var api = UserApi{}
 
 func init() {
 	db.Init()
-	apidep.ClientManager = apidep.MockClientManager{}
+	apidep.ClientInterface = apidep.MockClientManager{}
 }
 
 func getContext(uid int64, device int64) *route.Context {

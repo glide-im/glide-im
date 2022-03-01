@@ -33,8 +33,9 @@ func (f *fakeConn) GetConnInfo() *conn.ConnectionInfo {
 func TestDefaultManager_ClientConnected(t *testing.T) {
 	db.Init()
 	dao.Init()
-	Manager = NewDefaultManager()
-	c := Manager.ClientConnected(&fakeConn{})
+	manager := NewDefaultManager()
+	manager = manager
+	c := manager.ClientConnected(&fakeConn{})
 	t.Log(c)
 	time.Sleep(time.Second * 20)
 }

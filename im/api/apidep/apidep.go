@@ -4,16 +4,18 @@ import (
 	"go_im/im/client"
 	"go_im/im/group"
 	"go_im/im/message"
+	"go_im/pkg/logger"
 )
 
-// ClientManager 客户端连接相关接口
-var ClientManager ClientManagerInterface = client.Manager
+// ClientInterface 客户端连接相关接口
+var ClientInterface ClientManagerInterface = &clientInterface{}
 
-// GroupManager 群相关接口
-var GroupManager GroupManagerInterface = &groupInterface{}
+// GroupInterface 群相关接口
+var GroupInterface GroupManagerInterface = &groupInterface{}
 
 func SendMessage(uid int64, device int64, m *message.Message) {
-	ClientManager.EnqueueMessage(uid, device, m)
+	err := ClientInterface.EnqueueMessage(uid, device, m)
+	logger.E("SendMessage error: %v", err)
 }
 
 func SendMessageIfOnline(uid int64, device int64, m *message.Message) {
@@ -21,9 +23,23 @@ func SendMessageIfOnline(uid int64, device int64, m *message.Message) {
 }
 
 type ClientManagerInterface interface {
-	ClientSignIn(oldUid int64, uid int64, device int64)
-	ClientLogout(uid int64, device int64)
-	EnqueueMessage(uid int64, device int64, message *message.Message)
+	ClientSignIn(oldUid int64, uid int64, device int64) error
+	ClientLogout(uid int64, device int64) error
+	EnqueueMessage(uid int64, device int64, message *message.Message) error
+}
+
+type clientInterface struct{}
+
+func (c clientInterface) ClientSignIn(oldUid int64, uid int64, device int64) error {
+	return client.SignIn(oldUid, uid, device)
+}
+
+func (c clientInterface) ClientLogout(uid int64, device int64) error {
+	return client.Logout(uid, device)
+}
+
+func (c clientInterface) EnqueueMessage(uid int64, device int64, message *message.Message) error {
+	return client.EnqueueMessageToDevice(uid, device, message)
 }
 
 type GroupManagerInterface interface {

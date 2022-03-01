@@ -11,66 +11,12 @@ import (
 	"time"
 )
 
-// Manager 群相关操作入口
-var Manager IGroupManager = NewDefaultManager()
-
-type EnqueueMessageInterface interface {
-	EnqueueMessage(uid int64, device int64, message *message.Message)
-}
-
-var EnqueueMessage EnqueueMessageInterface = client.Manager
-
-const (
-	_ = iota
-	FlagMemberAdd
-	FlagMemberDel
-	FlagMemberOnline
-	FlagMemberOffline
-	FlagMemberMuted
-	FlagMemberSetAdmin
-	FlagMemberCancelAdmin
-)
-
-const (
-	_ = iota
-	FlagGroupCreate
-	FlagGroupDissolve
-	FlagGroupMute
-	FlagGroupCancelMute
-)
-
-type MemberUpdate struct {
-	Uid  int64
-	Flag int64
-
-	Extra interface{}
-}
-
-type Update struct {
-	Flag int64
-
-	Extra interface{}
-}
-
-type IGroupManager interface {
-	// UpdateMember 更新群成员
-	UpdateMember(gid int64, update []MemberUpdate) error
-
-	// UpdateGroup 更新群
-	UpdateGroup(gid int64, update Update) error
-
-	// DispatchNotifyMessage 发送通知消息
-	DispatchNotifyMessage(gid int64, message *message.GroupNotify) error
-
-	// DispatchMessage 发送聊天消息
-	DispatchMessage(gid int64, action message.Action, message *message.ChatMessage) error
-}
-
 // TODO 2021-11-20 大群小群优化
 
 type DefaultManager struct {
 	mu     *comm.Mutex
 	groups map[int64]*Group
+	h      MessageHandler
 }
 
 func NewDefaultManager() *DefaultManager {

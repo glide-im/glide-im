@@ -229,7 +229,7 @@ func (g *Group) SendMessage(from int64, message *message.Message) {
 		if !mf.online || uid == from {
 			continue
 		}
-		EnqueueMessage.EnqueueMessage(uid, 0, message)
+		enqueueMessage(uid, 0, message)
 	}
 	g.mu.Unlock()
 }

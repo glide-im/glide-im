@@ -8,16 +8,19 @@ import (
 type MockClientManager struct {
 }
 
-func (MockClientManager) ClientSignIn(oldUid int64, uid int64, device int64) {
+func (MockClientManager) ClientSignIn(oldUid int64, uid int64, device int64) error {
 	logger.D("ClientSignIn, oldUid=%d, uid=%d, device=%d", oldUid, uid, device)
+	return nil
 }
 
-func (MockClientManager) ClientLogout(uid int64, device int64) {
+func (MockClientManager) ClientLogout(uid int64, device int64) error {
 	logger.D("ClientLogout, uid=%d, device=%d", uid, device)
+	return nil
 }
 
-func (MockClientManager) EnqueueMessage(uid int64, device int64, message *message.Message) {
+func (MockClientManager) EnqueueMessage(uid int64, device int64, message *message.Message) error {
 	logger.D("EnqueueMessage, uid=%d, device=%d, msg=%v", uid, device, message)
+	return nil
 }
 
 type MockGroupManager struct {

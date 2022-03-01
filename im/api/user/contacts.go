@@ -83,7 +83,7 @@ func (a *UserApi) GetContactList(ctx *route.Context) error {
 	resp := []ContactResponse{}
 	for _, contact := range contacts {
 		if contact.Type == userdao.ContactsTypeGroup {
-			_ = apidep.GroupManager.MemberOnline(contact.Id, ctx.Uid)
+			_ = apidep.GroupInterface.MemberOnline(contact.Id, ctx.Uid)
 		}
 		resp = append(resp, ContactResponse{
 			Id:     contact.Id,

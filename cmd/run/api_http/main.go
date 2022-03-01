@@ -12,8 +12,8 @@ func main() {
 	db.Init()
 	dao.Init()
 
-	apidep.GroupManager = &apidep.MockGroupManager{}
-	apidep.ClientManager = &apidep.MockClientManager{}
+	apidep.GroupInterface = &apidep.MockGroupManager{}
+	apidep.ClientInterface = &apidep.MockClientManager{}
 	err := api.RunHttpServer("0.0.0.0", 8081)
 
 	if err != nil {

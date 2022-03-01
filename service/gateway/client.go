@@ -3,7 +3,6 @@ package gateway
 import (
 	"context"
 	"go_im/im/client"
-	"go_im/im/conn"
 	"go_im/im/message"
 	"go_im/protobuff/gen/pb_rpc"
 	"go_im/service/rpc"
@@ -20,16 +19,9 @@ func NewClient(options *rpc.ClientOptions) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	client.Manager = ret
+	client.SetInterfaceImpl(ret)
 	return ret, nil
 }
-
-// ClientConnected idle function
-func (c *Client) ClientConnected(conn conn.Connection) int64 {
-	return 0
-}
-
-func (c *Client) AddClient(uid int64, cs client.IClient) {}
 
 func (c *Client) ClientSignIn(id int64, uid int64, device int64) {
 	req := &pb_rpc.GatewaySignInRequest{

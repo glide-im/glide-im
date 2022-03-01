@@ -1,7 +1,6 @@
 package api_service
 
 import (
-	"go_im/im/client"
 	"go_im/im/group"
 	"go_im/service/rpc"
 	"testing"
@@ -9,8 +8,7 @@ import (
 
 func TestNewServer(t *testing.T) {
 
-	client.Manager = client.NewDefaultManager()
-	group.Manager = group.NewDefaultManager()
+	group.SetInterfaceImpl(group.NewDefaultManager())
 
 	op := rpc.ServerOptions{
 		Name:        "api",
@@ -26,8 +24,7 @@ func TestNewServer(t *testing.T) {
 
 func TestNewServer2(t *testing.T) {
 
-	client.Manager = client.NewDefaultManager()
-	group.Manager = group.NewDefaultManager()
+	group.SetInterfaceImpl(group.NewDefaultManager())
 
 	op := rpc.ServerOptions{
 		Name:        "api",

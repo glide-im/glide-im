@@ -1,11 +1,13 @@
 package main
 
 import (
+	"go_im/im/client"
 	"go_im/im/dao"
 	"go_im/im/group"
 	"go_im/pkg/db"
 	"go_im/service"
 	"go_im/service/api_service"
+	"go_im/service/gateway"
 	"go_im/service/group_messaging"
 	"go_im/service/rpc"
 )
@@ -20,6 +22,7 @@ func main() {
 	}
 	etcd := config.Etcd.Servers
 
+	gateway.InitMQ("")
 	groupManager, err := group_messaging.NewClient(&rpc.ClientOptions{
 		Name:        config.GroupMessaging.Client.Name,
 		EtcdServers: etcd,
@@ -27,7 +30,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	group.Manager = groupManager
+	group.SetInterfaceImpl(groupManager)
+	group.SetMessageHandler(client.EnqueueMessageToDevice)
 
 	server := api_service.NewServer(&rpc.ServerOptions{
 		Name:        config.Api.Server.Name,

@@ -11,40 +11,20 @@ import (
 	"sync/atomic"
 )
 
-type CommonInterface interface {
-	ClientSignIn(oldUid int64, uid int64, device int64)
-
-	ClientLogout(uid int64, device int64)
-
-	// EnqueueMessage 尝试将消息放入指定 uid 的客户端
-	EnqueueMessage(uid int64, device int64, message *message.Message)
-}
-
-// IClientManager 管理所有客户端的创建, 消息派发, 退出等
-type IClientManager interface {
-
-	// ClientConnected 当一个用户连接建立后, 由该方法创建 IClient 实例 Client 并管理该连接, 返回该由连接创建客户端的标识 id
-	// 返回的标识 id 是一个临时 id, 后续连接认证后会改变
-	ClientConnected(conn conn.Connection) int64
-
-	// AddClient 用于手段创建一个 IClient, 方便自定义临时 uid 以及其他的 IClient 实现
-	AddClient(uid int64, cs IClient)
-
-	CommonInterface
-}
-
-type DefaultManager struct {
+type DefaultClientManager struct {
 	clients     *clients
 	clientCount int64
 }
 
-func NewDefaultManager() *DefaultManager {
-	ret := new(DefaultManager)
+func NewDefaultManager() *DefaultClientManager {
+	ret := new(DefaultClientManager)
 	ret.clients = newClients()
 	return ret
 }
 
-func (c *DefaultManager) ClientConnected(conn conn.Connection) int64 {
+// ClientConnected 当一个用户连接建立后, 由该方法创建 IClient 实例 Client 并管理该连接, 返回该由连接创建客户端的标识 id
+// 返回的标识 id 是一个临时 id, 后续连接认证后会改变
+func (c *DefaultClientManager) ClientConnected(conn conn.Connection) int64 {
 	statistics.SConnEnter()
 
 	// 获取一个临时 uid 标识这个连接
@@ -58,13 +38,13 @@ func (c *DefaultManager) ClientConnected(conn conn.Connection) int64 {
 	return connUid
 }
 
-func (c *DefaultManager) AddClient(uid int64, cs IClient) {
+func (c *DefaultClientManager) AddClient(uid int64, cs IClient) {
 	c.clients.add(uid, 0, cs)
 	atomic.AddInt64(&c.clientCount, 1)
 }
 
 // ClientSignIn 客户端登录, id 为连接时使用的临时标识, uid 为z用户标识, device 用于区分不同设备
-func (c *DefaultManager) ClientSignIn(id, uid_ int64, device int64) {
+func (c *DefaultClientManager) ClientSignIn(id, uid_ int64, device int64) {
 	logger.D("client sign in origin-id=%d, uid=%d", id, uid_)
 	tempDs := c.clients.get(id)
 	if tempDs == nil || tempDs.size() == 0 {
@@ -100,7 +80,7 @@ func (c *DefaultManager) ClientSignIn(id, uid_ int64, device int64) {
 	c.clients.delete(id, 0)
 }
 
-func (c *DefaultManager) ClientLogout(uid_ int64, device int64) {
+func (c *DefaultClientManager) ClientLogout(uid_ int64, device int64) {
 	cl := c.clients.get(uid_)
 	if cl == nil || cl.size() == 0 {
 		logger.E("uid is not sign in, uid=%d", uid_)
@@ -119,7 +99,7 @@ func (c *DefaultManager) ClientLogout(uid_ int64, device int64) {
 	statistics.SConnExit()
 }
 
-func (c *DefaultManager) EnqueueMessage(uid int64, device int64, msg *message.Message) {
+func (c *DefaultClientManager) EnqueueMessage(uid int64, device int64, msg *message.Message) {
 	ds := c.clients.get(uid)
 	if ds == nil || ds.size() == 0 {
 		// offline
@@ -144,7 +124,7 @@ func (c *DefaultManager) EnqueueMessage(uid int64, device int64, msg *message.Me
 	})
 }
 
-func (c *DefaultManager) isOnline(uid int64) bool {
+func (c *DefaultClientManager) isOnline(uid int64) bool {
 	ds := c.clients.get(uid)
 	if ds == nil {
 		return false
@@ -152,7 +132,7 @@ func (c *DefaultManager) isOnline(uid int64) bool {
 	return ds.size() > 0
 }
 
-func (c *DefaultManager) isDeviceOnline(uid, device int64) bool {
+func (c *DefaultClientManager) isDeviceOnline(uid, device int64) bool {
 	ds := c.clients.get(uid)
 	if ds == nil {
 		return false
@@ -160,7 +140,7 @@ func (c *DefaultManager) isDeviceOnline(uid, device int64) bool {
 	return ds.get(device) != nil
 }
 
-func (c *DefaultManager) allClient() []int64 {
+func (c *DefaultClientManager) allClient() []int64 {
 	var ret []int64
 	for k := range c.clients.clients {
 		if k > 0 {
