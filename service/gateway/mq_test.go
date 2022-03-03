@@ -30,7 +30,7 @@ func TestProto(t *testing.T) {
 
 func TestInitMQ(t *testing.T) {
 
-	err := InitMQ("127.0.0.1:4154")
+	err := InitMQ("127.0.0.1:4159")
 	if err != nil {
 		t.Error(err)
 	}

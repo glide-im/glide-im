@@ -23,7 +23,7 @@ func NewClient(options *rpc.ClientOptions) (*Client, error) {
 	return ret, nil
 }
 
-func (c *Client) ClientSignIn(id int64, uid int64, device int64) {
+func (c *Client) ClientSignIn(id int64, uid int64, device int64) error {
 	req := &pb_rpc.GatewaySignInRequest{
 		Old:    id,
 		Uid:    uid,
@@ -34,17 +34,19 @@ func (c *Client) ClientSignIn(id int64, uid int64, device int64) {
 	if err != nil {
 
 	}
+	return nil
 }
 
-func (c *Client) ClientLogout(uid int64, device int64) {
+func (c *Client) ClientLogout(uid int64, device int64) error {
 	resp := &pb_rpc.Response{}
 	err := c.Call(getTagContext(uid, device), "Logout", &pb_rpc.GatewayLogoutRequest{Uid: uid, Device: device}, resp)
 	if err != nil {
 
 	}
+	return nil
 }
 
-func (c *Client) EnqueueMessage(uid int64, device int64, message *message.Message) {
+func (c *Client) EnqueueMessage(uid int64, device int64, message *message.Message) error {
 
 	req := &pb_rpc.EnqueueMessageRequest{
 		Uid: uid,
@@ -54,6 +56,7 @@ func (c *Client) EnqueueMessage(uid int64, device int64, message *message.Messag
 	if err != nil {
 
 	}
+	return nil
 }
 
 func (c *Client) isDeviceOnline(uid, device int64) bool {

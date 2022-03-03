@@ -44,13 +44,13 @@ func (c *DefaultClientManager) AddClient(uid int64, cs IClient) {
 }
 
 // ClientSignIn 客户端登录, id 为连接时使用的临时标识, uid 为z用户标识, device 用于区分不同设备
-func (c *DefaultClientManager) ClientSignIn(id, uid_ int64, device int64) {
+func (c *DefaultClientManager) ClientSignIn(id, uid_ int64, device int64) error {
 	logger.D("client sign in origin-id=%d, uid=%d", id, uid_)
 	tempDs := c.clients.get(id)
 	if tempDs == nil || tempDs.size() == 0 {
 		// 该客户端不存在
 		logger.W("attempt to sign in a nonexistent client, id=%d", id)
-		return
+		return nil
 	}
 	client := tempDs.get(0)
 	logged := c.clients.get(uid_)
@@ -78,18 +78,19 @@ func (c *DefaultClientManager) ClientSignIn(id, uid_ int64, device int64) {
 	client.SetID(uid_, device)
 	// 删除临时 id
 	c.clients.delete(id, 0)
+	return nil
 }
 
-func (c *DefaultClientManager) ClientLogout(uid_ int64, device int64) {
+func (c *DefaultClientManager) ClientLogout(uid_ int64, device int64) error {
 	cl := c.clients.get(uid_)
 	if cl == nil || cl.size() == 0 {
 		logger.E("uid is not sign in, uid=%d", uid_)
-		return
+		return nil
 	}
 	logDevice := cl.get(device)
 	if logDevice == nil {
 		logger.E("device not exist")
-		return
+		return nil
 	}
 	logger.I("client logout, uid=%d, device=%d", uid_, device)
 	logDevice.SetID(uid.GenTemp(), 0)
@@ -97,18 +98,19 @@ func (c *DefaultClientManager) ClientLogout(uid_ int64, device int64) {
 	cl.remove(device)
 	atomic.AddInt64(&c.clientCount, -1)
 	statistics.SConnExit()
+	return nil
 }
 
-func (c *DefaultClientManager) EnqueueMessage(uid int64, device int64, msg *message.Message) {
+func (c *DefaultClientManager) EnqueueMessage(uid int64, device int64, msg *message.Message) error {
 	ds := c.clients.get(uid)
 	if ds == nil || ds.size() == 0 {
 		// offline
-		return
+		return nil
 	}
 	if device != 0 {
 		d := ds.get(device)
 		if d == nil {
-			return
+			return nil
 		}
 		d.EnqueueMessage(msg)
 	}
@@ -122,6 +124,7 @@ func (c *DefaultClientManager) EnqueueMessage(uid int64, device int64, msg *mess
 			c.EnqueueMessage(msg)
 		}
 	})
+	return nil
 }
 
 func (c *DefaultClientManager) isOnline(uid int64) bool {
