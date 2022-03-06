@@ -22,7 +22,10 @@ func main() {
 	}
 	etcd := config.Etcd.Servers
 
-	gateway.InitMQ("")
+	err = gateway.InitMessageProducer(config.Nsq.Nsqd)
+	if err != nil {
+		panic(err)
+	}
 	groupManager, err := group_messaging.NewClient(&rpc.ClientOptions{
 		Name:        config.GroupMessaging.Client.Name,
 		EtcdServers: etcd,

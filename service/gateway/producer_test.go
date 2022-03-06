@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"go_im/im/client"
 	"go_im/im/message"
 	"go_im/pkg/logger"
 	"go_im/protobuff/gen/pb_rpc"
@@ -30,7 +31,7 @@ func TestProto(t *testing.T) {
 
 func TestInitMQ(t *testing.T) {
 
-	err := InitMQ("127.0.0.1:4159")
+	err := InitMessageProducer("127.0.0.1:4159")
 	if err != nil {
 		t.Error(err)
 	}
@@ -42,7 +43,7 @@ func TestInitMQ(t *testing.T) {
 			for i := 0; i < 1; i++ {
 				time.Sleep(time.Millisecond * 200)
 				m := message.NewMessage(1, message.ActionChatMessage, nil)
-				err = PublishMsg(1, m.CommMessage)
+				_ = client.EnqueueMessage(0, m)
 				if err != nil {
 					t.Error(err)
 				}

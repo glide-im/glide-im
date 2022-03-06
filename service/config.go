@@ -62,8 +62,14 @@ type EtcdConfig struct {
 	Servers []string
 }
 
+type NsqConfig struct {
+	Lookup string
+	Nsqd   string
+}
+
 type Configs struct {
 	Etcd *EtcdConfig
+	Nsq  *NsqConfig
 
 	Api            *ApiConfig
 	Gateway        *GatewayConfig

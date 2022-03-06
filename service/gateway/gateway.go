@@ -1,43 +1,11 @@
 package gateway
 
 import (
+	"github.com/gogo/protobuf/proto"
 	"github.com/nsqio/go-nsq"
-	"go_im/protobuff/gen/pb_im"
 	"go_im/protobuff/gen/pb_rpc"
-	"go_im/service/cache"
 	"go_im/service/mq_nsq"
-	"google.golang.org/protobuf/proto"
 )
-
-var producer *mq_nsq.NSQProducer
-var consumer *mq_nsq.NSQConsumer
-var topicPrefix = "im_gateway_"
-
-func InitMQ(addr string) error {
-	var err error
-	c := &mq_nsq.NSQProducerConfig{
-		Addr: addr,
-	}
-	producer, err = mq_nsq.NewProducer(c)
-	return err
-}
-
-func PublishMsg(uid int64, message *pb_im.CommMessage) error {
-	m := pb_rpc.NSQUserMessage{
-		Uid:     uid,
-		Message: message,
-	}
-	bts, err := proto.Marshal(&m)
-	if err != nil {
-		return err
-	}
-	gateway, err := cache.GetGateway(uid)
-	if err != nil {
-		return err
-	}
-	err = producer.Publish(topicPrefix+gateway, bts)
-	return err
-}
 
 type msgHandler struct {
 }
