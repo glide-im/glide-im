@@ -49,8 +49,9 @@ func (c *Client) Handle(uid int64, device int64, message *message.Message) error
 	ctx := context.WithValue(context.Background(), "from_gate", "node_id")
 
 	request := pb_rpc.ApiHandleRequest{
-		Uid:    uid,
-		Device: device,
+		Uid:     uid,
+		Device:  device,
+		Message: message.CommMessage,
 	}
 	err := c.Call(ctx, "Handle", &request, &emptypb.Empty{})
 	return err

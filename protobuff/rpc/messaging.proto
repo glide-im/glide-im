@@ -1,0 +1,11 @@
+syntax = "proto3";
+package pro.glide;
+
+option go_package = "/pb_rpc";
+import public 'message.proto';
+
+message MessagingHandleRequest{
+  int64 id = 1;
+  int64 device = 2;
+  CommMessage message = 3;
+}

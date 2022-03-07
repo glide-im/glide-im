@@ -1,16 +1,14 @@
 package messaging
 
 import (
-	"go_im/im/client"
 	"go_im/im/dao/msgdao"
 	"go_im/im/dao/uid"
-	"go_im/im/group"
 	"go_im/im/message"
 	"go_im/pkg/logger"
 )
 
-// dispatchGroupMsg 分发群消息
-func dispatchGroupMsg(from int64, device int64, msg *message.Message) {
+// handleGroupMsg 分发群消息
+func handleGroupMsg(from int64, device int64, msg *message.Message) {
 	if uid.IsTempId(from) {
 		logger.D("not sign in, uid=%d", from)
 		return
@@ -23,19 +21,19 @@ func dispatchGroupMsg(from int64, device int64, msg *message.Message) {
 
 	var err error
 	if msg.Action == message.ActionGroupMessageRecall {
-		err = group.DispatchRecallMessage(groupMsg.To, groupMsg)
+		err = dispatchRecallMessage(groupMsg.To, groupMsg)
 	} else {
-		err = group.DispatchMessage(groupMsg.To, groupMsg)
+		err = dispatchGroupMessage(groupMsg.To, groupMsg)
 	}
 	if err != nil {
 		logger.E("dispatch group message error: %v", err)
 		notify := message.NewMessage(0, message.ActionMessageFailed, message.NewAckNotify(groupMsg.Mid))
-		client.EnqueueMessage(from, notify)
+		enqueueMessage(from, notify)
 	}
 }
 
-func dispatchGroupRecallMsg(from int64, device int64, msg *message.Message) {
-	dispatchGroupMsg(from, device, msg)
+func handleGroupRecallMsg(from int64, device int64, msg *message.Message) {
+	handleGroupMsg(from, device, msg)
 }
 
 func handleAckGroupMsgRequest(from int64, device int64, msg *message.Message) {

@@ -9,8 +9,8 @@ import (
 	"strconv"
 )
 
-// dispatchChatMessage 分发用户单聊消息
-func dispatchChatMessage(from int64, device int64, m *message.Message) {
+// handleChatMessage 分发用户单聊消息
+func handleChatMessage(from int64, device int64, m *message.Message) {
 	if uid.IsTempId(from) {
 		logger.D("not sign in")
 		client.EnqueueMessage(from, message.NewMessage(0, message.ActionNotifyNeedAuth, ""))
@@ -77,8 +77,8 @@ func dispatchChatMessage(from int64, device int64, m *message.Message) {
 	}
 }
 
-func dispatchChatRecallMessage(from int64, device int64, msg *message.Message) {
-	dispatchChatMessage(from, device, msg)
+func handleChatRecallMessage(from int64, device int64, msg *message.Message) {
+	handleChatMessage(from, device, msg)
 }
 
 func ackNotifyMessage(from int64, mid int64) {

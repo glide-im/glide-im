@@ -10,8 +10,10 @@ type Interface interface {
 	EnqueueMessage(uid int64, device int64, message *message.Message) error
 }
 
-// MessageHandleFunc 所有客户端消息都传递到该函数处理
-var MessageHandleFunc func(from int64, device int64, message *message.Message) = nil
+type MessageHandler func(from int64, device int64, message *message.Message)
+
+// messageHandleFunc 所有客户端消息都传递到该函数处理
+var messageHandleFunc MessageHandler = nil
 
 // Manager 客户端管理入口
 var manager Interface = NewDefaultManager()
@@ -44,4 +46,8 @@ func EnqueueMessageToDevice(uid int64, device int64, message *message.Message) e
 
 func SetInterfaceImpl(i Interface) {
 	manager = i
+}
+
+func SetMessageHandler(handler MessageHandler) {
+	messageHandleFunc = handler
 }

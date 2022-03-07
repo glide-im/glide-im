@@ -28,6 +28,7 @@ func (c *Client) DispatchNotifyMessage(gid int64, message *message.GroupNotify) 
 func (c *Client) DispatchMessage(gid int64, action message.Action, message *message.ChatMessage) error {
 	return c.Call(getContext(gid), "UpdateMember", message, nil)
 }
+
 func (c *Client) UpdateMember(gid int64, update []group.MemberUpdate) error {
 	return c.Call(getContext(gid), "UpdateMember", update, nil)
 }

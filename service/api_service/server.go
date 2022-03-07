@@ -9,17 +9,11 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-const (
-	DefaultServiceName = "im_api_rpc_service"
-	DefaultListenPort  = 8081
-)
-
 type Server struct {
 	*rpc.BaseServer
 }
 
 func (s *Server) Handle(ctx context.Context, r *pb_rpc.ApiHandleRequest, resp *emptypb.Empty) error {
-
 	return api.Handle(r.GetUid(), r.GetDevice(), &message.Message{CommMessage: r.GetMessage()})
 }
 

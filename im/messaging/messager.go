@@ -3,7 +3,6 @@ package messaging
 import (
 	"github.com/panjf2000/ants/v2"
 	"go_im/im/api"
-	"go_im/im/client"
 	"go_im/im/message"
 	"go_im/im/statistics"
 	"go_im/pkg/logger"
@@ -14,20 +13,18 @@ import (
 var execPool *ants.Pool
 
 var messageHandlerFunMap = map[message.Action]func(from int64, device int64, msg *message.Message){
-	message.ActionGroupMessageRecall: dispatchGroupRecallMsg,
-	message.ActionChatMessageRecall:  dispatchChatRecallMessage,
-	message.ActionChatMessage:        dispatchChatMessage,
-	message.ActionChatMessageRetry:   dispatchChatMessage,
-	message.ActionChatMessageResend:  dispatchChatMessage,
-	message.ActionGroupMessage:       dispatchGroupMsg,
-	message.ActionCSMessage:          dispatchCustomerServiceMsg,
+	message.ActionGroupMessageRecall: handleGroupRecallMsg,
+	message.ActionChatMessageRecall:  handleChatRecallMessage,
+	message.ActionChatMessage:        handleChatMessage,
+	message.ActionChatMessageRetry:   handleChatMessage,
+	message.ActionChatMessageResend:  handleChatMessage,
+	message.ActionGroupMessage:       handleGroupMsg,
+	message.ActionCSMessage:          handleCustomerServiceMsg,
 	message.ActionAckRequest:         handleAckRequest,
 	message.ActionAckGroupMsg:        handleAckGroupMsgRequest,
 }
 
-func Init() {
-	client.MessageHandleFunc = messageHandler
-
+func init() {
 	var err error
 	execPool, err = ants.NewPool(50_0000,
 		ants.WithNonblocking(true),
@@ -39,8 +36,8 @@ func Init() {
 	}
 }
 
-// messageHandler 处理接收到的所有类型消息, 所有消息处理的入口
-func messageHandler(from int64, device int64, msg *message.Message) {
+// handleMessage 处理接收到的所有类型消息, 所有消息处理的入口
+func handleMessage(from int64, device int64, msg *message.Message) {
 	logger.D("new message: uid=%d, %v", from, msg)
 	err := execPool.Submit(func() {
 		statistics.SMsgInput()
@@ -59,7 +56,7 @@ func messageHandler(from int64, device int64, msg *message.Message) {
 					logger.E("handle api message error %v", err)
 				}
 			} else {
-				client.EnqueueMessage(from, message.NewMessage(-1, message.ActionNotifyError, "unknown action"))
+				enqueueMessage(from, message.NewMessage(-1, message.ActionNotifyError, "unknown action"))
 				logger.W("receive a unknown action message: " + string(msg.Action))
 			}
 		}
@@ -73,7 +70,7 @@ func messageHandler(from int64, device int64, msg *message.Message) {
 			logger.E("Messaging.MessageHandler goroutine pool is closed")
 			return
 		}
-		client.EnqueueMessage(from, message.NewMessage(-1, message.ActionNotifyError, "internal server error"))
+		enqueueMessage(from, message.NewMessage(-1, message.ActionNotifyError, "internal server error"))
 		logger.E("async handle message error %v", err)
 	}
 }
@@ -90,17 +87,17 @@ func handleAckRequest(from int64, device int64, msg *message.Message) {
 	}
 	ackNotify := message.NewMessage(0, message.ActionAckNotify, ackMsg)
 	// 通知发送者, 对方已收到消息
-	client.EnqueueMessage(ackMsg.From, ackNotify)
+	enqueueMessage(ackMsg.From, ackNotify)
 }
 
-// dispatchCustomerServiceMsg 分发客服消息
-func dispatchCustomerServiceMsg(from int64, device int64, msg *message.Message) {
+// handleCustomerServiceMsg 分发客服消息
+func handleCustomerServiceMsg(from int64, device int64, msg *message.Message) {
 	csMsg := new(message.CustomerServiceMessage)
 	if !unwrap(from, msg, csMsg) {
 		return
 	}
 	// 发送消息给客服
-	client.EnqueueMessage(csMsg.CsId, msg)
+	enqueueMessage(csMsg.CsId, msg)
 }
 
 func onHandleMessagePanic(i interface{}) {
@@ -112,7 +109,7 @@ func onHandleMessagePanic(i interface{}) {
 func unwrap(from int64, msg *message.Message, to interface{}) bool {
 	err := msg.DeserializeData(to)
 	if err != nil {
-		client.EnqueueMessage(from, message.NewMessage(msg.Seq, message.ActionNotifyError, "send message failed"))
+		enqueueMessage(from, message.NewMessage(msg.Seq, message.ActionNotifyError, "send message failed"))
 		logger.E("sender chat senderMsg %v", err)
 		return false
 	}

@@ -190,7 +190,7 @@ func (c *Client) readMessage() {
 			c.hb = tw.After(HeartbeatDuration)
 			id, device := c.getID()
 			// 统一处理消息函数
-			MessageHandleFunc(id, device, msg.m)
+			messageHandleFunc(id, device, msg.m)
 			msg.Recycle()
 		}
 	}
