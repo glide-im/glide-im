@@ -1,8 +1,8 @@
 package gateway
 
 import (
+	"go_im/pkg/rpc"
 	"go_im/service"
-	"go_im/service/rpc"
 	"testing"
 )
 

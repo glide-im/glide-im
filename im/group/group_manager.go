@@ -3,25 +3,25 @@ package group
 import (
 	"errors"
 	"go_im/im/client"
-	"go_im/im/comm"
 	"go_im/im/dao/groupdao"
 	"go_im/im/message"
 	"go_im/pkg/logger"
 	"strconv"
+	"sync"
 	"time"
 )
 
 // TODO 2021-11-20 大群小群优化
 
 type DefaultManager struct {
-	mu     *comm.Mutex
+	mu     *sync.Mutex
 	groups map[int64]*Group
 	h      MessageHandler
 }
 
 func NewDefaultManager() *DefaultManager {
 	ret := new(DefaultManager)
-	ret.mu = comm.NewMutex()
+	ret.mu = &sync.Mutex{}
 	ret.groups = map[int64]*Group{}
 	return ret
 }

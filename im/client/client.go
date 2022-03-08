@@ -2,7 +2,6 @@ package client
 
 import (
 	"github.com/panjf2000/ants/v2"
-	"go_im/im/comm"
 	"go_im/im/conn"
 	"go_im/im/dao/uid"
 	"go_im/im/message"
@@ -85,7 +84,7 @@ type Client struct {
 	hbLost int
 
 	// seq 服务器下行消息递增序列号
-	seq *comm.AtomicInt64
+	seq int64
 }
 
 func newClient(conn conn.Connection) *Client {
@@ -96,7 +95,7 @@ func newClient(conn conn.Connection) *Client {
 	client.messages = make(chan *message.Message, 60)
 	client.connectAt = time.Now()
 	client.readClose = make(chan struct{})
-	client.seq = new(comm.AtomicInt64)
+	client.seq = 0
 	client.hb = tw.After(HeartbeatDuration)
 	return client
 }
@@ -283,9 +282,7 @@ func (c *Client) getID() (int64, int64) {
 
 // getNextSeq 获取下一个下行消息序列号 sequence
 func (c *Client) getNextSeq() int64 {
-	seq := c.seq.Get()
-	c.seq.Set(seq + 1)
-	return seq
+	return atomic.AddInt64(&c.seq, 1)
 }
 
 func (c *Client) Run() {

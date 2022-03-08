@@ -4,19 +4,19 @@ import (
 	"context"
 	"go_im/im/api"
 	"go_im/im/message"
+	rpc2 "go_im/pkg/rpc"
 	"go_im/protobuff/gen/pb_rpc"
-	"go_im/service/rpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type Client struct {
-	rpc.Cli
+	rpc2.Cli
 }
 
-func NewClient(options *rpc.ClientOptions) (*Client, error) {
+func NewClient(options *rpc2.ClientOptions) (*Client, error) {
 	ret := &Client{}
 	var err error
-	ret.Cli, err = rpc.NewBaseClient(options)
+	ret.Cli, err = rpc2.NewBaseClient(options)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (c *Client) Echo(uid int64, message *message.Message) *pb_rpc.Response {
 		Ok:      false,
 		Message: "",
 	}
-	err := c.Call(rpc.NewCtx(), "Echo", arg, resp)
+	err := c.Call(rpc2.NewCtx(), "Echo", arg, resp)
 	if err != nil {
 		panic(err)
 	}

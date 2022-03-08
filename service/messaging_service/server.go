@@ -4,8 +4,8 @@ import (
 	"context"
 	"go_im/im/message"
 	"go_im/im/messaging"
+	"go_im/pkg/rpc"
 	"go_im/protobuff/gen/pb_rpc"
-	"go_im/service/rpc"
 )
 
 type Server struct {

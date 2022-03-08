@@ -2,21 +2,21 @@ package gateway
 
 import (
 	"go_im/im/message"
+	mq_nsq2 "go_im/pkg/mq_nsq"
 	"go_im/service/cache"
-	"go_im/service/mq_nsq"
 )
 
-var producer *mq_nsq.NSQProducer
-var consumer *mq_nsq.NSQConsumer
+var producer *mq_nsq2.NSQProducer
+var consumer *mq_nsq2.NSQConsumer
 var topicPrefix = "im_gateway_"
 
 // InitMessageProducer  init service as a gateway message producer, nsqdAddr is the address of local nsqd
 func InitMessageProducer(nsqdAddr string) error {
 	var err error
-	c := &mq_nsq.NSQProducerConfig{
+	c := &mq_nsq2.NSQProducerConfig{
 		Addr: nsqdAddr,
 	}
-	producer, err = mq_nsq.NewProducer(c)
+	producer, err = mq_nsq2.NewProducer(c)
 	return err
 }
 

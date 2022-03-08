@@ -3,8 +3,8 @@ package messaging_service
 import (
 	"context"
 	"go_im/im/message"
+	"go_im/pkg/rpc"
 	"go_im/protobuff/gen/pb_rpc"
-	"go_im/service/rpc"
 )
 
 type Client struct {

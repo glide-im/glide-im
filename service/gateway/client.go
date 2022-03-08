@@ -4,18 +4,18 @@ import (
 	"context"
 	"go_im/im/client"
 	"go_im/im/message"
+	rpc2 "go_im/pkg/rpc"
 	"go_im/protobuff/gen/pb_rpc"
-	"go_im/service/rpc"
 )
 
 type Client struct {
-	rpc.Cli
+	rpc2.Cli
 }
 
-func NewClient(options *rpc.ClientOptions) (*Client, error) {
+func NewClient(options *rpc2.ClientOptions) (*Client, error) {
 	ret := &Client{}
 	var err error
-	ret.Cli, err = rpc.NewBaseClient(options)
+	ret.Cli, err = rpc2.NewBaseClient(options)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (c *Client) allClient() []int64 {
 }
 
 func getTagContext(uid int64, device int64) context.Context {
-	ret := rpc.NewCtxFrom(context.Background())
+	ret := rpc2.NewCtxFrom(context.Background())
 
 	return ret
 }

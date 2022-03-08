@@ -5,11 +5,11 @@ import (
 	"go_im/im/dao"
 	"go_im/im/group"
 	"go_im/pkg/db"
+	"go_im/pkg/rpc"
 	"go_im/service"
 	"go_im/service/api_service"
 	"go_im/service/gateway"
 	"go_im/service/group_messaging"
-	"go_im/service/rpc"
 )
 
 func main() {

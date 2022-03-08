@@ -3,8 +3,8 @@ package rpc
 import (
 	"context"
 	"fmt"
-	client3 "github.com/rpcxio/rpcx-etcd/client"
-	client2 "github.com/smallnest/rpcx/client"
+	etcd_cli "github.com/rpcxio/rpcx-etcd/client"
+	"github.com/smallnest/rpcx/client"
 	"github.com/smallnest/rpcx/protocol"
 )
 
@@ -16,17 +16,17 @@ type Cli interface {
 }
 
 type ClientOptions struct {
-	client2.Option
+	client.Option
 
 	Addr        string
 	Port        int
 	Name        string
 	EtcdServers []string
-	Selector    client2.Selector
+	Selector    client.Selector
 }
 
 type BaseClient struct {
-	cli     client2.XClient
+	cli     client.XClient
 	options *ClientOptions
 	id      string
 }
@@ -36,7 +36,7 @@ func NewBaseClient(options *ClientOptions) (*BaseClient, error) {
 		options: options,
 		id:      fmt.Sprintf("%s@%s:%d", "", "", 1),
 	}
-	etcd, err := client3.NewEtcdV3Discovery(BaseServicePath, options.Name, options.EtcdServers, false, nil)
+	etcd, err := etcd_cli.NewEtcdV3Discovery(BaseServicePath, options.Name, options.EtcdServers, false, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func NewBaseClient(options *ClientOptions) (*BaseClient, error) {
 		// using protobuffer serializer by default
 		options.SerializeType = protocol.ProtoBuffer
 	}
-	ret.cli = client2.NewXClient(options.Name, client2.Failtry, client2.RoundRobin, etcd, options.Option)
+	ret.cli = client.NewXClient(options.Name, client.Failtry, client.RoundRobin, etcd, options.Option)
 
 	if options.Selector != nil {
 		ret.cli.SetSelector(options.Selector)

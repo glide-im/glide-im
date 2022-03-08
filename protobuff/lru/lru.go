@@ -1,4 +1,4 @@
-package comm
+package lru
 
 import (
 	"container/list"

@@ -2,7 +2,7 @@ package api_service
 
 import (
 	"go_im/im/group"
-	"go_im/service/rpc"
+	"go_im/pkg/rpc"
 	"testing"
 )
 

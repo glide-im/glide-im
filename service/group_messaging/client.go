@@ -4,17 +4,17 @@ import (
 	"context"
 	"go_im/im/group"
 	"go_im/im/message"
-	"go_im/service/rpc"
+	rpc2 "go_im/pkg/rpc"
 )
 
 type Client struct {
-	rpc.Cli
+	rpc2.Cli
 }
 
-func NewClient(options *rpc.ClientOptions) (*Client, error) {
+func NewClient(options *rpc2.ClientOptions) (*Client, error) {
 	ret := &Client{}
 	var err error
-	ret.Cli, err = rpc.NewBaseClient(options)
+	ret.Cli, err = rpc2.NewBaseClient(options)
 	if err != nil {
 		return nil, err
 	}
@@ -38,6 +38,6 @@ func (c *Client) UpdateGroup(gid int64, update group.Update) error {
 }
 
 func getContext(gid int64) context.Context {
-	ctx := rpc.NewCtxFrom(context.Background())
+	ctx := rpc2.NewCtxFrom(context.Background())
 	return ctx
 }

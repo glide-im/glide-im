@@ -27,7 +27,7 @@ func Run() {
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
-	messaging.Init()
+	client.SetMessageHandler(messaging.HandleMessage)
 	server = conn.NewWsServer(op)
 
 	cm := client.NewDefaultManager()

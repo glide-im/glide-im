@@ -1,7 +1,6 @@
 package client
 
 import (
-	"go_im/im/comm"
 	"go_im/im/message"
 	"go_im/pkg/logger"
 )
@@ -11,7 +10,7 @@ type CustomerServiceClient struct {
 	uid int64
 
 	messages chan *message.Message
-	seq      *comm.AtomicInt64
+	seq      int64
 
 	// waiter the online customer service staff
 	waiter map[int64]interface{}
@@ -23,7 +22,7 @@ func NewCustomerServiceClient(uid int64) *CustomerServiceClient {
 	client := new(CustomerServiceClient)
 	client.messages = make(chan *message.Message, 200)
 	client.uid = uid
-	client.seq = new(comm.AtomicInt64)
+	client.seq = 0
 	client.waiter = map[int64]interface{}{}
 	return client
 }

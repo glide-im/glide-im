@@ -3,12 +3,12 @@ package group
 import (
 	"errors"
 	"github.com/panjf2000/ants/v2"
-	"go_im/im/comm"
 	"go_im/im/dao/msgdao"
 	"go_im/im/message"
 	"go_im/pkg/logger"
 	"go_im/pkg/timingwheel"
 	"strconv"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -71,13 +71,13 @@ type Group struct {
 	checkActive *timingwheel.Task
 
 	lastMsgAt time.Time
-	mu        *comm.Mutex
+	mu        *sync.Mutex
 	members   map[int64]*memberInfo
 }
 
 func newGroup(gid int64) *Group {
 	ret := new(Group)
-	ret.mu = comm.NewMutex()
+	ret.mu = &sync.Mutex{}
 	ret.members = map[int64]*memberInfo{}
 	ret.startup = strconv.FormatInt(time.Now().Unix(), 10)
 	ret.messages = make(chan *message.ChatMessage, 100)
@@ -235,7 +235,8 @@ func (g *Group) SendMessage(from int64, message *message.Message) {
 }
 
 func (g *Group) updateMember(u MemberUpdate) error {
-	defer g.mu.LockUtilReturn()()
+	g.mu.Lock()
+	defer g.mu.Unlock()
 	mf, ok := g.members[u.Uid]
 	if !ok && u.Flag != FlagMemberAdd {
 		return errors.New("member not exist")
@@ -260,22 +261,26 @@ func (g *Group) updateMember(u MemberUpdate) error {
 }
 
 func (g *Group) GetMember(id int64) *memberInfo {
-	defer g.mu.LockUtilReturn()()
+	g.mu.Lock()
+	defer g.mu.Unlock()
 	return g.members[id]
 }
 
 func (g *Group) PutMember(member int64, s *memberInfo) {
-	defer g.mu.LockUtilReturn()()
+	g.mu.Lock()
+	defer g.mu.Unlock()
 	g.members[member] = s
 }
 
 func (g *Group) RemoveMember(uid int64) {
-	defer g.mu.LockUtilReturn()()
+	g.mu.Lock()
+	defer g.mu.Unlock()
 	delete(g.members, uid)
 }
 
 func (g *Group) HasMember(uid int64) bool {
-	defer g.mu.LockUtilReturn()()
+	g.mu.Lock()
+	defer g.mu.Unlock()
 	_, exist := g.members[uid]
 	return exist
 }
