@@ -48,3 +48,6 @@ func (j jsonCodec) Decode(data []byte, i interface{}) error {
 func (j jsonCodec) Encode(i interface{}) ([]byte, error) {
 	return json.Marshal(i)
 }
+
+type GlideProtocol struct {
+}

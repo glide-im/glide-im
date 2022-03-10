@@ -16,8 +16,6 @@ Nsqd = "127.0.0.1:4154"
     Network = "tcp"
     Name = "im_api"
 [Api.Client]
-    Addr = "0.0.0.0"
-    Port = 7071
     Network = "tcp"
     Name = "im_api"
 
@@ -28,8 +26,6 @@ Nsqd = "127.0.0.1:4154"
     Network = "tcp"
     Name = "im_Gateway"
 [Gateway.Client]
-    Addr = "0.0.0.0"
-    Port = 7072
     Network = "tcp"
     Name = "im_Gateway"
 
@@ -40,8 +36,6 @@ Nsqd = "127.0.0.1:4154"
     Network = "tcp"
     Name = "im_group_messaging"
 [GroupMessaging.Client]
-    Addr = "0.0.0.0"
-    Port = 7073
     Network = "tcp"
     Name = "im_group_messaging"
 
@@ -52,7 +46,5 @@ Nsqd = "127.0.0.1:4154"
     Network = "tcp"
     Name = "im_message_router"
 [MessageRouter.Client]
-    Addr = "0.0.0.0"
-    Port = 7074
     Network = "tcp"
     Name = "im_message_router"

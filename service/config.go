@@ -22,6 +22,7 @@ type ServerConfig struct {
 	Port    int
 	Network string
 	Name    string
+	SrvID   string
 }
 
 type ClientConfig struct {

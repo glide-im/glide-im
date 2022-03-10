@@ -45,7 +45,7 @@ func (d *Data) Deserialize(i interface{}) error {
 	return nil
 }
 
-type CommMessage struct {
+type ComMessage struct {
 	Ver    int64
 	Seq    int64
 	Action string
@@ -53,8 +53,8 @@ type CommMessage struct {
 	Extra  map[string]string
 }
 
-func NewMessage(seq int64, action string, data interface{}) CommMessage {
-	return CommMessage{
+func NewMessage(seq int64, action string, data interface{}) ComMessage {
+	return ComMessage{
 		Ver:    0,
 		Seq:    seq,
 		Action: action,

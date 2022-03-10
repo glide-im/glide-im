@@ -4,17 +4,19 @@ import (
 	"context"
 	"go_im/im/group"
 	"go_im/im/message"
-	rpc2 "go_im/pkg/rpc"
+	"go_im/pkg/rpc"
+	"go_im/protobuff/gen/pb_rpc"
 )
 
 type Client struct {
-	rpc2.Cli
+	rpc.Cli
 }
 
-func NewClient(options *rpc2.ClientOptions) (*Client, error) {
+func NewClient(options *rpc.ClientOptions) (*Client, error) {
 	ret := &Client{}
 	var err error
-	ret.Cli, err = rpc2.NewBaseClient(options)
+	options.Selector = &groupSelector{}
+	ret.Cli, err = rpc.NewBaseClient(options)
 	if err != nil {
 		return nil, err
 	}
@@ -22,22 +24,27 @@ func NewClient(options *rpc2.ClientOptions) (*Client, error) {
 }
 
 func (c *Client) DispatchNotifyMessage(gid int64, message *message.GroupNotify) error {
-	return c.Call(getContext(gid), "UpdateMember", message, nil)
+	return c.Call(getContext(gid), "DispatchNotifyMessage", message, &pb_rpc.Response{})
 }
 
 func (c *Client) DispatchMessage(gid int64, action message.Action, message *message.ChatMessage) error {
-	return c.Call(getContext(gid), "UpdateMember", message, nil)
+	param := pb_rpc.DispatchGroupChatParam{
+		Gid:     gid,
+		Action:  string(action),
+		Message: message.ChatMessage,
+	}
+	return c.Call(getContext(gid), "DispatchMessage", &param, &pb_rpc.Response{})
 }
 
 func (c *Client) UpdateMember(gid int64, update []group.MemberUpdate) error {
-	return c.Call(getContext(gid), "UpdateMember", update, nil)
+	return c.Call(getContext(gid), "UpdateMember", update, &pb_rpc.Response{})
 }
 
 func (c *Client) UpdateGroup(gid int64, update group.Update) error {
-	return c.Call(getContext(gid), "UpdateMember", update, nil)
+	return c.Call(getContext(gid), "UpdateGroup", update, &pb_rpc.Response{})
 }
 
 func getContext(gid int64) context.Context {
-	ctx := rpc2.NewCtxFrom(context.Background())
+	ctx := rpc.NewCtxFrom(context.Background())
 	return ctx
 }

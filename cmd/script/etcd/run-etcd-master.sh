@@ -1,5 +1,5 @@
 etcd \
---data-dir=data.etcd
+--data-dir=data.etcd \
 --name master \
 --initial-advertise-peer-urls http://127.0.0.1:2380 \
 --listen-peer-urls http://127.0.0.1:2380 \

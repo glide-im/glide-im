@@ -1,11 +1,9 @@
 package message
 
 import (
-	"errors"
 	"fmt"
 	"go_im/im/message/pb"
 	"go_im/protobuff/gen/pb_im"
-	"google.golang.org/protobuf/proto"
 )
 
 type Message struct {
@@ -13,7 +11,7 @@ type Message struct {
 }
 
 func NewMessage(seq int64, action Action, data interface{}) *Message {
-	message := Message{pb.NewMessage(seq, string(action), data)}
+	message := Message{CommMessage: pb.NewMessage(seq, string(action), data)}
 	return &message
 }
 
@@ -22,11 +20,7 @@ func NewEmptyMessage() *Message {
 }
 
 func (m *Message) DeserializeData(v interface{}) error {
-	pbMsg, ok := v.(proto.Message)
-	if !ok {
-		return errors.New("not proto.Message")
-	}
-	return m.Data.UnmarshalTo(pbMsg)
+	return DefaultCodec.Decode(m.Data.Value, v)
 }
 
 func (m *Message) String() string {

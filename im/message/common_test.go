@@ -18,3 +18,13 @@ func TestNewMessage(t *testing.T) {
 	}
 	t.Log(message)
 }
+
+func TestJsonCodec_Decode(t *testing.T) {
+	c := NewChatMessage(1, 1, 1, 1, 1, "", 1)
+	m := NewMessage(1, ActionGroupMessageRecall, &c)
+	j, err := JsonCodec.Encode(&m)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(string(j))
+}

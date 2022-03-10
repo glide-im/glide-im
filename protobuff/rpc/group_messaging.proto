@@ -1,0 +1,31 @@
+syntax = "proto3";
+package pro.glide;
+
+option go_package = "/pb_rpc";
+import public 'message.proto';
+
+message MemberUpdateParam {
+  int64 uid = 1;
+  int64 flag = 2;
+}
+
+message UpdateMemberParam {
+  int64 gid = 1;
+  repeated MemberUpdateParam updates = 2;
+}
+
+message UpdateGroupParam {
+  int64 gid = 1;
+  int64 flag = 2;
+}
+
+message DispatchGroupNotifyParam {
+  int64 gid = 1;
+  pro.glide.GroupNotify notify = 2;
+}
+
+message DispatchGroupChatParam {
+  int64 gid = 1;
+  string action = 2;
+  pro.glide.ChatMessage message = 3;
+}

@@ -10,16 +10,29 @@ import (
 	"go_im/service/api_service"
 	"go_im/service/gateway"
 	"go_im/service/group_messaging"
+	"go_im/service/route"
 )
 
 func main() {
-	db.Init()
-	dao.Init()
 
 	config, err := service.GetConfig()
 	if err != nil {
 		panic(err)
 	}
+	apiConf := config.Api.Server
+	apiConf.SrvID = "api-1"
+
+	db.Init()
+	dao.Init()
+
+	err = route.Init(nil, &route.ConsumerConf{
+		Channel:     apiConf.SrvID,
+		NsqLookupds: []string{config.Nsq.Lookup},
+	})
+	if err != nil {
+		panic(err)
+	}
+
 	etcd := config.Etcd.Servers
 
 	err = gateway.InitMessageProducer(config.Nsq.Nsqd)
