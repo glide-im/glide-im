@@ -6,12 +6,12 @@ import public 'google/protobuf/any.proto';
 
 message DispatchRequest {
   string srvName = 1;
-  string id = 2;
+  int64 id = 2;
   google.protobuf.Any data = 3;
 }
 
 message UpdateRouteRequest {
   string srvName = 1;
-  string id = 2;
+  int64 id = 2;
   string node = 3;
 }
