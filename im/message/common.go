@@ -3,7 +3,7 @@ package message
 import (
 	"fmt"
 	"go_im/im/message/pb"
-	"go_im/protobuff/gen/pb_im"
+	"go_im/protobuf/gen/pb_im"
 )
 
 type Message struct {

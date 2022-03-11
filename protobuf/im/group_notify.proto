@@ -1,7 +1,7 @@
 syntax = "proto3";
 package pro.glide;
 
-option go_package = "/pb_im";
+option go_package = "go_im/protobuf/gen/pb_im";
 
 message GroupNotifyMemberAdded {
   repeated int64 uid = 1;

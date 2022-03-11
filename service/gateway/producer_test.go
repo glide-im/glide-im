@@ -5,7 +5,7 @@ import (
 	"go_im/im/message"
 	"go_im/pkg/logger"
 	"go_im/pkg/mq_nsq"
-	"go_im/protobuff/gen/pb_rpc"
+	"go_im/protobuf/gen/pb_rpc"
 	"google.golang.org/protobuf/proto"
 	"sync"
 	"testing"

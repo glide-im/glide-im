@@ -5,7 +5,7 @@ import (
 	"go_im/im/client"
 	"go_im/im/message"
 	"go_im/pkg/rpc"
-	"go_im/protobuff/gen/pb_rpc"
+	"go_im/protobuf/gen/pb_rpc"
 )
 
 const ServiceName = "client"

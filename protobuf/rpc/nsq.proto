@@ -1,0 +1,26 @@
+syntax = "proto3";
+package pro.glide;
+
+option go_package = "go_im/protobuf/gen/pb_rpc";
+import 'message.proto';
+import 'google/protobuf/any.proto';
+
+message NSQUserMessage {
+  int64 uid = 1;
+  CommMessage message = 2;
+}
+
+message NSQGroupMessage {
+  int64 gid = 1;
+  CommMessage message = 2;
+}
+
+message NSQGatewayMessage {
+  enum Operate {
+    LOGIN = 0;
+    LOGOUT = 1;
+    PUSH_MSG = 3;
+  }
+  Operate operate = 1;
+  google.protobuf.Any params = 2;
+}

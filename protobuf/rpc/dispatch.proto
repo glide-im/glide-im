@@ -1,0 +1,17 @@
+syntax = "proto3";
+package pro.glide;
+
+option go_package = "go_im/protobuf/gen/pb_rpc";
+import public 'google/protobuf/any.proto';
+
+message DispatchRequest {
+  string srvName = 1;
+  string id = 2;
+  google.protobuf.Any data = 3;
+}
+
+message UpdateRouteRequest {
+  string srvName = 1;
+  string id = 2;
+  string node = 3;
+}

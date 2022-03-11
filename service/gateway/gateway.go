@@ -4,7 +4,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/nsqio/go-nsq"
 	"go_im/pkg/mq_nsq"
-	"go_im/protobuff/gen/pb_rpc"
+	"go_im/protobuf/gen/pb_rpc"
 )
 
 type msgHandler struct {
