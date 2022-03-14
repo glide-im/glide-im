@@ -37,7 +37,6 @@ require (
 	github.com/miekg/dns v1.1.43 // indirect
 	github.com/nsqio/go-nsq v1.1.0
 	github.com/panjf2000/ants/v2 v2.4.6
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pquerna/ffjson v0.0.0-20190930134022-aa0246cd15f7 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
 	github.com/rpcxio/rpcx-etcd v0.0.0-20210826121711-7ccfefc846e7
