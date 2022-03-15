@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"go_im/pkg/murmur"
-	"strconv"
 )
 
 const (
@@ -12,22 +11,15 @@ const (
 	seed             = 0xabcd1234
 )
 
-type Uint32 interface {
-	Val() uint32
-}
+var (
+	errNodeExist = errors.New("node already exist")
+)
 
 type Node struct {
 	val     string
 	hash    uint32
 	virtual bool
 	real    *Node
-}
-
-func (n *Node) Val() uint32 {
-	return n.hash
-}
-func (n *Node) String() string {
-	return strconv.FormatInt(int64(n.hash), 10)
 }
 
 type Nodes struct {
@@ -43,12 +35,18 @@ func (n *Nodes) appendVirtual(node Node) {
 type ConsistentHash struct {
 	nodes   []Node
 	nodeMap map[string]*Nodes
+	virtual int
 }
 
 func NewConsistentHash() *ConsistentHash {
+	return NewConsistentHash2(duplicateVirtual)
+}
+
+func NewConsistentHash2(virtual int) *ConsistentHash {
 	hash := &ConsistentHash{
 		nodes:   []Node{},
 		nodeMap: map[string]*Nodes{},
+		virtual: virtual,
 	}
 	return hash
 }
@@ -82,7 +80,11 @@ func (c *ConsistentHash) Remove(id string) error {
 	return nil
 }
 
-func (c *ConsistentHash) Get(data string) *Node {
+func (c *ConsistentHash) Get(data string) (*Node, error) {
+	if len(c.nodes) == 0 {
+		return nil, errNodeExist
+	}
+
 	hash := murmur.Hash([]byte(data), seed)
 	index, _ := c.findIndex(hash)
 	if index == len(c.nodes) {
@@ -90,9 +92,9 @@ func (c *ConsistentHash) Get(data string) *Node {
 	}
 	n := c.nodes[index]
 	if n.virtual {
-		return n.real
+		return n.real, nil
 	}
-	return &n
+	return &n, nil
 }
 
 func (c *ConsistentHash) addVirtual(real *Node, duplicate int) {
@@ -124,10 +126,10 @@ func (c *ConsistentHash) addNode(nd Node) {
 	c.nodes = n
 }
 
-func (c *ConsistentHash) Add(id string) {
+func (c *ConsistentHash) Add(id string) error {
 	_, ok := c.nodeMap[id]
 	if ok {
-		// exist
+		return errors.New("node already exist, id=" + id)
 	}
 	hash := murmur.Hash([]byte(id), seed)
 	nd := Node{
@@ -141,11 +143,8 @@ func (c *ConsistentHash) Add(id string) {
 		virtual: []Node{},
 	}
 	c.addNode(nd)
-	c.addVirtual(&nd, duplicateVirtual)
-}
-
-func (c *ConsistentHash) removeHash(hash uint32) {
-
+	c.addVirtual(&nd, c.virtual)
+	return nil
 }
 
 func (c *ConsistentHash) removeIndex(index int) {

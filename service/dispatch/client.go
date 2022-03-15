@@ -1,7 +1,6 @@
 package dispatch
 
 import (
-	"context"
 	rpc2 "go_im/pkg/rpc"
 	"go_im/protobuf/gen/pb_rpc"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -14,7 +13,7 @@ type Client struct {
 func NewClient(options *rpc2.ClientOptions) (*Client, error) {
 	ret := &Client{}
 	var err error
-	options.Selector = &dispatchSelector{}
+	options.Selector = newSelector()
 	ret.Cli, err = rpc2.NewBaseClient(options)
 	if err != nil {
 		return nil, err
@@ -32,7 +31,8 @@ func (c *Client) DispatchGateway(uid int64, m *pb_rpc.NSQGatewayMessage) error {
 		Id:      uid,
 		Data:    any,
 	}
-	return c.Call(context.Background(), "Dispatch", request, &pb_rpc.Response{})
+	ctx := contextOfUidHashRoute(uid)
+	return c.Call(ctx, "Dispatch", request, &pb_rpc.Response{})
 }
 
 func (c *Client) UpdateGatewayRoute(uid int64, node string) error {
@@ -41,5 +41,6 @@ func (c *Client) UpdateGatewayRoute(uid int64, node string) error {
 		Id:      uid,
 		Node:    node,
 	}
-	return c.Call(context.Background(), "UpdateRoute", request, &pb_rpc.Response{})
+	ctx := contextOfUidHashRoute(uid)
+	return c.Call(ctx, "UpdateRoute", request, &pb_rpc.Response{})
 }

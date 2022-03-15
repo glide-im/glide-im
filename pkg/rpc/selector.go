@@ -17,7 +17,7 @@ func newSelector() *selector {
 	s := map[string]string{}
 	return &selector{
 		services: s,
-		round:    NewServerSelector(),
+		round:    NewRoundRobinSelector(),
 		tags:     map[string]string{},
 	}
 }

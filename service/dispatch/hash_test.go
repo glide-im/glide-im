@@ -8,15 +8,15 @@ import (
 
 func TestConsistentHash_Add(t *testing.T) {
 	c := NewConsistentHash()
-	c.Add("A")
-	c.Add("B")
-	c.Add("C")
-	c.Add("D")
-	c.Add("E")
-	c.Add("F")
-	c.Add("G")
+	_ = c.Add("A")
+	_ = c.Add("B")
+	_ = c.Add("C")
+	_ = c.Add("D")
+	_ = c.Add("E")
+	_ = c.Add("F")
+	_ = c.Add("G")
 
-	//for _, n := range c.nodes {
+	//for _, n := range hash.nodes {
 	//	t.Log(n.val, n.hash, n.virtual)
 	//}
 
@@ -34,7 +34,7 @@ func TestConsistentHash_Add(t *testing.T) {
 
 	for i := 0; i < count; i++ {
 		s := strconv.FormatInt(rand.Int63n(100000), 10)
-		nd := c.Get(s)
+		nd, _ := c.Get(s)
 		r := rates[nd.val]
 		rates[nd.val] = r + 1
 	}
@@ -46,13 +46,13 @@ func TestConsistentHash_Add(t *testing.T) {
 
 func TestConsistentHash_Remove(t *testing.T) {
 	c := NewConsistentHash()
-	c.Add("A")
-	c.Add("B")
-	c.Add("C")
-	c.Add("D")
-	c.Add("E")
-	c.Add("F")
-	//for _, n := range c.nodes {
+	_ = c.Add("A")
+	_ = c.Add("B")
+	_ = c.Add("C")
+	_ = c.Add("D")
+	_ = c.Add("E")
+	_ = c.Add("F")
+	//for _, n := range hash.nodes {
 	//	t.Log(n.val, n.hash, n.virtual)
 	//}
 	e := c.Remove("A")
@@ -60,7 +60,27 @@ func TestConsistentHash_Remove(t *testing.T) {
 		t.Error(e)
 	}
 	//t.Log("=====================")
-	//for _, n := range c.nodes {
+	//for _, n := range hash.nodes {
 	//	t.Log(n.val, n.hash, n.virtual)
 	//}
+}
+
+func TestAdd(t *testing.T) {
+	c := NewConsistentHash2(1)
+	_ = c.Add("A")
+	_ = c.Add("B")
+
+	for i := 0; i < 5; i++ {
+		s := strconv.FormatInt(int64(i), 10)
+		n, _ := c.Get(s)
+		t.Log(i, ":", n.val)
+	}
+
+	t.Log("===================")
+	_ = c.Add("C")
+	for i := 0; i < 5; i++ {
+		s := strconv.FormatInt(int64(i), 10)
+		n, _ := c.Get(s)
+		t.Log(i, ":", n.val)
+	}
 }

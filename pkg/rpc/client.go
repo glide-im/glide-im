@@ -36,21 +36,31 @@ func NewBaseClient(options *ClientOptions) (*BaseClient, error) {
 		options: options,
 		id:      fmt.Sprintf("%s@%s:%d", "", "", 1),
 	}
-	etcd, err := etcd_cli.NewEtcdV3Discovery(BaseServicePath, options.Name, options.EtcdServers, false, nil)
-	if err != nil {
-		return nil, err
+
+	var discovery client.ServiceDiscovery
+	var err error
+
+	if options.EtcdServers != nil {
+		discovery, err = etcd_cli.NewEtcdV3Discovery(BaseServicePath, options.Name, options.EtcdServers, false, nil)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		srv := fmt.Sprintf("%s@%s:%d", "tcp", options.Addr, options.Port)
+		discovery, _ = client.NewPeer2PeerDiscovery(srv, "")
 	}
+
 	if options.SerializeType == protocol.SerializeNone {
 		// using protobuffer serializer by default
 		options.SerializeType = protocol.ProtoBuffer
 	}
-	ret.cli = client.NewXClient(options.Name, client.Failtry, client.RoundRobin, etcd, options.Option)
+	ret.cli = client.NewXClient(options.Name, client.Failtry, client.RoundRobin, discovery, options.Option)
 
 	if options.Selector != nil {
 		ret.cli.SetSelector(options.Selector)
 	} else {
 		// using round robbin selector by default
-		ret.cli.SetSelector(NewServerSelector())
+		ret.cli.SetSelector(NewRoundRobinSelector())
 	}
 	return ret, nil
 }
