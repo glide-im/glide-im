@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/BurntSushi/toml"
+	"go_im/pkg/rpc"
 	"sync"
 )
 
@@ -25,6 +26,16 @@ type ServerConfig struct {
 	SrvID   string
 }
 
+func (s *ServerConfig) ToServerOptions(etcd []string) *rpc.ServerOptions {
+	return &rpc.ServerOptions{
+		Name:        s.Name,
+		Network:     s.Network,
+		Addr:        s.Addr,
+		Port:        s.Port,
+		EtcdServers: etcd,
+	}
+}
+
 type ClientConfig struct {
 	Retries           int32
 	IdleTimeout       int64
@@ -37,6 +48,15 @@ type ClientConfig struct {
 	// optional when use service discovery
 	Addr string
 	Port int32
+}
+
+func (c *ClientConfig) ToClientOptions() *rpc.ClientOptions {
+	return &rpc.ClientOptions{
+		Addr:        c.Addr,
+		Port:        int(c.Port),
+		Name:        c.Name,
+		EtcdServers: c.EtcdServers,
+	}
 }
 
 type ApiConfig struct {

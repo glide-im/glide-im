@@ -57,6 +57,6 @@ func (c *Client) ClientLogout(uid int64, device int64) error {
 }
 
 func (c *Client) EnqueueMessage(uid int64, device int64, message *message.Message) error {
-
+	// todo
 	return nil
 }

@@ -7,8 +7,16 @@ import (
 	"go_im/pkg/logger"
 )
 
-func HandleMessage(from int64, device int64, msg *message.Message) {
-	handleMessage(from, device, msg)
+type Interface func(from int64, device int64, msg *message.Message) error
+
+var handler Interface = handleMessage
+
+func HandleMessage(from int64, device int64, msg *message.Message) error {
+	return handler(from, device, msg)
+}
+
+func SetInterfaceImpl(i Interface) {
+	handler = i
 }
 
 func dispatchGroupMessage(gid int64, msg *message.ChatMessage) error {

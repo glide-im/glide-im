@@ -37,7 +37,7 @@ func init() {
 }
 
 // handleMessage 处理接收到的所有类型消息, 所有消息处理的入口
-func handleMessage(from int64, device int64, msg *message.Message) {
+func handleMessage(from int64, device int64, msg *message.Message) error {
 	logger.D("new message: uid=%d, %v", from, msg)
 	err := execPool.Submit(func() {
 		statistics.SMsgInput()
@@ -64,15 +64,16 @@ func handleMessage(from int64, device int64, msg *message.Message) {
 	if err != nil {
 		if err == ants.ErrPoolOverload {
 			logger.E("Messaging.MessageHandler goroutine pool is overload")
-			return
+			return err
 		}
 		if err == ants.ErrPoolClosed {
 			logger.E("Messaging.MessageHandler goroutine pool is closed")
-			return
+			return err
 		}
 		enqueueMessage(from, message.NewMessage(-1, message.ActionNotifyError, "internal server error"))
 		logger.E("async handle message error %v", err)
 	}
+	return nil
 }
 
 func handleHeartbeat(from int64, device int64, msg *message.Message) {

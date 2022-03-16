@@ -1,6 +1,9 @@
 package group
 
-import "go_im/im/message"
+import (
+	"go_im/im/client"
+	"go_im/im/message"
+)
 
 const (
 	_ = iota
@@ -53,7 +56,7 @@ type Interface interface {
 // manager 群相关操作入口
 var manager Interface = NewDefaultManager()
 
-var enqueueMessage MessageHandler = nil
+var enqueueMessage MessageHandler = client.EnqueueMessageToDevice
 
 func SetMessageHandler(handler MessageHandler) {
 	enqueueMessage = handler

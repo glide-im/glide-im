@@ -10,7 +10,7 @@ type Interface interface {
 	EnqueueMessage(uid int64, device int64, message *message.Message) error
 }
 
-type MessageHandler func(from int64, device int64, message *message.Message)
+type MessageHandler func(from int64, device int64, message *message.Message) error
 
 // messageHandleFunc 所有客户端消息都传递到该函数处理
 var messageHandleFunc MessageHandler = nil

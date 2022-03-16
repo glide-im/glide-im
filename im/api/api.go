@@ -6,7 +6,6 @@ import (
 	"go_im/im/api/app"
 	"go_im/im/api/auth"
 	"go_im/im/api/groups"
-	"go_im/im/api/http_srv"
 	"go_im/im/api/msg"
 	"go_im/im/api/router"
 	"go_im/im/api/test"
@@ -15,22 +14,6 @@ import (
 	"go_im/pkg/logger"
 	"strings"
 )
-
-var Handler ApiHandler = NewDefaultRouter()
-
-type ApiHandler interface {
-	Handle(uid int64, device int64, message *message.Message) error
-}
-
-// Handle 处理一个 api 消息
-func Handle(uid int64, device int64, message *message.Message) error {
-	return Handler.Handle(uid, device, message)
-}
-
-// RunHttpServer 启动 http 服务器, 以 HTTP 服务方式访问 api
-func RunHttpServer(addr string, port int) error {
-	return http_srv.Run(addr, port)
-}
 
 // Routers 默认 api 路由, 将不同 action 交给相应的方法处理
 type Routers struct {

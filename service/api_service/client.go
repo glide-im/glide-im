@@ -2,7 +2,6 @@ package api_service
 
 import (
 	"context"
-	"go_im/im/api"
 	"go_im/im/message"
 	rpc2 "go_im/pkg/rpc"
 	"go_im/protobuf/gen/pb_rpc"
@@ -20,7 +19,6 @@ func NewClient(options *rpc2.ClientOptions) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	api.Handler = ret
 	return ret, nil
 }
 

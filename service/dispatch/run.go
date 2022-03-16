@@ -8,6 +8,7 @@ import (
 )
 
 func SetupClient(configs *service.Configs) error {
+
 	config := configs.Dispatch.Client
 	options := &rpc.ClientOptions{
 		Name:        config.Name,
@@ -17,11 +18,12 @@ func SetupClient(configs *service.Configs) error {
 	if err != nil {
 		return err
 	}
+	// TODO remove
 	client.SetInterfaceImpl(cli)
 	return nil
 }
 
-func RunServer(configs service.Configs) error {
+func RunServer(configs *service.Configs) error {
 
 	sConfig := configs.Dispatch.Server
 	if sConfig == nil {

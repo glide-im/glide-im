@@ -37,7 +37,7 @@ wget https://raw.githubusercontent.com/Glide-IM/Glide-IM/master/cmd/script/glide
 
 ## 系统架构
 
-![i](_art/glide-system-arch.png)
+![i](_art/system_arch.png)
 
 ## 讨论群
 
