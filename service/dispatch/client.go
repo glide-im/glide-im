@@ -1,6 +1,7 @@
 package dispatch
 
 import (
+	"go_im/im/message"
 	rpc2 "go_im/pkg/rpc"
 	"go_im/protobuf/gen/pb_rpc"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -43,4 +44,19 @@ func (c *Client) UpdateGatewayRoute(uid int64, node string) error {
 	}
 	ctx := contextOfUidHashRoute(uid)
 	return c.Call(ctx, "UpdateRoute", request, &pb_rpc.Response{})
+}
+
+func (c *Client) ClientSignIn(oldUid int64, uid int64, device int64) error {
+
+	return nil
+}
+
+func (c *Client) ClientLogout(uid int64, device int64) error {
+
+	return nil
+}
+
+func (c *Client) EnqueueMessage(uid int64, device int64, message *message.Message) error {
+
+	return nil
 }

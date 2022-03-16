@@ -11,6 +11,9 @@ import (
 
 const ctxKeyCalculateVal = "key_hash_calculate_value"
 
+// dispatchSelector
+// 一致性 Hash 节点选择器, 客户端 rpc 调用时在上下文中附带 hash 计算值, selector 通过该值继续路由.
+// Consistent has server selector.
 type dispatchSelector struct {
 	srv map[string]string
 
@@ -70,6 +73,9 @@ func (s *dispatchSelector) UpdateServer(servers map[string]string) {
 	s.roundRobbin.UpdateServer(servers)
 }
 
+// contextOfUidHashRoute
+// 返回一个通过 uid 路由的 Context
+// Create the context with uid route info.
 func contextOfUidHashRoute(uid int64) context.Context {
 	return context.WithValue(context.Background(), ctxKeyCalculateVal, uid)
 }

@@ -48,3 +48,13 @@ Nsqd = "127.0.0.1:4154"
 [MessageRouter.Client]
     Network = "tcp"
     Name = "im_message_router"
+
+[Dispatch]
+[Dispatch.Server]
+    Addr = "0.0.0.0"
+    Port = 7075
+    Network = "tcp"
+    Name = "im_dispatch"
+[Dispatch.Client]
+    Network = "tcp"
+    Name = "im_dispatch"

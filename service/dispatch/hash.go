@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"go_im/pkg/murmur"
+	"sync"
 )
 
 const (
@@ -36,6 +37,8 @@ type ConsistentHash struct {
 	nodes   []Node
 	nodeMap map[string]*Nodes
 	virtual int
+
+	mu sync.RWMutex
 }
 
 func NewConsistentHash() *ConsistentHash {
@@ -47,10 +50,12 @@ func NewConsistentHash2(virtual int) *ConsistentHash {
 		nodes:   []Node{},
 		nodeMap: map[string]*Nodes{},
 		virtual: virtual,
+		mu:      sync.RWMutex{},
 	}
 	return hash
 }
 
+// Remove node by id, include virtual node.
 func (c *ConsistentHash) Remove(id string) error {
 	nodes, ok := c.nodeMap[id]
 	if !ok {
@@ -63,7 +68,9 @@ func (c *ConsistentHash) Remove(id string) error {
 		} else {
 			return errors.New("virtual node does not exist, id:" + vNd.val)
 		}
+		c.mu.RLock()
 		nd := c.nodes[ndIndex]
+		c.mu.RUnlock()
 		if nd.hash != vNd.hash {
 			return errors.New("could not find virtual node, id:" + vNd.val)
 		} else {
@@ -81,12 +88,39 @@ func (c *ConsistentHash) Remove(id string) error {
 }
 
 func (c *ConsistentHash) Get(data string) (*Node, error) {
+	hash := murmur.Hash([]byte(data), seed)
+	index, _ := c.findIndex(hash)
+	return c.get(index)
+}
+
+func (c *ConsistentHash) Add(id string) error {
+	_, ok := c.nodeMap[id]
+	if ok {
+		return errors.New("node already exist, id=" + id)
+	}
+	hash := murmur.Hash([]byte(id), seed)
+	nd := Node{
+		val:     id,
+		hash:    hash,
+		virtual: false,
+		real:    nil,
+	}
+	c.nodeMap[id] = &Nodes{
+		nd:      nd,
+		virtual: []Node{},
+	}
+	c.addNode(nd)
+	c.addVirtual(&nd, c.virtual)
+	return nil
+}
+
+func (c *ConsistentHash) get(index int) (*Node, error) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
 	if len(c.nodes) == 0 {
 		return nil, errNodeExist
 	}
-
-	hash := murmur.Hash([]byte(data), seed)
-	index, _ := c.findIndex(hash)
 	if index == len(c.nodes) {
 		index = len(c.nodes) - 1
 	}
@@ -114,6 +148,9 @@ func (c *ConsistentHash) addVirtual(real *Node, duplicate int) {
 }
 
 func (c *ConsistentHash) addNode(nd Node) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	index, _ := c.findIndex(nd.hash)
 	p1 := c.nodes[:index]
 	p2 := c.nodes[index:]
@@ -126,32 +163,15 @@ func (c *ConsistentHash) addNode(nd Node) {
 	c.nodes = n
 }
 
-func (c *ConsistentHash) Add(id string) error {
-	_, ok := c.nodeMap[id]
-	if ok {
-		return errors.New("node already exist, id=" + id)
-	}
-	hash := murmur.Hash([]byte(id), seed)
-	nd := Node{
-		val:     id,
-		hash:    hash,
-		virtual: false,
-		real:    nil,
-	}
-	c.nodeMap[id] = &Nodes{
-		nd:      nd,
-		virtual: []Node{},
-	}
-	c.addNode(nd)
-	c.addVirtual(&nd, c.virtual)
-	return nil
-}
-
 func (c *ConsistentHash) removeIndex(index int) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	if index == len(c.nodes)-1 {
 		c.nodes = c.nodes[:len(c.nodes)-1]
 		return
 	}
+
 	p2 := c.nodes[index+1:]
 	c.nodes = c.nodes[:index]
 	for _, n := range p2 {
@@ -159,17 +179,21 @@ func (c *ConsistentHash) removeIndex(index int) {
 	}
 }
 
-func (c *ConsistentHash) findIndex(s uint32) (int, bool) {
+func (c *ConsistentHash) findIndex(h uint32) (int, bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
 	left := 0
 	right := len(c.nodes)
 	exist := false
+
 LOOP:
 	if left < right {
 		middle := (left + right) / 2
 		hash := c.nodes[middle].hash
-		if hash < s {
+		if hash < h {
 			left = middle + 1
-		} else if hash == s {
+		} else if hash == h {
 			left = middle + 1
 			exist = true
 		} else {

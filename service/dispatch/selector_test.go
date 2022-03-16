@@ -8,9 +8,9 @@ func TestReflectMethodName(t *testing.T) {
 
 	s := newSelector()
 	nodes := map[string]string{
-		"node_a": "",
-		"node_c": "",
-		"node_d": "",
+		"node_AAA": "",
+		"node_BBB": "",
+		"node_CCC": "",
 	}
 	s.UpdateServer(nodes)
 
@@ -21,6 +21,7 @@ func TestReflectMethodName(t *testing.T) {
 	}
 
 	nodes["node_e"] = ""
+	nodes["node_f"] = ""
 	s.UpdateServer(nodes)
 	t.Log("=====================")
 
@@ -30,7 +31,7 @@ func TestReflectMethodName(t *testing.T) {
 		t.Log(i, "=>", n)
 	}
 
-	delete(nodes, "node_a")
+	delete(nodes, "node_AAA")
 	s.UpdateServer(nodes)
 	t.Log("=====================")
 

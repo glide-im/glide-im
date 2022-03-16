@@ -7,6 +7,7 @@ import (
 	"go_im/pkg/db"
 	"go_im/pkg/rpc"
 	"go_im/service"
+	"go_im/service/dispatch"
 	"go_im/service/gateway"
 	"go_im/service/group_messaging"
 	"go_im/service/messaging_service"
@@ -21,6 +22,11 @@ func main() {
 		panic(err)
 	}
 	etcd := config.Etcd.Servers
+
+	err = dispatch.SetupClient(config)
+	if err != nil {
+		panic(err)
+	}
 
 	err = gateway.InitMessageProducer(config.Nsq.Nsqd)
 	if err != nil {

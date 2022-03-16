@@ -54,6 +54,11 @@ type GroupMessagingConfig struct {
 	Client *ClientConfig
 }
 
+type DispatchConfig struct {
+	Server *ServerConfig
+	Client *ClientConfig
+}
+
 type MessageRouterConfig struct {
 	Server *ServerConfig
 	Client *ClientConfig
@@ -72,6 +77,7 @@ type Configs struct {
 	Etcd *EtcdConfig
 	Nsq  *NsqConfig
 
+	Dispatch       *DispatchConfig
 	Api            *ApiConfig
 	Gateway        *GatewayConfig
 	GroupMessaging *GroupMessagingConfig
