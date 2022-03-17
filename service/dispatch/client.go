@@ -36,6 +36,22 @@ func (c *Client) DispatchGateway(uid int64, m *pb_rpc.NSQGatewayMessage) error {
 	return c.Call(ctx, "Dispatch", request, &pb_rpc.Response{})
 }
 
+func (c *Client) DispatchGatewayDirect(uid int64, gateway string, m *pb_rpc.NSQGatewayMessage) error {
+	any, err := anypb.New(m)
+	if err != nil {
+		return err
+	}
+	request := &pb_rpc.DispatchRequest{
+		SrvName:  "gateway",
+		Id:       uid,
+		Data:     any,
+		Direct:   true,
+		RouteVal: gateway,
+	}
+	ctx := contextOfUidHashRoute(uid)
+	return c.Call(ctx, "Dispatch", request, &pb_rpc.Response{})
+}
+
 func (c *Client) UpdateGatewayRoute(uid int64, node string) error {
 	request := &pb_rpc.UpdateRouteRequest{
 		SrvName: "gateway",

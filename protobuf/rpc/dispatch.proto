@@ -8,6 +8,8 @@ message DispatchRequest {
   string srvName = 1;
   int64 id = 2;
   google.protobuf.Any data = 3;
+  string routeVal = 4;
+  bool direct = 5;
 }
 
 message UpdateRouteRequest {

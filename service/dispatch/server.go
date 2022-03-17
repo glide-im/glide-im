@@ -27,6 +27,9 @@ func NewServer(msgNsqdAddr string, options *rpc.ServerOptions) (*rpc.BaseServer,
 }
 
 func (s *Server) Dispatch(ctx context.Context, param *pb_rpc.DispatchRequest, replay *pb_rpc.Response) error {
+	if param.Direct {
+		return nsq.publish(param.RouteVal, param.Data)
+	}
 	node := cache.getRoute(param.SrvName, param.Id)
 	if node == "" {
 		return errors.New("route not fund")
