@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-deploy:
-    name: GoIM
+    name: GlideIM
     runs-on: ubuntu-latest
     steps:
 
@@ -18,8 +18,6 @@ jobs:
         id: get_tag
         run: |
           echo ::set-output name=TAG::${GITHUB_REF/refs\/tags\//}
-          echo go_im_${GITHUB_REF/refs\/tags\//}.tar.gz
-
 
       - name: Set Up Go
         uses: actions/setup-go@master
@@ -30,12 +28,18 @@ jobs:
         run: |
           go get -v -t -d ./...
 
-      - name: Build
+      - name: Build Linux x64
         run: |
-            export CGO_ENABLED=0
-            export GOOS=linux
-            export GOARCH=amd64
-            go build -o go_im ./cmd/run/singleton/
+          export CGO_ENABLED=0
+          export GOOS=linux
+          export GOARCH=amd64
+          go build -o glide ./cmd/run/singleton/
+
+      - name: Build Windows x64
+        run: |
+          export GOOS=windows
+          export GOARCH=amd64
+          go build -o glide.exe ./cmd/run/singleton/
 
       - name: Create Release
         id: create_release
@@ -49,9 +53,11 @@ jobs:
           prerelease: false
 
       - name: build TAR PACKAGE
-        run: tar -czvf go_im.tar.gz go_im
+        run: |
+          tar -czvf glide_linux_x64.tar.gz glide config.toml
+          tar -czvf glide_windows_x64.tar.gz glide.exe config.toml
 
-      - name: Upload Release Asset
+      - name: Upload Release Asset Linux64
         id: upload-release-asset
         uses: actions/upload-release-asset@master
         env:
@@ -59,22 +65,34 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: go_im.tar.gz
-          asset_name: go_im_singleton_${{ steps.get_tag.outputs.TAG }}.tar.gz
+          asset_path: glide_linux_x64.tar.gz
+          asset_name: glide_linux_x64_${{ steps.get_tag.outputs.TAG }}.tar.gz
           asset_content_type: application/gzip
 
-      - name: Deploy
-        uses: appleboy/ssh-action@master
+      - name: Upload Release Asset Windows64
+        id: upload-release-asset
+        uses: actions/upload-release-asset@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GitAction }}
         with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          password: ${{ secrets.PASSWORD }}
-          port: ${{ secrets.PORT }}
-          script: |
-            cd /srv/glideim
-            wget https://github.91chi.fun//https://github.com/dengzii/go_im/releases/latest/download/go_im_singleton_${{ steps.get_tag.outputs.TAG }}.tar.gz -O go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz
-            tar zxvf go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz
-            pkill go_im
-            nohup ./go_im >> log.output &
-            rm go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz
+          tag_name: ${{ github.ref }}
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: glide_windows_x64.tar.gz
+          asset_name: glide_windows_x64_${{ steps.get_tag.outputs.TAG }}.tar.gz
+          asset_content_type: application/gzip
+
+#      - name: Deploy
+#        uses: appleboy/ssh-action@master
+#        with:
+#          host: ${{ secrets.HOST }}
+#          username: ${{ secrets.USERNAME }}
+#          password: ${{ secrets.PASSWORD }}
+#          port: ${{ secrets.PORT }}
+#          script: |
+#            cd /srv/glideim
+#            wget https://github.91chi.fun//https://github.com/dengzii/go_im/releases/latest/download/go_im_singleton_${{ steps.get_tag.outputs.TAG }}.tar.gz -O go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz
+#            tar zxvf go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz
+#            pkill go_im
+#            nohup ./go_im >> log.output &
+#            rm go_im_${{ steps.get_tag.outputs.TAG }}.tar.gz
 
