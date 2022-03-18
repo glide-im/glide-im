@@ -8,14 +8,14 @@
 
 ## 简介
 
-GlideIM 是一款完全Free, 开源的 IM 服务, 项目采用低耦合度模块化方式编写, 方便功能迭代和维护, 支持单实例, 微服务等多种方式部署. 支持 WebSocket, TCP 两种连接协议, 内置 JSON,
+GlideIM 是一款完全开源的 IM 服务, 支持单实例, 微服务等多种方式部署. 支持 WebSocket, TCP 两种连接协议, 内置 JSON,
 ProtoBuff 两种消息交换协议, 并支持添加协议解析过程, 消息加密等. GlideIM 还实现了智能心跳保活机制, 死链接检测, 消息 ACK 机制等功能.
 
 ## 立即体验
 
 [安卓体验 APP 下载](https://github.com/Glide-IM/Glide-IM-Android/releases)
 
-[GlideIM Web (TODO)](#)
+[GlideIM Web (TODO)](https://github.com/Glide-IM/Glide-IM-Web)
 
 ## 一键部署
 
@@ -36,6 +36,8 @@ wget https://raw.githubusercontent.com/Glide-IM/Glide-IM/master/cmd/script/glide
 单机支持约 20w(4万消息吞吐量) 活跃用户同时聊天(100Mbps), [查看测试数据](https://github.com/Glide-IM/Glide-IM/blob/master/doc/performance_test.md)
 
 ## 系统架构
+
+介绍文章: [GlideIM - Golang 实现的高性能的分布式 IM](https://github.com/Glide-IM/Glide-IM/blob/master/doc/arch.md)
 
 ![i](_art/system_arch.png)
 
