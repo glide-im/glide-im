@@ -70,7 +70,7 @@ jobs:
           asset_content_type: application/gzip
 
       - name: Upload Release Asset Windows64
-        id: upload-release-asset
+        id: upload-release-asset-2
         uses: actions/upload-release-asset@master
         env:
           GITHUB_TOKEN: ${{ secrets.GitAction }}
