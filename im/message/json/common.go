@@ -15,6 +15,10 @@ func NewData(d interface{}) Data {
 	}
 }
 
+func (d *Data) Data() interface{} {
+	return d.des
+}
+
 func (d *Data) UnmarshalJSON(bytes []byte) error {
 	d.des = bytes
 	return nil
@@ -24,7 +28,7 @@ func (d *Data) MarshalJSON() ([]byte, error) {
 	return json.Marshal(d.des)
 }
 
-func (d *Data) Bytes() []byte {
+func (d *Data) bytes() []byte {
 	bytes, ok := d.des.([]byte)
 	if ok {
 		return bytes
@@ -53,11 +57,11 @@ type ComMessage struct {
 	Extra  map[string]string
 }
 
-func NewMessage(seq int64, action string, data interface{}) ComMessage {
-	return ComMessage{
+func NewMessage(seq int64, action string, data interface{}) *ComMessage {
+	return &ComMessage{
 		Ver:    0,
 		Seq:    seq,
 		Action: action,
-		Data:   Data{des: data},
+		Data:   NewData(data),
 	}
 }

@@ -15,7 +15,7 @@ import (
 func TestProto(t *testing.T) {
 	m := pb_rpc.NSQUserMessage{
 		Uid:     1,
-		Message: message.NewMessage(1, message.ActionChatMessage, nil).CommMessage,
+		Message: message.NewMessage(1, message.ActionChatMessage, nil).GetProtobuf(),
 	}
 	bts, err := proto.Marshal(&m)
 	if err != nil {

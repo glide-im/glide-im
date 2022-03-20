@@ -116,7 +116,7 @@ func (g *Group) EnqueueMessage(msg *message.ChatMessage, recall bool) (int64, er
 
 	if recall {
 		r := &message.Recall{}
-		err := message.UnmarshallJson(msg.Content, r)
+		err := message.JsonCodec.Decode([]byte(msg.Content), r)
 		if err != nil {
 			return 0, err
 		}

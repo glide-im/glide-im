@@ -20,7 +20,7 @@ func handleGroupMsg(from int64, device int64, msg *message.Message) {
 	groupMsg.From = from
 
 	var err error
-	if msg.Action == message.ActionGroupMessageRecall {
+	if msg.GetAction() == message.ActionGroupMessageRecall {
 		err = dispatchRecallMessage(groupMsg.To, groupMsg)
 	} else {
 		err = dispatchGroupMessage(groupMsg.To, groupMsg)

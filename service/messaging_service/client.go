@@ -25,7 +25,7 @@ func (c *Client) HandleMessage(from int64, device int64, message *message.Messag
 	request := pb_rpc.MessagingHandleRequest{
 		Id:      from,
 		Device:  device,
-		Message: message.CommMessage,
+		Message: message.GetProtobuf(),
 	}
 
 	return c.Call(context.Background(), "UpdateMember", &request, &pb_rpc.Response{})

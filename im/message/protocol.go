@@ -8,11 +8,7 @@ import (
 
 var ProtoBuffCodec = protobufCodec{}
 var JsonCodec = jsonCodec{}
-var DefaultCodec = ProtoBuffCodec
-
-func UnmarshallJson(json_ string, i interface{}) error {
-	return json.Unmarshal([]byte(json_), i)
-}
+var DefaultCodec = JsonCodec
 
 type Codec interface {
 	Decode(data []byte, i interface{}) error
@@ -46,6 +42,11 @@ func (j jsonCodec) Decode(data []byte, i interface{}) error {
 }
 
 func (j jsonCodec) Encode(i interface{}) ([]byte, error) {
+	//m, ok := i.(*Message)
+	//msg := i
+	//if ok {
+	//msg = json2.NewMessage(m.Seq, m.Action, m.Data)
+	//}
 	return json.Marshal(i)
 }
 

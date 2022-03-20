@@ -102,11 +102,12 @@ const (
 
 func (a *Routers) intercept(uid int64, device int64, message *message.Message) error {
 
-	if strings.HasPrefix(message.Action, "api.test") {
+	if strings.HasPrefix(message.GetAction(), "api.test") {
 		return nil
 	}
 
-	doNotNeedAuth := message.Action == actionLogin || message.Action == actionRegister || message.Action == actionAuth || message.Action == actionEcho
+	action := message.GetAction()
+	doNotNeedAuth := action == actionLogin || action == actionRegister || action == actionAuth || action == actionEcho
 	if uid <= 0 && !doNotNeedAuth {
 		return errors.New("unauthorized")
 	}
@@ -118,8 +119,8 @@ func (a *Routers) intercept(uid int64, device int64, message *message.Message) e
 }
 
 func (a *Routers) onError(uid int64, device int64, msg *message.Message, err error) {
-	logger.D("a.onError: uid=%d, Action=%s, err=%s", uid, msg.Action, err.Error())
+	logger.D("a.onError: uid=%d, Action=%s, err=%s", uid, msg.GetAction(), err.Error())
 
-	errMsg := message.NewMessage(msg.Seq, message.ActionApiFailed, err.Error())
+	errMsg := message.NewMessage(msg.GetSeq(), message.ActionApiFailed, err.Error())
 	apidep.SendMessageIfOnline(uid, device, errMsg)
 }

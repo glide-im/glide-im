@@ -1,28 +1,126 @@
 package message
 
 import (
-	"fmt"
+	"errors"
+	"go_im/im/message/json"
 	"go_im/im/message/pb"
 	"go_im/protobuf/gen/pb_im"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 type Message struct {
-	*pb_im.CommMessage
+	pb   *pb_im.CommMessage
+	json *json.ComMessage
+	data interface{}
+}
+
+func (m *Message) SetSeq(seq int64) {
+	if m.json != nil {
+		m.json.Seq = seq
+	}
+	if m.pb != nil {
+		m.pb.Seq = seq
+	}
+}
+
+func (m *Message) GetSeq() int64 {
+	if m.json != nil {
+		return m.json.Seq
+	}
+	if m.pb != nil {
+		return m.pb.Seq
+	}
+	return 0
+}
+
+func (m *Message) GetAction() string {
+	if m.json != nil {
+		return m.json.Action
+	}
+	if m.pb != nil {
+		return m.pb.Action
+	}
+	return ""
+}
+
+func (m *Message) GetData() interface{} {
+	if m.data != nil {
+		return m.data
+	}
+	return nil
+}
+
+func (m *Message) MarshalJSON() ([]byte, error) {
+	if m.json == nil {
+		if m.pb == nil {
+			m.json = json.NewMessage(0, "", nil)
+		} else {
+			//if m.data == nil {
+			//	return nil, errors.New("cannot marshal protobuf msg to json")
+			//}
+			if m.data == nil {
+				m.data = m.pb.Data
+			}
+			m.json = json.NewMessage(m.pb.Seq, m.pb.Action, m.data)
+		}
+	}
+	return JsonCodec.Encode(m.json)
+}
+
+func (m *Message) UnmarshalJSON(bytes []byte) error {
+	if m.json == nil {
+		m.json = &json.ComMessage{}
+	}
+	return JsonCodec.Decode(bytes, m.json)
+}
+
+func (m *Message) ProtoReflect() protoreflect.Message {
+	return m.GetProtobuf().ProtoReflect()
+}
+
+func (m *Message) GetProtobuf() *pb_im.CommMessage {
+	if m.pb == nil {
+		if m.json == nil {
+			m.pb = &pb_im.CommMessage{}
+		} else {
+			m.data = m.json.Data.Data()
+			m.pb = pb.NewMessage(m.json.Seq, m.json.Action, m.data)
+		}
+	}
+	return m.pb
 }
 
 func NewMessage(seq int64, action Action, data interface{}) *Message {
-	message := Message{CommMessage: pb.NewMessage(seq, string(action), data)}
+	message := Message{
+		pb:   pb.NewMessage(seq, string(action), data),
+		json: nil,
+		data: data,
+	}
 	return &message
 }
 
 func NewEmptyMessage() *Message {
-	return &Message{&pb_im.CommMessage{Data: &pb_im.Any{}}}
+	return &Message{
+		pb:   nil,
+		json: nil,
+		data: nil,
+	}
 }
 
 func (m *Message) DeserializeData(v interface{}) error {
-	return DefaultCodec.Decode(m.Data.Value, v)
+	if m.pb != nil {
+		return ProtoBuffCodec.Decode(m.pb.Data.Value, v)
+	}
+	if m.json != nil {
+		return m.json.Data.Deserialize(v)
+	}
+	return errors.New("the data is nil")
 }
 
 func (m *Message) String() string {
-	return fmt.Sprintf("Message{Seq=%d, Action=%s, Data=%v}", m.Seq, m.Action, m.Data)
+	b, err := JsonCodec.Encode(m)
+	if err != nil {
+		return "-"
+	}
+	return string(b)
 }

@@ -41,23 +41,23 @@ func handleMessage(from int64, device int64, msg *message.Message) error {
 	logger.D("new message: uid=%d, %v", from, msg)
 	err := execPool.Submit(func() {
 		statistics.SMsgInput()
-		h, ok := messageHandlerFunMap[message.Action(msg.Action)]
+		h, ok := messageHandlerFunMap[message.Action(msg.GetAction())]
 		if ok {
 			h(from, device, msg)
 			return
 		}
-		switch msg.Action {
+		switch msg.GetAction() {
 		case message.ActionHeartbeat:
 			handleHeartbeat(from, device, msg)
 		default:
-			if strings.HasPrefix(msg.Action, message.ActionApi) {
+			if strings.HasPrefix(msg.GetAction(), message.ActionApi) {
 				err := api.Handle(from, device, msg)
 				if err != nil {
 					logger.E("handle api message error %v", err)
 				}
 			} else {
 				enqueueMessage(from, message.NewMessage(-1, message.ActionNotifyError, "unknown action"))
-				logger.W("receive a unknown action message: " + string(msg.Action))
+				logger.W("receive a unknown action message: " + string(msg.GetAction()))
 			}
 		}
 	})
@@ -110,7 +110,7 @@ func onHandleMessagePanic(i interface{}) {
 func unwrap(from int64, msg *message.Message, to interface{}) bool {
 	err := msg.DeserializeData(to)
 	if err != nil {
-		enqueueMessage(from, message.NewMessage(msg.Seq, message.ActionNotifyError, "send message failed"))
+		enqueueMessage(from, message.NewMessage(msg.GetSeq(), message.ActionNotifyError, "send message failed"))
 		logger.E("sender chat senderMsg %v", err)
 		return false
 	}

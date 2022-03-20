@@ -110,11 +110,11 @@ func getContext(ctx *gin.Context) *route.Context {
 	info := &route.Context{
 		Uid:    0,
 		Device: 0,
-		R: func(message *message.Message) {
+		R: func(msg *message.Message) {
 			response := CommonResponse{
 				Code: 100,
 				Msg:  "success",
-				Data: &message.Data,
+				Data: msg.GetData(),
 			}
 			ctx.JSON(http.StatusOK, &response)
 		},

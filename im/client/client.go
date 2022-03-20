@@ -127,10 +127,10 @@ func (c *Client) EnqueueMessage(message *message.Message) {
 			logger.D("client has closed, enqueue message failed")
 			return
 		}
-		logger.I("EnqueueMessage(id=%d, %s): %v", c.id, message.Action, message)
-		if message.Seq < 0 {
+		logger.I("EnqueueMessage(id=%d, %s): %v", c.id, message.GetAction(), message)
+		if message.GetSeq() < 0 {
 			// 服务端主动发送的消息使用服务端的序列号
-			message.Seq = c.getNextSeq()
+			message.SetSeq(c.getNextSeq())
 		}
 		select {
 		case c.messages <- message:

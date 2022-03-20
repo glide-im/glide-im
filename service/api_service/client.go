@@ -49,7 +49,7 @@ func (c *Client) Handle(uid int64, device int64, message *message.Message) error
 	request := pb_rpc.ApiHandleRequest{
 		Uid:     uid,
 		Device:  device,
-		Message: message.CommMessage,
+		Message: message.GetProtobuf(),
 	}
 	err := c.Call(ctx, "Handle", &request, &emptypb.Empty{})
 	return err

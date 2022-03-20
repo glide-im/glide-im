@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/wcharczuk/go-chart"
+	"go_im/im"
 	"go_im/im/dao/msgdao"
-	"go_im/im/messaging"
 	"go_im/im/statistics"
-	"go_im/pkg/db"
 	"go_im/pkg/logger"
 	"net/http"
 	"os"
@@ -22,10 +21,9 @@ func main() {
 
 func RunAnalysisServer() {
 
+	im.Init()
 	msgdao.MockChatMsg(time.Millisecond * 5)
 	msgdao.MockCommDao()
-	db.Init()
-	messaging.Init()
 
 	done := make(chan struct{})
 

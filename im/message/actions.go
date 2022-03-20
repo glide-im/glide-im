@@ -4,16 +4,14 @@ type Action string
 
 const (
 	ActionMessage            Action = "message"
-	ActionGroupMessage              = "message.group"
 	ActionChatMessage               = "message.chat"
 	ActionChatMessageRecall         = "message.chat.recall"
+	ActionChatMessageRetry          = "message.chat.retry"  // 消息重发, 服务器未ack
+	ActionChatMessageResend         = "message.chat.resend" // 消息重发, 服务器已ack, 接收方未ack
+	ActionGroupMessage              = "message.group"
 	ActionGroupMessageRecall        = "message.group.recall"
-	// ActionChatMessageRetry 消息重发, 服务器未ack
-	ActionChatMessageRetry = "message.chat.retry"
-	// ActionChatMessageResend 消息重发, 服务器已ack, 接收方未ack
-	ActionChatMessageResend = "message.chat.resend"
-	ActionCSMessage         = "message.cs"
-	ActionMessageFailed     = "message.failed.send"
+	ActionCSMessage                 = "message.cs"
+	ActionMessageFailed             = "message.failed.send"
 
 	ActionNotifyNeedAuth      = "notify.auth"
 	ActionNotifyKickOut       = "notify.kickout"

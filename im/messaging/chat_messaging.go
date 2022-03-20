@@ -22,16 +22,16 @@ func handleChatMessage(from int64, device int64, m *message.Message) {
 	}
 	msg.From = from
 
-	if m.Action != message.ActionChatMessageResend {
+	if m.GetAction() != message.ActionChatMessageResend {
 		lg := from
 		sm := msg.To
 		if lg < sm {
 			lg, sm = sm, lg
 		}
 		sessionId := strconv.FormatInt(lg, 10) + "_" + strconv.FormatInt(sm, 10)
-		if m.Action == message.ActionChatMessageRecall {
+		if m.GetAction() == message.ActionChatMessageRecall {
 			r := &message.Recall{}
-			err := message.UnmarshallJson(msg.Content, r)
+			err := message.DefaultCodec.Decode([]byte(msg.Content), r)
 			if err != nil || r.RecallBy != from {
 				return
 			}

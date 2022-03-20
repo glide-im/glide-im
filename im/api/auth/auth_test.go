@@ -59,6 +59,6 @@ func TestAuthApi_SignIn(t *testing.T) {
 }
 
 func TestAuthApi_Logout(t *testing.T) {
-	err := authApi.Logout(getContext(543603, 1), &LogoutRequest{})
+	err := authApi.Logout(getContext(543603, 1))
 	logErr(t, err)
 }

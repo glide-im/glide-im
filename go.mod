@@ -32,21 +32,17 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/klauspost/reedsolomon v1.9.13 // indirect
-	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/miekg/dns v1.1.43 // indirect
 	github.com/nsqio/go-nsq v1.1.0
 	github.com/panjf2000/ants/v2 v2.4.6
-	github.com/pquerna/ffjson v0.0.0-20190930134022-aa0246cd15f7 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
 	github.com/rpcxio/rpcx-etcd v0.0.0-20210826121711-7ccfefc846e7
 	github.com/rs/cors v1.8.0 // indirect
 	github.com/smallnest/quick v0.0.0-20210406061658-4bf95e372fbd // indirect
 	github.com/smallnest/rpcx v1.6.10
 	github.com/soheilhy/cmux v0.1.5 // indirect
-	github.com/stretchr/testify v1.7.0
 	github.com/tjfoc/gmsm v1.4.1 // indirect
-	github.com/ugorji/go v1.2.6 // indirect
 	github.com/valyala/fastrand v1.0.0 // indirect
 	github.com/wcharczuk/go-chart v2.0.1+incompatible
 	go.opencensus.io v0.23.0 // indirect
