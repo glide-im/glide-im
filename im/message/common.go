@@ -90,6 +90,14 @@ func (m *Message) GetProtobuf() *pb_im.CommMessage {
 	return m.pb
 }
 
+func FromProtobuf(message *pb_im.CommMessage) *Message {
+	return &Message{
+		pb:   message,
+		json: nil,
+		data: nil,
+	}
+}
+
 func NewMessage(seq int64, action Action, data interface{}) *Message {
 	message := Message{
 		pb:   pb.NewMessage(seq, string(action), data),

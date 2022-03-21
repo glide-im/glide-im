@@ -79,7 +79,12 @@ type DispatchConfig struct {
 	Client *ClientConfig
 }
 
-type MessageRouterConfig struct {
+type BrokerConfig struct {
+	Server *ServerConfig
+	Client *ClientConfig
+}
+
+type MessagingConfig struct {
 	Server *ServerConfig
 	Client *ClientConfig
 }
@@ -97,9 +102,10 @@ type Configs struct {
 	Etcd *EtcdConfig
 	Nsq  *NsqConfig
 
+	Broker         *BrokerConfig
 	Dispatch       *DispatchConfig
 	Api            *ApiConfig
 	Gateway        *GatewayConfig
 	GroupMessaging *GroupMessagingConfig
-	MessageRouter  *MessageRouterConfig
+	Messaging      *MessagingConfig
 }

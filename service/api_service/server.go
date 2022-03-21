@@ -14,7 +14,7 @@ type Server struct {
 }
 
 func (s *Server) Handle(ctx context.Context, r *pb_rpc.ApiHandleRequest, resp *emptypb.Empty) error {
-	return api.Handle(r.GetUid(), r.GetDevice(), &message.Message{CommMessage: r.GetMessage()})
+	return api.Handle(r.GetUid(), r.GetDevice(), message.FromProtobuf(r.Message))
 }
 
 func (s *Server) Echo(ctx context.Context, r *pb_rpc.ApiHandleRequest, resp *pb_rpc.Response) error {

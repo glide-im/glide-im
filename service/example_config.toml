@@ -39,13 +39,13 @@ Nsqd = "127.0.0.1:4154"
     Network = "tcp"
     Name = "im_group_messaging"
 
-[MessageRouter]
-[MessageRouter.Server]
+[Messaging]
+[Messaging.Server]
     Addr = "0.0.0.0"
     Port = 7074
     Network = "tcp"
     Name = "im_message_router"
-[MessageRouter.Client]
+[Messaging.Client]
     Network = "tcp"
     Name = "im_message_router"
 
@@ -58,3 +58,14 @@ Nsqd = "127.0.0.1:4154"
 [Dispatch.Client]
     Network = "tcp"
     Name = "im_dispatch"
+
+
+[Broker]
+[Broker.Server]
+    Addr = "0.0.0.0"
+    Port = 7076
+    Network = "tcp"
+    Name = "im_group_broker"
+[Broker.Client]
+    Network = "tcp"
+    Name = "im_group_broker"

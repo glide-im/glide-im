@@ -15,7 +15,6 @@ type Client struct {
 func NewClient(options *rpc.ClientOptions) (*Client, error) {
 	ret := &Client{}
 	var err error
-	options.Selector = &groupSelector{}
 	ret.Cli, err = rpc.NewBaseClient(options)
 	if err != nil {
 		return nil, err
@@ -37,11 +36,28 @@ func (c *Client) DispatchMessage(gid int64, action message.Action, message *mess
 }
 
 func (c *Client) UpdateMember(gid int64, update []group.MemberUpdate) error {
-	return c.Call(getContext(gid), "UpdateMember", update, &pb_rpc.Response{})
+
+	var updates []*pb_rpc.MemberUpdateParam
+	for _, u := range update {
+		up := pb_rpc.MemberUpdateParam{
+			Uid:  u.Uid,
+			Flag: u.Flag,
+		}
+		updates = append(updates, &up)
+	}
+	param := pb_rpc.UpdateMemberParam{
+		Gid:     gid,
+		Updates: updates,
+	}
+	return c.Call(getContext(gid), "UpdateMember", &param, &pb_rpc.Response{})
 }
 
 func (c *Client) UpdateGroup(gid int64, update group.Update) error {
-	return c.Call(getContext(gid), "UpdateGroup", update, &pb_rpc.Response{})
+	param := pb_rpc.UpdateGroupParam{
+		Gid:  gid,
+		Flag: update.Flag,
+	}
+	return c.Call(getContext(gid), "UpdateGroup", &param, &pb_rpc.Response{})
 }
 
 func getContext(gid int64) context.Context {

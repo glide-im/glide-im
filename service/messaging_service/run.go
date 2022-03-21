@@ -8,7 +8,7 @@ import (
 
 func SetupClient(configs service.Configs) error {
 
-	options := configs.MessageRouter.Client.ToClientOptions()
+	options := configs.Messaging.Client.ToClientOptions()
 	cli, err := NewClient(options)
 	if err != nil {
 		return err
@@ -20,7 +20,7 @@ func SetupClient(configs service.Configs) error {
 
 func RunServer(configs *service.Configs) error {
 
-	options := configs.MessageRouter.Server.ToServerOptions(configs.Etcd.Servers)
+	options := configs.Messaging.Server.ToServerOptions(configs.Etcd.Servers)
 
 	server := NewServer(options)
 
