@@ -1,4 +1,4 @@
-package dispatch
+package hash
 
 import (
 	"math/rand"
@@ -17,7 +17,7 @@ func TestConsistentHash_Add(t *testing.T) {
 	_ = c.Add("G")
 
 	//for _, n := range hash.nodes {
-	//	t.Log(n.val, n.hash, n.virtual)
+	//	t.Log(n.Val, n.hash, n.virtual)
 	//}
 
 	rates := map[string]int{
@@ -35,8 +35,8 @@ func TestConsistentHash_Add(t *testing.T) {
 	for i := 0; i < count; i++ {
 		s := strconv.FormatInt(rand.Int63n(100000), 10)
 		nd, _ := c.Get(s)
-		r := rates[nd.val]
-		rates[nd.val] = r + 1
+		r := rates[nd.Val]
+		rates[nd.Val] = r + 1
 	}
 
 	for k, v := range rates {
@@ -53,7 +53,7 @@ func TestConsistentHash_Remove(t *testing.T) {
 	_ = c.Add("E")
 	_ = c.Add("F")
 	//for _, n := range hash.nodes {
-	//	t.Log(n.val, n.hash, n.virtual)
+	//	t.Log(n.Val, n.hash, n.virtual)
 	//}
 	e := c.Remove("A")
 	if e != nil {
@@ -61,7 +61,7 @@ func TestConsistentHash_Remove(t *testing.T) {
 	}
 	//t.Log("=====================")
 	//for _, n := range hash.nodes {
-	//	t.Log(n.val, n.hash, n.virtual)
+	//	t.Log(n.Val, n.hash, n.virtual)
 	//}
 }
 
@@ -73,7 +73,7 @@ func TestAdd(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		s := strconv.FormatInt(int64(i), 10)
 		n, _ := c.Get(s)
-		t.Log(i, ":", n.val)
+		t.Log(i, ":", n.Val)
 	}
 
 	t.Log("===================")
@@ -81,6 +81,6 @@ func TestAdd(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		s := strconv.FormatInt(int64(i), 10)
 		n, _ := c.Get(s)
-		t.Log(i, ":", n.val)
+		t.Log(i, ":", n.Val)
 	}
 }

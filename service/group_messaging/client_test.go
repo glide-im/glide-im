@@ -18,7 +18,6 @@ func TestNewClient(t *testing.T) {
 	client, err := NewClient(&rpc.ClientOptions{
 		Name:        config.GroupMessaging.Client.Name,
 		EtcdServers: etcd,
-		Selector:    &groupSelector{},
 	})
 	if err != nil {
 		t.Error(err)

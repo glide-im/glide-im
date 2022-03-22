@@ -3,6 +3,7 @@ package dispatch
 import (
 	"context"
 	"github.com/smallnest/rpcx/client"
+	hash2 "go_im/pkg/hash"
 	"go_im/pkg/logger"
 	"go_im/pkg/rpc"
 	"reflect"
@@ -17,14 +18,14 @@ const ctxKeyCalculateVal = "key_hash_calculate_value"
 type dispatchSelector struct {
 	srv map[string]string
 
-	hash        *ConsistentHash
+	hash        *hash2.ConsistentHash
 	roundRobbin client.Selector
 }
 
 func newSelector() *dispatchSelector {
 	ret := &dispatchSelector{
 		srv:         map[string]string{},
-		hash:        NewConsistentHash(),
+		hash:        hash2.NewConsistentHash(),
 		roundRobbin: rpc.NewRoundRobinSelector(),
 	}
 	return ret
@@ -39,7 +40,7 @@ func (s *dispatchSelector) Select(ctx context.Context, servicePath, serviceMetho
 			logger.E("consistent hash selector get error: %v", err)
 			return ""
 		}
-		return node.val
+		return node.Val
 	}
 
 	return s.roundRobbin.Select(ctx, servicePath, serviceMethod, args)

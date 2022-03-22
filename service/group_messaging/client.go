@@ -32,7 +32,7 @@ func (c *Client) DispatchMessage(gid int64, action message.Action, message *mess
 		Action:  string(action),
 		Message: message.ChatMessage,
 	}
-	return c.Call(getContext(gid), "DispatchMessage", &param, &pb_rpc.Response{})
+	return c.Call(context.Background(), "DispatchMessage", &param, &pb_rpc.Response{})
 }
 
 func (c *Client) UpdateMember(gid int64, update []group.MemberUpdate) error {

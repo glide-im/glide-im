@@ -23,6 +23,7 @@ func SetupClient(config *service.Configs) error {
 
 func RunServer(configs *service.Configs) error {
 	options := configs.GroupMessaging.Server.ToServerOptions(configs.Etcd.Servers)
-	server := NewServer(options)
+	clientOptions := configs.GroupMessaging.Client.ToClientOptions()
+	server := NewServer(options, clientOptions)
 	return server.Run()
 }

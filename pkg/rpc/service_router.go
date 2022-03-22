@@ -16,6 +16,10 @@ func NewRoundRobinSelector() client.Selector {
 }
 
 func (s *RoundRobinSelector) Select(ctx context.Context, servicePath, serviceMethod string, args interface{}) string {
+	return s.SelectNext()
+}
+
+func (s *RoundRobinSelector) SelectNext() string {
 	ss := s.servers
 	if len(ss) == 0 {
 		return ""
@@ -23,7 +27,6 @@ func (s *RoundRobinSelector) Select(ctx context.Context, servicePath, serviceMet
 	i := s.i
 	i = i % len(ss)
 	s.i = i + 1
-
 	return ss[i]
 }
 

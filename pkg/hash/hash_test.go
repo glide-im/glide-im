@@ -1,4 +1,4 @@
-package murmur
+package hash
 
 import "testing"
 

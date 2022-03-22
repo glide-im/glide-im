@@ -1,9 +1,8 @@
-package dispatch
+package hash
 
 import (
 	"errors"
 	"fmt"
-	"go_im/pkg/murmur"
 	"sync"
 )
 
@@ -17,7 +16,7 @@ var (
 )
 
 type Node struct {
-	val     string
+	Val     string
 	hash    uint32
 	virtual bool
 	real    *Node
@@ -66,13 +65,13 @@ func (c *ConsistentHash) Remove(id string) error {
 		if exist {
 			ndIndex--
 		} else {
-			return errors.New("virtual node does not exist, id:" + vNd.val)
+			return errors.New("virtual node does not exist, id:" + vNd.Val)
 		}
 		c.mu.RLock()
 		nd := c.nodes[ndIndex]
 		c.mu.RUnlock()
 		if nd.hash != vNd.hash {
-			return errors.New("could not find virtual node, id:" + vNd.val)
+			return errors.New("could not find virtual node, id:" + vNd.Val)
 		} else {
 			c.removeIndex(ndIndex)
 		}
@@ -88,7 +87,7 @@ func (c *ConsistentHash) Remove(id string) error {
 }
 
 func (c *ConsistentHash) Get(data string) (*Node, error) {
-	hash := murmur.Hash([]byte(data), seed)
+	hash := Hash([]byte(data), seed)
 	index, _ := c.findIndex(hash)
 	return c.get(index)
 }
@@ -98,9 +97,9 @@ func (c *ConsistentHash) Add(id string) error {
 	if ok {
 		return errors.New("node already exist, id=" + id)
 	}
-	hash := murmur.Hash([]byte(id), seed)
+	hash := Hash([]byte(id), seed)
 	nd := Node{
-		val:     id,
+		Val:     id,
 		hash:    hash,
 		virtual: false,
 		real:    nil,
@@ -133,16 +132,16 @@ func (c *ConsistentHash) get(index int) (*Node, error) {
 
 func (c *ConsistentHash) addVirtual(real *Node, duplicate int) {
 	for i := 0; i < duplicate; i++ {
-		vNodeID := fmt.Sprintf("%s_#%d", real.val, i)
-		hash := murmur.Hash([]byte(vNodeID), seed)
+		vNodeID := fmt.Sprintf("%s_#%d", real.Val, i)
+		hash := Hash([]byte(vNodeID), seed)
 		vNode := Node{
-			val:     vNodeID,
+			Val:     vNodeID,
 			hash:    hash,
 			virtual: true,
 			real:    real,
 		}
 		c.addNode(vNode)
-		nds := c.nodeMap[real.val]
+		nds := c.nodeMap[real.Val]
 		nds.appendVirtual(vNode)
 	}
 }
