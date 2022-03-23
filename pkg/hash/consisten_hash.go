@@ -147,10 +147,12 @@ func (c *ConsistentHash) addVirtual(real *Node, duplicate int) {
 }
 
 func (c *ConsistentHash) addNode(nd Node) {
+
+	index, _ := c.findIndex(nd.hash)
+
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	index, _ := c.findIndex(nd.hash)
 	p1 := c.nodes[:index]
 	p2 := c.nodes[index:]
 	n := make([]Node, len(p1))
