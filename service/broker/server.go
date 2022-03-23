@@ -2,6 +2,7 @@ package broker
 
 import (
 	"context"
+	"errors"
 	"go_im/im/group"
 	"go_im/pkg/logger"
 	"go_im/pkg/rpc"
@@ -18,16 +19,22 @@ type Server struct {
 	routeCache map[int64]string
 }
 
-func NewServer(options *rpc.ServerOptions, groupMessagingOpts *rpc.ClientOptions) *rpc.BaseServer {
+func NewServer(options *rpc.ServerOptions, groupMessagingOpts *rpc.ClientOptions) (*rpc.BaseServer, error) {
 	s := rpc.NewBaseServer(options)
 	brokerServer := &Server{}
+
+	brokerServer.routeCache = make(map[int64]string)
 
 	brokerServer.selector = newGroupRouteSelector()
 	groupMessagingOpts.Selector = brokerServer.selector
 
-	brokerServer.cli, _ = group_messaging.NewClient(groupMessagingOpts)
+	var err error
+	brokerServer.cli, err = group_messaging.NewClient(groupMessagingOpts)
+	if err != nil {
+		return nil, err
+	}
 	s.Register(options.Name, brokerServer)
-	return s
+	return s, nil
 }
 
 func (s *Server) UpdateMember(ctx context.Context, param *pb_rpc.UpdateMemberParam, replay *pb_rpc.Response) error {
@@ -37,7 +44,11 @@ func (s *Server) UpdateMember(ctx context.Context, param *pb_rpc.UpdateMemberPar
 func (s *Server) UpdateGroup(ctx context.Context, param *pb_rpc.UpdateGroupParam, replay *pb_rpc.Response) error {
 
 	if param.GetFlag() == group.FlagGroupCreate {
+		// 选择一个服务创建群
 		next := s.selector.SelectNext()
+		if len(next) == 0 {
+			return errors.New("no group server")
+		}
 		s.routeCache[param.GetGid()] = next
 	}
 

@@ -7,11 +7,11 @@ import (
 	"testing"
 )
 
-func RunServerForTest(port int) {
+func TestNewServer(t *testing.T) {
 
 	config, _ := service.GetConfig()
 
-	c := &rpc.ClientOptions{
+	cli := &rpc.ClientOptions{
 		Addr: config.GroupMessaging.Server.Addr,
 		Port: config.GroupMessaging.Server.Port,
 		Name: config.GroupMessaging.Server.Name,
@@ -24,16 +24,17 @@ func RunServerForTest(port int) {
 		Addr:    broker.Addr,
 		Port:    broker.Port,
 	}
-	server := NewServer(&options, c)
 
-	err := server.Run()
+	t.Logf("Starting server on %s:%d", options.Addr, options.Port)
+	server, err := NewServer(&options, cli)
+	if err != nil {
+		t.Error(err)
+	}
+
+	t.Log("Starting server...")
+	err = server.Run()
 	if err != nil {
 		logger.E("%v", err)
 	}
-}
-
-func TestNewServer(t *testing.T) {
-
-	RunServerForTest(9090)
 
 }

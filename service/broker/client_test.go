@@ -1,6 +1,7 @@
 package broker
 
 import (
+	"go_im/im/group"
 	"go_im/im/message"
 	"go_im/pkg/rpc"
 	"go_im/service"
@@ -16,7 +17,16 @@ func TestNewClient(t *testing.T) {
 		Addr: config.Broker.Server.Addr,
 		Port: config.Broker.Server.Port,
 	}
+
 	client, err := NewClient(&options)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = client.UpdateGroup(1, group.Update{
+		Flag: group.FlagGroupCreate,
+	})
+
 	if err != nil {
 		t.Error(err)
 	}
