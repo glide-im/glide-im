@@ -13,11 +13,13 @@ func TestNewClient(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	etcd := config.Etcd.Servers
+	//etcd := config.Etcd.Servers
 
 	client, err := NewClient(&rpc.ClientOptions{
-		Name:        config.GroupMessaging.Client.Name,
-		EtcdServers: etcd,
+		Name: config.GroupMessaging.Client.Name,
+		Addr: config.GroupMessaging.Server.Addr,
+		Port: config.GroupMessaging.Server.Port,
+		//EtcdServers: etcd,
 	})
 	if err != nil {
 		t.Error(err)

@@ -37,6 +37,7 @@ func RunServer(configs *service.Configs) error {
 		Port:        sConfig.Port,
 		EtcdServers: configs.Etcd.Servers,
 	})
+
 	if err != nil {
 		return err
 	}

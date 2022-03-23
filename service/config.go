@@ -47,7 +47,7 @@ type ClientConfig struct {
 	EtcdServers []string
 	// optional when use service discovery
 	Addr string
-	Port int32
+	Port int
 }
 
 func (c *ClientConfig) ToClientOptions() *rpc.ClientOptions {

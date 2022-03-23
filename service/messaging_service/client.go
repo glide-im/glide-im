@@ -28,5 +28,5 @@ func (c *Client) HandleMessage(from int64, device int64, message *message.Messag
 		Message: message.GetProtobuf(),
 	}
 
-	return c.Call(context.Background(), "UpdateMember", &request, &pb_rpc.Response{})
+	return c.Call(context.Background(), "HandleMessage", &request, &pb_rpc.Response{})
 }

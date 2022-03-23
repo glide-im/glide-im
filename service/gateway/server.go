@@ -8,8 +8,6 @@ import (
 	"go_im/protobuf/gen/pb_rpc"
 )
 
-const ServiceName = "client"
-
 type Server struct {
 	*rpc.BaseServer
 }
@@ -31,7 +29,7 @@ func (s *Server) ClientLogout(ctx context.Context, request *pb_rpc.GatewayLogout
 }
 
 func (s *Server) EnqueueMessage(ctx context.Context, request *pb_rpc.EnqueueMessageRequest, reply *pb_rpc.Response) error {
-	m := &message.Message{CommMessage: request.Message}
+	m := message.FromProtobuf(request.GetMessage())
 	err := client.EnqueueMessageToDevice(request.GetUid(), 0, m)
 	return err
 }

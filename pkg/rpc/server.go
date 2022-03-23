@@ -28,11 +28,13 @@ type BaseServer struct {
 	Options      *ServerOptions
 	etcdRegister *serverplugin.EtcdV3RegisterPlugin
 	reg          []func(srv *BaseServer) error
+	id           string
 }
 
 func NewBaseServer(options *ServerOptions) *BaseServer {
 	ret := &BaseServer{
 		Srv: server.NewServer(),
+		id:  fmt.Sprintf("%s@%s:%d", options.Name, options.Addr, options.Port),
 	}
 	ret.Options = options
 	if len(options.EtcdServers) != 0 {
@@ -44,6 +46,13 @@ func NewBaseServer(options *ServerOptions) *BaseServer {
 		}
 	}
 	return ret
+}
+
+func (s *BaseServer) GetServerID() string {
+	if len(s.id) == 0 {
+		s.id = fmt.Sprintf("%s@%s:%d", s.Options.Name, s.Options.Addr, s.Options.Port)
+	}
+	return s.id
 }
 
 func (s *BaseServer) Register(name string, sv interface{}) {

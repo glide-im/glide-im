@@ -4,8 +4,8 @@ import (
 	"go_im/im/dao"
 	"go_im/pkg/db"
 	"go_im/service"
+	"go_im/service/api_service"
 	"go_im/service/dispatch"
-	"go_im/service/gateway"
 	"go_im/service/group_messaging"
 	"go_im/service/messaging_service"
 )
@@ -19,12 +19,12 @@ func main() {
 		panic(err)
 	}
 
-	err = dispatch.SetupClient(config)
+	err = api_service.SetupClient(config)
 	if err != nil {
 		panic(err)
 	}
 
-	err = gateway.InitMessageProducer(config.Nsq.Nsqd)
+	err = dispatch.SetupClient(config)
 	if err != nil {
 		panic(err)
 	}

@@ -34,7 +34,6 @@ type BaseClient struct {
 func NewBaseClient(options *ClientOptions) (*BaseClient, error) {
 	ret := &BaseClient{
 		options: options,
-		id:      fmt.Sprintf("%s@%s:%d", "", "", 1),
 	}
 
 	var discovery client.ServiceDiscovery

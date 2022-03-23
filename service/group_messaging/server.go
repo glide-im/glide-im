@@ -7,7 +7,6 @@ import (
 	"go_im/pkg/logger"
 	"go_im/pkg/rpc"
 	"go_im/protobuf/gen/pb_rpc"
-	"go_im/service/route"
 )
 
 type Server struct {
@@ -40,12 +39,6 @@ func (s *Server) UpdateGroup(ctx context.Context, param *pb_rpc.UpdateGroupParam
 	}
 	err := group.UpdateGroup(gid, update)
 	if err != nil {
-		return err
-	}
-
-	// when group service load or create group, publish group route info
-	if update.Flag == group.FlagGroupCreate {
-		err = route.PublishGroupRoute(gid)
 		return err
 	}
 	return nil

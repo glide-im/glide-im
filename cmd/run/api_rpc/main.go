@@ -5,22 +5,22 @@ import (
 	"go_im/pkg/db"
 	"go_im/service"
 	"go_im/service/api_service"
-	"go_im/service/gateway"
-	"go_im/service/group_messaging"
+	"go_im/service/broker"
+	"go_im/service/dispatch"
 )
 
 func main() {
 
-	config, err := service.GetConfig()
-	must(err)
-
 	db.Init()
 	dao.Init()
 
-	err = gateway.InitMessageProducer(config.Nsq.Nsqd)
+	config, err := service.GetConfig()
 	must(err)
 
-	err = group_messaging.SetupClient(config)
+	err = dispatch.SetupClient(config)
+	must(err)
+
+	err = broker.SetupClient(config)
 	must(err)
 
 	err = api_service.RunServer(config)

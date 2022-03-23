@@ -33,7 +33,7 @@ JavaSDK: [Glide-IM-Java-SDK - GitHub](https://github.com/Glide-IM/Glide-IM-Java-
 ### 1.2 开发侧功能
 
 - 支持 WebSocket, TCP, 自定义连接协议
-- 支持 JSON 或 Protobuf 或自定义数据交换协议
+- 支持 JSON 或 Protobuff 或自定义数据交换协议
 - 支持分布式部署, 水平扩展
 - 心跳保活, 超时断开, 清理死链接
 - 消息缓冲, 异步处理, 弱网优化
@@ -42,33 +42,47 @@ JavaSDK: [Glide-IM-Java-SDK - GitHub](https://github.com/Glide-IM/Glide-IM-Java-
 
 ## 二. 项目架构
 
-![i](https://github.com/Glide-IM/Glide-IM/blob/master/_art/glide-system-arch.png?raw=true)
+![i](https://github.com/Glide-IM/Glide-IM/blob/master/_art/system_arch.png?raw=true)
 
 ### 2.1 聊天服务划分
 
 #### Gateway
 
-Gateway 模块为管理用户连接的聊天服务网关, 所有用户消息上下行都由这个模块处理. Gateway 负责管理用户连接, 消息的接收解析, 消息下发, 判断连接是否存活, 标识用户连接, 断开用户连接.
+Gateway 模块为管理用户连接的聊天服务网关, 所有用户消息上下行都由这个模块处理. Gateway 管理用户连接, 消息的接收解析, 消息下发, 判断连接是否存活, 标识用户连接, 断开用户连接.
+
+Gateway 依赖 Messaging 服务, 接收到客户端消息将交由 Messaging 处理, Gateway 提供指定 uid 登录, 登出, 下发消息三个接口.
 
 #### Messaging
 
-Messaging 负责不同类型消息的路由, 例如群消息, API 消息, 也处理部分类型的消息, 例如 ACK 消息, 单聊消息, 心跳消息. 根据消息类型分别转发给 Gateway (单聊消息), Auth(API消息), Group(群消息).
+Messaging 负责不同类型消息的路由, 例如群消息, API 消息, 也处理部分类型的消息, 例如 ACK 消息, 单聊消息, 心跳消息. 根据消息类型分别转发给 Dispatch (用户消息), API (API消息), Group(群消息).
+
+Messaging 依赖 API, GroupMessaging, Dispatch, 提供一个消息路由接口.
 
 #### Group
 
-群聊服务, 主要负责多人聊天消息的下发, 保存, 群消息确认, 成员管理. 用户上线后同步联系人时初始化群聊列表, 根据群聊所在服务通进入群聊天.
+(GroupMessaging), 群聊服务, 主要负责多人聊天消息的下发, 保存, 群消息确认, 成员管理. 用户上线后同步联系人时初始化群聊列表, 根据群聊所在服务通进入群聊天.
 
-#### Auth
+Group 服务依赖 Dispatch 服务, 提供群更新, 成员更新, 发送消息到指定群三个接口.
 
-Auth 也可以处理一些 API 消息, 目前暂时作为长连接的登录鉴权, HTTP API 接口都可以通过长连接消息访问, 这个可以根据具体情况灵活配置, 只需配置相关路由即可.
+#### API
+
+目前暂时作为长连接的登录鉴权, HTTP API 接口都可以通过长连接消息访问, 这个可以根据具体情况灵活配置, 只需配置相关路由即可.
+
+API 依赖 Dispatch, Group 服务. 提供一个处理 API 类型消息的接口.
+
+#### Dispatch
+
+消息路由服务, 用于消息路由到用户所在网关, 在用户登录时通知 Dispatch 更新缓存用户对应的网关, 缓存信息通过一致性哈希保存在固定的一个服务上, 消息下发时查询缓存, 根据查询到的网关信息放入到 NSQ 队列, 每Gateway 订阅自己的消息. 这里的消息不一定是用户消息, 也可以是通知网关更新用户状态的控制消息, 例如登录登出, 由于使用消息队列进行通信, 所以叫做消息, 其实是调用 Gateway 的接口.
+
+Dispatch 不直接依赖任何服务, 消息通过 NSQ 发送到 Gateway, 提供更新路由和下发消息两个接口.
 
 #### NSQ
 
-[NSQ](https://nsq.io/) 是 Golang 实现的消息队列, 在分布式部署模式下, 所有消息都通过 NSQ 路由. 相比其他 MQ 选择 NSQ 的理由: 低延迟, 不需要顺序, 高性能, 简单二进制协议.
+[NSQ](https://nsq.io/) 是 Golang 实现的消息队列, 所有消息都通过 NSQ 路由. 相比其他 MQ 选择 NSQ 的理由: 低延迟, 不需要顺序, 高性能, 简单二进制协议.
 
 在每一台生产者上都部署一个 nsqd .
 
-### 2.2 API 接口服务划分
+### 2.2 HTTP API 服务划分
 
 - **认证**: 用户鉴权, 登录注册等
 - **用户**: 用户信息管理
@@ -76,7 +90,23 @@ Auth 也可以处理一些 API 消息, 目前暂时作为长连接的登录鉴�
 - **群管理**: 群增删改查
 - **其他**
 
-### 2.4 设计原则
+### 2.3 消息路由
+
+#### 网关消息路由
+
+在分布式部署环境下, 网关可能部署任意个实例, 用户可能连接到其中任意一个实例中, 当需要给某一个用户发送消息, 或者断开某个用户的连接时, 我们需要找到这个用户所在的网关, 这就需要记录所有在线用户所在网关. 可能快想到的是使用 Redis, 或者 Redis 加二级缓存, 但 IM 系统消息吞吐量非常大, 而且存在扩散等其他原因, Redis 很容易成为性能瓶颈.
+
+GlideIM 使用一致性哈希算法, 将每个用户连接的网关信息按照 UID 分布在不同的 Dispatch 服务上, 从而达到分散缓存, 负载均衡, 及提高可用性的目的.
+
+![i](https://github.com/Glide-IM/Glide-IM/blob/master/_art/msg_routing.png?raw=true)
+
+如上图所示, Dispatch 在整个环节中承当了消息分发的角色. 当某一个 Dispatch 服务宕机后, 该服务中所有缓存的网关信息都将丢失, 根据一致性哈希算法, 原来的请求都转向了下一个 Dispatch, 显然这个服务上是没有已宕机的那个服务缓存的信息的, 我们可以在用户登录后将登录信息缓存在 Redis 中 (查询登录设备列表等其他场景共用), Dispatch 内存中没查到再去 Redis 查找, 查找一次后缓存在内存中即可.新上线的用户则不影响, 只影响在线期间网关信息保存的 Dispatch 服务宕机的用户.
+
+#### 群消息的路由
+
+群和用户一样 Group 服务也需要一样的路由, 不同群可能分布在不同的服务上, 但群并不会随意切换所在服务, 一般只有群所在的服务异常的时候重新加载群信息才可能重新分配, Broker 读多写少, 因此只需要在所有 Broker 中都缓存所有群所在服务即可, 群消息可以通过任意一台 Broker 转发, 当 Group 服务掉线和加载群时通知所有 Broker 更新即可.
+
+### 2.4 设计准则
 
 #### 使用接口
 
@@ -109,7 +139,7 @@ type MessageHandleFunc func(from int64, device int64, message *message.Message)
 
 ### 2.5 微服务
 
-GlideIM 使用 [RPCX](https://rpcx.io/) 作为微服务的基础, RPCX 功能丰富, 性能优越, 服务发现使用 [ETCD](http://www.etcd.cn/).
+GlideIM 使用 [RPCX](https://rpcx.io/) 作为微服务的基础, RPCX 功能丰富, 性能优越, 集成了服务发现, 多种路由方案, 以及失败模式, 服务发现使用 [ETCD](http://www.etcd.cn/).
 
 服务间通讯均使用 Protobuff + RPC 方式.
 
@@ -132,11 +162,11 @@ GlideIM 使用 [RPCX](https://rpcx.io/) 作为微服务的基础, RPCX 功能丰
 ### 3.1 消息类型
 
 - IM 消息类型
-    - 聊天消息: 重发, 重试, 撤回, 群聊, 单聊
-    - ACK 消息: 服务器确认收到, 接受者确认通知, 接受者确认送达
-    - 心跳消息: 客户端心跳, 服务端心跳
-    - API 消息: 令牌认证, 退出等
-    - 通知消息: 新联系人, kickout 等
+  - 聊天消息: 重发, 重试, 撤回, 群聊, 单聊
+  - ACK 消息: 服务器确认收到, 接受者确认通知, 接受者确认送达
+  - 心跳消息: 客户端心跳, 服务端心跳
+  - API 消息: 令牌认证, 退出等
+  - 通知消息: 新联系人, kickout 等
 
 - 聊天内容消息类型
 

@@ -21,7 +21,7 @@ func NewServer(options *rpc.ServerOptions) *Server {
 }
 
 func (s *Server) HandleMessage(ctx context.Context, request *pb_rpc.MessagingHandleRequest, replay *pb_rpc.Response) error {
-	m := &message.Message{CommMessage: request.GetMessage()}
+	m := message.FromProtobuf(request.Message)
 
 	return messaging.HandleMessage(request.GetId(), request.GetDevice(), m)
 }

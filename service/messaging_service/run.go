@@ -6,7 +6,7 @@ import (
 	"go_im/service"
 )
 
-func SetupClient(configs service.Configs) error {
+func SetupClient(configs *service.Configs) error {
 
 	options := configs.Messaging.Client.ToClientOptions()
 	cli, err := NewClient(options)
