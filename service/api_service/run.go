@@ -8,6 +8,8 @@ import (
 func SetupClient(configs *service.Configs) error {
 
 	options := configs.Api.Client.ToClientOptions()
+	options.EtcdServers = configs.Etcd.Servers
+
 	cli, err := NewClient(options)
 	if err != nil {
 		return err
@@ -17,6 +19,9 @@ func SetupClient(configs *service.Configs) error {
 }
 
 func RunServer(configs *service.Configs) error {
+
+	router := api.NewDefaultRouter()
+	api.SetInterfaceImpl(router)
 
 	options := configs.Api.Server.ToServerOptions(configs.Etcd.Servers)
 	server := NewServer(options)

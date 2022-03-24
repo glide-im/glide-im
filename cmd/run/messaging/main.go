@@ -5,8 +5,8 @@ import (
 	"go_im/pkg/db"
 	"go_im/service"
 	"go_im/service/api_service"
+	"go_im/service/broker"
 	"go_im/service/dispatch"
-	"go_im/service/group_messaging"
 	"go_im/service/messaging_service"
 )
 
@@ -29,7 +29,7 @@ func main() {
 		panic(err)
 	}
 
-	err = group_messaging.SetupClient(config)
+	err = broker.SetupClient(config)
 	if err != nil {
 		panic(err)
 	}

@@ -9,6 +9,8 @@ import (
 func SetupClient(configs *service.Configs) error {
 
 	options := configs.Messaging.Client.ToClientOptions()
+	options.EtcdServers = configs.Etcd.Servers
+
 	cli, err := NewClient(options)
 	if err != nil {
 		return err

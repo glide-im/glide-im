@@ -1,6 +1,9 @@
 package client
 
-import "go_im/im/message"
+import (
+	"go_im/im/message"
+	"go_im/pkg/logger"
+)
 
 type Interface interface {
 	ClientSignIn(oldUid int64, uid int64, device int64) error
@@ -49,5 +52,12 @@ func SetInterfaceImpl(i Interface) {
 }
 
 func SetMessageHandler(handler MessageHandler) {
-	messageHandleFunc = handler
+
+	messageHandleFunc = func(from int64, device int64, message *message.Message) error {
+		err := handler(from, device, message)
+		if err != nil {
+			logger.E("handle message error: %v", err)
+		}
+		return err
+	}
 }

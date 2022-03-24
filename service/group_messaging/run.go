@@ -9,6 +9,7 @@ import (
 func SetupClient(configs *service.Configs) error {
 
 	options := configs.GroupMessaging.Client.ToClientOptions()
+	options.EtcdServers = configs.Etcd.Servers
 	groupManager, err := NewClient(options)
 	if err != nil {
 		return err

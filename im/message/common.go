@@ -4,7 +4,10 @@ import (
 	"errors"
 	"go_im/im/message/json"
 	"go_im/im/message/pb"
+	"go_im/pkg/logger"
 	"go_im/protobuf/gen/pb_im"
+	"go_im/protobuf/gen/pb_rpc"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -83,7 +86,18 @@ func (m *Message) GetProtobuf() *pb_im.CommMessage {
 		if m.json == nil {
 			m.pb = &pb_im.CommMessage{}
 		} else {
-			m.data = m.json.Data.Data()
+			data := m.json.Data
+			_, ok := data.Data().(proto.Message)
+			if !ok {
+				jb, err := data.MarshalJSON()
+				if err != nil {
+					logger.E("%v", err)
+					return nil
+				}
+				m.data = &pb_rpc.JsonString{Json: string(jb)}
+			} else {
+				m.data = data
+			}
 			m.pb = pb.NewMessage(m.json.Seq, m.json.Action, m.data)
 		}
 	}
@@ -99,11 +113,19 @@ func FromProtobuf(message *pb_im.CommMessage) *Message {
 }
 
 func NewMessage(seq int64, action Action, data interface{}) *Message {
+
 	message := Message{
-		pb:   pb.NewMessage(seq, string(action), data),
+		pb:   nil,
 		json: nil,
 		data: data,
 	}
+	_, ok := data.(proto.Message)
+	if ok {
+		message.pb = pb.NewMessage(seq, string(action), data)
+	} else {
+		message.json = json.NewMessage(seq, string(action), data)
+	}
+
 	return &message
 }
 

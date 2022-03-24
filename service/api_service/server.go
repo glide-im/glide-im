@@ -2,6 +2,7 @@ package api_service
 
 import (
 	"context"
+	"errors"
 	"go_im/im/api"
 	"go_im/im/message"
 	"go_im/pkg/rpc"
@@ -14,7 +15,16 @@ type Server struct {
 }
 
 func (s *Server) Handle(ctx context.Context, r *pb_rpc.ApiHandleRequest, resp *emptypb.Empty) error {
-	return api.Handle(r.GetUid(), r.GetDevice(), message.FromProtobuf(r.Message))
+	msg := message.FromProtobuf(r.Message)
+
+	if msg.GetAction() == "api.user.auth" {
+		protobuf := msg.GetProtobuf()
+		extra := protobuf.GetExtra()
+		if extra == nil {
+			return errors.New("message extra is nil")
+		}
+	}
+	return api.Handle(r.GetUid(), r.GetDevice(), msg)
 }
 
 func (s *Server) Echo(ctx context.Context, r *pb_rpc.ApiHandleRequest, resp *pb_rpc.Response) error {

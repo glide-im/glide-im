@@ -17,3 +17,7 @@ message UpdateRouteRequest {
   int64 id = 2;
   string node = 3;
 }
+
+message UserGatewayResponse {
+  string node = 1;
+}

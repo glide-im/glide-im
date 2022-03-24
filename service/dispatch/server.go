@@ -42,3 +42,12 @@ func (s *Server) UpdateRoute(ctx context.Context, param *pb_rpc.UpdateRouteReque
 	cache.updateRoute(param.GetSrvName(), param.GetId(), param.GetNode())
 	return nil
 }
+
+func (s *Server) GetUserGateway(ctx context.Context, param *pb_rpc.UidRequest, replay *pb_rpc.UserGatewayResponse) error {
+	node := cache.getRoute("gateway", param.GetUid())
+	if node == "" {
+		return errors.New("route not fund")
+	}
+	replay.Node = node
+	return nil
+}

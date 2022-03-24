@@ -7,3 +7,5 @@ if [ ! -d "$outDir" ]; then
 fi
 
 protoc --proto_path=./rpc/ --proto_path=./im/ --go_out=./../../ ./rpc/*.proto ./im/*.proto
+
+#protoc --proto_path=./rpc/ --go_out=./../../ ./rpc/common.proto

@@ -8,12 +8,9 @@ import (
 
 func SetupClient(config *service.Configs) error {
 
-	broker := config.Broker.Client
-	if broker == nil {
-
-	}
-
 	options := config.Broker.Client.ToClientOptions()
+	options.EtcdServers = config.Etcd.Servers
+
 	cli, err := NewClient(options)
 	if err != nil {
 		return err

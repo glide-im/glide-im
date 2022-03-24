@@ -44,13 +44,12 @@ func (c *Client) Echo(uid int64, message *message.Message) *pb_rpc.Response {
 }
 
 func (c *Client) Handle(uid int64, device int64, message *message.Message) error {
-	ctx := context.WithValue(context.Background(), "from_gate", "node_id")
 
 	request := pb_rpc.ApiHandleRequest{
 		Uid:     uid,
 		Device:  device,
 		Message: message.GetProtobuf(),
 	}
-	err := c.Call(ctx, "Handle", &request, &emptypb.Empty{})
+	err := c.Call(context.Background(), "Handle", &request, &emptypb.Empty{})
 	return err
 }

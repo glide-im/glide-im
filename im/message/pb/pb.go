@@ -5,6 +5,7 @@ import (
 	"go_im/protobuf/gen/pb_im"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
+	"reflect"
 )
 
 func NewMessage(seq int64, action string, data interface{}) *pb_im.CommMessage {
@@ -19,7 +20,7 @@ func NewMessage(seq int64, action string, data interface{}) *pb_im.CommMessage {
 	}
 	p, ok := data.(proto.Message)
 	if !ok {
-		logger.E("%v is not proto.Message")
+		logger.E("%s is not proto.Message", reflect.TypeOf(data).String())
 		return message
 	}
 	any, err := anypb.New(p)

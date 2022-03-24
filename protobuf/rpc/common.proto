@@ -7,3 +7,7 @@ message Response {
   bool ok = 1;
   string message = 2;
 }
+
+message JsonString {
+  string json = 1;
+}
