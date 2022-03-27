@@ -40,9 +40,11 @@ var g *gin.Engine
 var typeRequestInfo = reflect.TypeOf((*route.Context)(nil))
 var typeError = reflect.TypeOf((*error)(nil)).Elem()
 
+//Run http server
 func Run(addr string, port int) error {
 
 	g = gin.Default()
+	g.Use(useCros())
 
 	initRoute()
 
