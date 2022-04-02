@@ -15,7 +15,9 @@ var GroupInterface GroupManagerInterface = &groupInterface{}
 
 func SendMessage(uid int64, device int64, m *message.Message) {
 	err := ClientInterface.EnqueueMessage(uid, device, m)
-	logger.E("SendMessage error: %v", err)
+	if err != nil {
+		logger.E("SendMessage error: %v", err)
+	}
 }
 
 func SendMessageIfOnline(uid int64, device int64, m *message.Message) {

@@ -31,7 +31,7 @@ func IsDeviceOnline(uid, device int64) bool {
 	return false
 }
 func IsOnline(uid int64) bool {
-	return false
+	return true
 }
 func AllClient() []int64 {
 	return []int64{}

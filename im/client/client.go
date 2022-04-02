@@ -14,8 +14,8 @@ import (
 
 var tw = timingwheel.NewTimingWheel(time.Millisecond*500, 3, 20)
 
-// HeartbeatDuration 心跳间隔, 默认5分钟
-const HeartbeatDuration = time.Minute * 5
+// HeartbeatDuration 心跳间隔
+const HeartbeatDuration = time.Second * 30
 
 var pool *ants.Pool
 
@@ -79,9 +79,11 @@ type Client struct {
 	readClose  chan struct{}
 	readClosed int32
 
-	// hb 心跳倒计时
-	hb     *timingwheel.Task
+	// hbR 心跳倒计时
+	hbR    *timingwheel.Task
 	hbLost int
+
+	hbW *timingwheel.Task
 
 	// seq 服务器下行消息递增序列号
 	seq int64
@@ -96,7 +98,8 @@ func newClient(conn conn.Connection) *Client {
 	client.connectAt = time.Now()
 	client.readClose = make(chan struct{})
 	client.seq = 0
-	client.hb = tw.After(HeartbeatDuration)
+	client.hbR = tw.After(HeartbeatDuration)
+	client.hbW = tw.After(HeartbeatDuration)
 	return client
 }
 
@@ -162,7 +165,7 @@ func (c *Client) readMessage() {
 		select {
 		case <-c.readClose:
 			goto STOP
-		case <-c.hb.C:
+		case <-c.hbR.C:
 			c.hbLost++
 			if c.hbLost > 3 {
 				logger.D("heartbeat timout, id=%d, device=%d", c.id, c.device)
@@ -185,8 +188,8 @@ func (c *Client) readMessage() {
 				continue
 			}
 			c.hbLost = 0
-			c.hb.Cancel()
-			c.hb = tw.After(HeartbeatDuration)
+			c.hbR.Cancel()
+			c.hbR = tw.After(HeartbeatDuration)
 			id, device := c.getID()
 			// 统一处理消息函数
 			_ = messageHandleFunc(id, device, msg.m)
@@ -194,7 +197,7 @@ func (c *Client) readMessage() {
 		}
 	}
 STOP:
-	c.hb.Cancel()
+	c.hbR.Cancel()
 	atomic.StoreInt32(&c.readClosed, 1)
 	done <- struct{}{}
 	id, device := c.getID()
@@ -212,6 +215,10 @@ func (c *Client) writeMessage() {
 
 	for {
 		select {
+		//case <-c.hbW.C:
+		//	c.EnqueueMessage(message.NewMessage(c.getNextSeq(), message.ActionHeartbeat, struct{}{}))
+		//	c.hbW.Cancel()
+		//	c.hbW = tw.After(HeartbeatDuration)
 		case m, ok := <-c.messages:
 			if !ok {
 				if atomic.LoadInt32(&c.readClosed) == 1 {
@@ -227,6 +234,9 @@ func (c *Client) writeMessage() {
 			}
 			err = c.conn.Write(b)
 			atomic.AddInt64(&c.queuedMessage, -1)
+
+			//c.hbW.Cancel()
+			//c.hbW = tw.After(HeartbeatDuration)
 			if err != nil {
 				if c.Closed() || c.handleError(err) {
 					// 连接断开或致命错误中断写消息
