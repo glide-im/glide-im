@@ -49,11 +49,18 @@ func (a *MsgApi) GetRecentSessions(ctx *route.Context) error {
 	//goland:noinspection GoPreferNilSlice
 	sr := []*SessionResponse{}
 	for _, s := range session {
+		to := s.Uid2
+		if s.Uid2 == ctx.Uid {
+			to = s.Uid
+		}
+
 		sr = append(sr, &SessionResponse{
 			Uid2:     s.Uid,
 			Uid1:     s.Uid2,
+			To:       to,
 			LastMid:  s.LastMID,
 			UpdateAt: s.UpdateAt,
+			CreateAt: s.CreateAt,
 		})
 	}
 	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, sr))

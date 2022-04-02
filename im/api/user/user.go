@@ -31,8 +31,8 @@ func (a *UserApi) GetUserInfo(ctx *route.Context, request *InfoRequest) error {
 		resp = append(resp, InfoResponse{
 			Uid:      i.Uid,
 			Nickname: i.Nickname,
-			Account:  i.Account,
-			Avatar:   i.Avatar,
+			// Account:  i.Account,
+			Avatar: i.Avatar,
 		})
 	}
 	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, resp))

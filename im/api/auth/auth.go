@@ -80,6 +80,7 @@ func (*AuthApi) AuthToken(ctx *route.Context, req *AuthTokenRequest) error {
 		}
 	}
 	resp := AuthResponse{
+		Token:   req.Token,
 		Uid:     token.Uid,
 		Servers: host,
 	}

@@ -41,6 +41,7 @@ type SessionRequest struct {
 type SessionResponse struct {
 	Uid1     int64
 	Uid2     int64
+	To       int64
 	Unread   int64
 	LastMid  int64
 	UpdateAt int64
