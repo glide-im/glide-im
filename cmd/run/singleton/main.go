@@ -24,8 +24,8 @@ func Run() {
 	var server conn.Server
 
 	op := &conn.WsServerOptions{
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		ReadTimeout:  60 * time.Second,
+		WriteTimeout: 60 * time.Second,
 	}
 	client.SetMessageHandler(messaging.HandleMessage)
 	server = conn.NewWsServer(op)
