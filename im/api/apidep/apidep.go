@@ -25,18 +25,23 @@ func SendMessageIfOnline(uid int64, device int64, m *message.Message) {
 }
 
 type ClientManagerInterface interface {
-	ClientSignIn(oldUid int64, uid int64, device int64) error
-	ClientLogout(uid int64, device int64) error
+	SignIn(oldUid int64, uid int64, device int64) error
+	Logout(uid int64, device int64) error
+	GetServerInfo() *client.ServerInfo
 	EnqueueMessage(uid int64, device int64, message *message.Message) error
 }
 
 type clientInterface struct{}
 
-func (c clientInterface) ClientSignIn(oldUid int64, uid int64, device int64) error {
+func (c clientInterface) SignIn(oldUid int64, uid int64, device int64) error {
 	return client.SignIn(oldUid, uid, device)
 }
 
-func (c clientInterface) ClientLogout(uid int64, device int64) error {
+func (c clientInterface) GetServerInfo() *client.ServerInfo {
+	return client.GetServerInfo(20)
+}
+
+func (c clientInterface) Logout(uid int64, device int64) error {
 	return client.Logout(uid, device)
 }
 

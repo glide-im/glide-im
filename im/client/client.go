@@ -40,6 +40,13 @@ const (
 	stateClosed
 )
 
+type Info struct {
+	ID           int64
+	AliveAt      int64
+	ConnectionAt int64
+	Device       int64
+}
+
 // IClient 表示一个客户端, 用于管理连接状态, 连接 id, 消息收发
 type IClient interface {
 
@@ -57,6 +64,8 @@ type IClient interface {
 
 	// Run 开始收发消息客户端连接的消息
 	Run()
+
+	GetInfo() Info
 }
 
 // Client represent a user conn conn
@@ -101,6 +110,15 @@ func newClient(conn conn.Connection) *Client {
 	client.hbR = tw.After(HeartbeatDuration)
 	client.hbW = tw.After(HeartbeatDuration)
 	return client
+}
+
+func (c *Client) GetInfo() Info {
+	return Info{
+		ID:           c.id,
+		AliveAt:      0,
+		ConnectionAt: c.connectAt.Unix(),
+		Device:       c.device,
+	}
 }
 
 // SetID 设置 id 标识及设备标识

@@ -1,6 +1,7 @@
 package apidep
 
 import (
+	"go_im/im/client"
 	"go_im/im/message"
 	"go_im/pkg/logger"
 )
@@ -8,18 +9,22 @@ import (
 type MockClientManager struct {
 }
 
-func (MockClientManager) ClientSignIn(oldUid int64, uid int64, device int64) error {
+func (MockClientManager) SignIn(oldUid int64, uid int64, device int64) error {
 	logger.D("ClientSignIn, oldUid=%d, uid=%d, device=%d", oldUid, uid, device)
 	return nil
 }
 
-func (MockClientManager) ClientLogout(uid int64, device int64) error {
+func (MockClientManager) Logout(uid int64, device int64) error {
 	logger.D("ClientLogout, uid=%d, device=%d", uid, device)
 	return nil
 }
 
 func (MockClientManager) EnqueueMessage(uid int64, device int64, message *message.Message) error {
 	logger.D("EnqueueMessage, uid=%d, device=%d, msg=%v", uid, device, message)
+	return nil
+}
+
+func (MockClientManager) GetServerInfo() *client.ServerInfo {
 	return nil
 }
 

@@ -9,16 +9,21 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
 type DefaultClientManager struct {
-	clients     *clients
-	clientCount int64
+	clients      *clients
+	clientOnline int64
+	messageSent  int64
+	maxOnline    int64
+	startAt      int64
 }
 
 func NewDefaultManager() *DefaultClientManager {
 	ret := new(DefaultClientManager)
 	ret.clients = newClients()
+	ret.startAt = time.Now().Unix()
 	return ret
 }
 
@@ -32,7 +37,13 @@ func (c *DefaultClientManager) ClientConnected(conn conn.Connection) int64 {
 	ret := newClient(conn)
 	ret.SetID(connUid, 0)
 	c.clients.add(connUid, 0, ret)
-	atomic.AddInt64(&c.clientCount, 1)
+	atomic.AddInt64(&c.clientOnline, 1)
+
+	max := atomic.LoadInt64(&c.maxOnline)
+	current := atomic.LoadInt64(&c.clientOnline)
+	if max < current {
+		atomic.StoreInt64(&c.maxOnline, current)
+	}
 	// 开始处理连接的消息
 	ret.Run()
 	return connUid
@@ -40,7 +51,7 @@ func (c *DefaultClientManager) ClientConnected(conn conn.Connection) int64 {
 
 func (c *DefaultClientManager) AddClient(uid int64, cs IClient) {
 	c.clients.add(uid, 0, cs)
-	atomic.AddInt64(&c.clientCount, 1)
+	atomic.AddInt64(&c.clientOnline, 1)
 }
 
 // ClientSignIn 客户端登录, id 为连接时使用的临时标识, uid 为z用户标识, device 用于区分不同设备
@@ -64,7 +75,6 @@ func (c *DefaultClientManager) ClientSignIn(id, uid_ int64, device int64) error 
 			existing.EnqueueMessage(message.NewMessage(0, message.ActionNotifyKickOut, "Your account is logged in on another device"))
 			existing.Exit()
 			logged.remove(device)
-			atomic.AddInt64(&c.clientCount, 1)
 		}
 		if logged.size() > 0 {
 			msg := "multi device login, device=" + strconv.FormatInt(device, 10)
@@ -96,12 +106,14 @@ func (c *DefaultClientManager) ClientLogout(uid_ int64, device int64) error {
 	logDevice.SetID(uid.GenTemp(), 0)
 	logDevice.Exit()
 	cl.remove(device)
-	atomic.AddInt64(&c.clientCount, -1)
+	atomic.AddInt64(&c.clientOnline, -1)
 	statistics.SConnExit()
 	return nil
 }
 
 func (c *DefaultClientManager) EnqueueMessage(uid int64, device int64, msg *message.Message) error {
+	atomic.AddInt64(&c.messageSent, 1)
+
 	ds := c.clients.get(uid)
 	if ds == nil || ds.size() == 0 {
 		// offline
@@ -144,14 +156,35 @@ func (c *DefaultClientManager) isDeviceOnline(uid, device int64) bool {
 	return ds.get(device) != nil
 }
 
-func (c *DefaultClientManager) allClient() []int64 {
-	var ret []int64
-	for k := range c.clients.clients {
-		if k > 0 {
-			ret = append(ret, k)
+func (c *DefaultClientManager) getClient(count int) []Info {
+	//goland:noinspection GoPreferNilSlice
+	ret := []Info{}
+	ct := 0
+	c.clients.m.RLock()
+	for id, ds := range c.clients.clients {
+		if uid.IsTempId(id) {
+			continue
+		}
+		for _, d := range ds.ds {
+			ret = append(ret, d.GetInfo())
+			break
+		}
+		ct++
+		if ct >= count {
+			break
 		}
 	}
+	c.clients.m.RUnlock()
 	return ret
+}
+
+func (c *DefaultClientManager) GetManagerInfo() ServerInfo {
+	return ServerInfo{
+		Online:      atomic.LoadInt64(&c.clientOnline),
+		MaxOnline:   atomic.LoadInt64(&c.maxOnline),
+		MessageSent: atomic.LoadInt64(&c.messageSent),
+		StartAt:     c.startAt,
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////////

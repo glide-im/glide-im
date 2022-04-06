@@ -74,7 +74,7 @@ func (*AuthApi) AuthToken(ctx *route.Context, req *AuthTokenRequest) error {
 	} else {
 		// if the request from http, at the first time auth, the uid is 0.
 		if ctx.Uid != 0 {
-			apidep.ClientInterface.ClientSignIn(ctx.Uid, token.Uid, token.Device)
+			apidep.ClientInterface.SignIn(ctx.Uid, token.Uid, token.Device)
 			ctx.Uid = token.Uid
 			ctx.Device = token.Device
 		}
@@ -150,6 +150,6 @@ func (a *AuthApi) Logout(ctx *route.Context) error {
 		return comm.NewDbErr(err)
 	}
 	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, ""))
-	apidep.ClientInterface.ClientLogout(ctx.Uid, ctx.Device)
+	apidep.ClientInterface.Logout(ctx.Uid, ctx.Device)
 	return nil
 }

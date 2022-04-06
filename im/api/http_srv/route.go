@@ -14,6 +14,7 @@ func initRoute() {
 
 	appApi := app.AppApi{}
 	getNoAuth("api/app/release", appApi.GetReleaseInfo)
+	getNoAuth("/api/app/info", appApi.GetServerInfo)
 
 	authApi := auth.AuthApi{}
 	postNoAuth("/api/auth/register", authApi.Register)

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"go_im/im/api/apidep"
+	"go_im/im/api/comm"
 	"go_im/im/message"
 	"reflect"
 	"strings"
@@ -54,6 +55,10 @@ type Context struct {
 
 func (i *Context) Response(message *message.Message) {
 	i.R(message)
+}
+
+func (i *Context) ReturnSuccess(data interface{}) {
+	i.R(message.NewMessage(i.Seq, comm.ActionSuccess, data))
 }
 
 type IRoute interface {

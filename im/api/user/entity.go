@@ -42,3 +42,8 @@ type ContactApproval struct {
 	Agree   bool
 	Comment string
 }
+
+type OnlineUser struct {
+	Uid    int64
+	Before int64
+}
