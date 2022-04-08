@@ -37,13 +37,7 @@ func (c *DefaultClientManager) ClientConnected(conn conn.Connection) int64 {
 	ret := newClient(conn)
 	ret.SetID(connUid, 0)
 	c.clients.add(connUid, 0, ret)
-	atomic.AddInt64(&c.clientOnline, 1)
 
-	max := atomic.LoadInt64(&c.maxOnline)
-	current := atomic.LoadInt64(&c.clientOnline)
-	if max < current {
-		atomic.StoreInt64(&c.maxOnline, current)
-	}
 	// 开始处理连接的消息
 	ret.Run()
 	return connUid
@@ -56,7 +50,7 @@ func (c *DefaultClientManager) AddClient(uid int64, cs IClient) {
 
 // ClientSignIn 客户端登录, id 为连接时使用的临时标识, uid 为z用户标识, device 用于区分不同设备
 func (c *DefaultClientManager) ClientSignIn(id, uid_ int64, device int64) error {
-	logger.D("client sign in origin-id=%d, uid=%d", id, uid_)
+	logger.D("client sign in temp-id=%d, uid=%d, device=%d", id, uid_, device)
 	tempDs := c.clients.get(id)
 	if tempDs == nil || tempDs.size() == 0 {
 		// 该客户端不存在
@@ -78,7 +72,7 @@ func (c *DefaultClientManager) ClientSignIn(id, uid_ int64, device int64) error 
 		}
 		if logged.size() > 0 {
 			msg := "multi device login, device=" + strconv.FormatInt(device, 10)
-			EnqueueMessage(uid_, message.NewMessage(0, message.ActionNotifyAccountLogin, msg))
+			_ = EnqueueMessage(uid_, message.NewMessage(0, message.ActionNotifyAccountLogin, msg))
 		}
 		logged.put(device, client)
 	} else {
@@ -88,6 +82,14 @@ func (c *DefaultClientManager) ClientSignIn(id, uid_ int64, device int64) error 
 	client.SetID(uid_, device)
 	// 删除临时 id
 	c.clients.delete(id, 0)
+
+	// TODO async
+	atomic.AddInt64(&c.clientOnline, 1)
+	max := atomic.LoadInt64(&c.maxOnline)
+	current := atomic.LoadInt64(&c.clientOnline)
+	if max < current {
+		atomic.StoreInt64(&c.maxOnline, current)
+	}
 	return nil
 }
 

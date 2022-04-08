@@ -181,6 +181,7 @@ func (c *Client) readMessage() {
 	atomic.StoreInt32(&c.readClosed, 0)
 	for {
 		select {
+		// TODO
 		case <-c.readClose:
 			goto STOP
 		case <-c.hbR.C:
@@ -238,6 +239,7 @@ func (c *Client) writeMessage() {
 		//	c.hbW.Cancel()
 		//	c.hbW = tw.After(HeartbeatDuration)
 		case m, ok := <-c.messages:
+			// TODO remove, use block read
 			if !ok {
 				if atomic.LoadInt32(&c.readClosed) == 1 {
 					logger.D("read closed, down message queue is empty, close write now, uid=%d", c.id)
