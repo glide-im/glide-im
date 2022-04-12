@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"github.com/BurntSushi/toml"
+	"go_im/pkg/logger"
 	"os"
 )
 
@@ -51,13 +52,11 @@ type config struct {
 
 func init() {
 	var conf config
-	env, b := os.LookupEnv(configEnv)
-	if !b {
-		panic("the config file location is not configured in env, please configure env IM_CONFIG")
-	}
-	_, err := toml.DecodeFile(env, &conf)
 
-	//_, err := toml.DecodeFile("config.toml", &conf)
+	c := getConfigPath()
+	logger.D("config path: %s", c)
+
+	_, err := toml.DecodeFile(c, &conf)
 	if err != nil {
 		panic(fmt.Sprintf("error on load config: %s", err.Error()))
 	}
@@ -65,4 +64,30 @@ func init() {
 	Redis = &conf.Redis
 	IMService = &conf.IMService
 	ApiHttpService = &conf.ApiHttp
+}
+
+func getConfigPath() string {
+	configPath := ""
+	for i, arg := range os.Args {
+		println(i, arg)
+	}
+	if len(os.Args) == 2 {
+		configPath = os.Args[1]
+	} else {
+		configPath = "config.toml"
+	}
+	f, e := os.Open(configPath)
+	if e == nil {
+		_ = f.Close()
+		return configPath
+	}
+	return readEnv()
+}
+
+func readEnv() string {
+	configPath, b := os.LookupEnv(configEnv)
+	if !b {
+		panic("the config file location is not configured in env, please configure env IM_CONFIG")
+	}
+	return configPath
 }
