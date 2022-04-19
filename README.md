@@ -96,6 +96,10 @@ wget https://raw.githubusercontent.com/Glide-IM/Glide-IM/master/cmd/script/glide
 
 [![QQ Group 793204140](http://pub.idqqimg.com/wpa/images/group.png)](https://qm.qq.com/cgi-bin/qm/qr?k=PJvSdCQXtAXyBGuOyP-T2CPu9eVNmzls&jump_from=webapi)
 
+- 微信群
+
+![i](_art/wechat-group.png)
+
 ## 特别鸣谢
 
 [![JetBrains](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg)]( https://jb.gg/OpenSourceSupport)
