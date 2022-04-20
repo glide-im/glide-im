@@ -11,7 +11,7 @@
 
 Glide is a high-availability, high-performance instant messaging service.
 
-Feel free to post your development in the issue.
+Feel free to post your opinion in the issues.
 
 ## Related Project
 
