@@ -4,6 +4,8 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/dengzii/go_im)](https://goreportcard.com/report/github.com/dengzii/go_im)
 
+[README-EN](README_EN.md)
+
 一款高可靠, 高性能的 IM 服务, 支持分布式集群部署, 单机(单实例)部署.
 
 ## 简介
