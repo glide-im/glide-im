@@ -127,6 +127,67 @@ func (*AuthApi) SignIn(ctx *route.Context, request *SignInRequest) error {
 	return nil
 }
 
+func (*AuthApi) GuestRegister(ctx *route.Context, req *GuestRegisterRequest) error {
+
+	avatar := req.Avatar
+	nickname := req.Nickname
+
+	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
+	if len(avatar) == 0 {
+		avatar = avatars[rnd.Intn(len(avatars))]
+	}
+	if len(nickname) == 0 {
+		nickname = nicknames[rnd.Intn(len(nicknames))]
+	}
+
+	account := "guest_" + randomStr(32)
+
+	u := &userdao.User{
+		Account:  account,
+		Password: "",
+		Nickname: nickname,
+		Avatar:   avatar,
+	}
+	err := userdao.UserInfoDao.AddUser(u)
+	if err != nil {
+		return comm.NewDbErr(err)
+	}
+
+	uid, err := userdao.Dao.GetUidInfoByLogin(account, "")
+	if err != nil || uid == 0 {
+		if err == common.ErrNoRecordFound || uid == 0 {
+			return ErrSignInAccountInfo
+		}
+		return comm.NewDbErr(err)
+	}
+	jt := comm.AuthInfo{
+		Uid:    uid,
+		Device: 3,
+		Ver:    comm.GenJwtVersion(),
+	}
+	token, err := comm.GenJwtExp(jt, time.Now().Add(time.Hour*24*3))
+	if err != nil {
+		return comm.NewUnexpectedErr("register failed", err)
+	}
+
+	err = userdao.Dao.SetTokenVersion(jt.Uid, jt.Device, jt.Ver, time.Duration(jt.ExpiresAt))
+	if err != nil {
+		return comm.NewDbErr(err)
+	}
+
+	tk := AuthResponse{
+		Uid:     uid,
+		Token:   token,
+		Servers: host,
+	}
+	resp := message.NewMessage(ctx.Seq, comm.ActionSuccess, tk)
+
+	ctx.Uid = uid
+	ctx.Device = 3
+	ctx.Response(resp)
+	return nil
+}
+
 func (*AuthApi) Register(ctx *route.Context, req *RegisterRequest) error {
 
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -152,4 +213,15 @@ func (a *AuthApi) Logout(ctx *route.Context) error {
 	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, ""))
 	apidep.ClientInterface.Logout(ctx.Uid, ctx.Device)
 	return nil
+}
+
+func randomStr(n int) string {
+	var l = []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	rand.Seed(time.Now().UnixNano())
+	b := make([]rune, n)
+	length := len(l)
+	for i := range b {
+		b[i] = l[rand.Intn(length)]
+	}
+	return string(b)
 }

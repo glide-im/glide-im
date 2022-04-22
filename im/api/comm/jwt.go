@@ -22,7 +22,11 @@ type AuthInfo struct {
 func GenJwt(payload AuthInfo) (string, error) {
 
 	expireAt := time.Now().Add(time.Hour * 24)
-	payload.ExpiresAt = expireAt.Unix()
+	return GenJwtExp(payload, expireAt)
+}
+
+func GenJwtExp(payload AuthInfo, expiredAt time.Time) (string, error) {
+	payload.ExpiresAt = expiredAt.Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
 
 	t, err := token.SignedString(jwtSecret)

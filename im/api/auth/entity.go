@@ -18,6 +18,11 @@ type RegisterRequest struct {
 	Password string
 }
 
+type GuestRegisterRequest struct {
+	Avatar   string
+	Nickname string
+}
+
 // AuthResponse login or register result
 type AuthResponse struct {
 	Token   string

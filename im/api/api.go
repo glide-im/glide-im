@@ -44,6 +44,7 @@ func (a *Routers) init() {
 				route.Route("logout", a.Logout),
 				route.Route("auth", a.AuthToken),
 				route.Route("register", a.Register),
+				route.Route("guest", a.GuestRegister),
 				route.Route("online", a.GetOnlineUser),
 				route.Group("info",
 					route.Route("get", a.GetUserInfo),

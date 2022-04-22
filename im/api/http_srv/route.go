@@ -18,6 +18,7 @@ func initRoute() {
 
 	authApi := auth.AuthApi{}
 	postNoAuth("/api/auth/register", authApi.Register)
+	postNoAuth("/api/auth/guest", authApi.GuestRegister)
 	postNoAuth("/api/auth/signin", authApi.SignIn)
 	postNoAuth("/api/auth/token", authApi.AuthToken)
 	post("/api/auth/logout", authApi.Logout)
