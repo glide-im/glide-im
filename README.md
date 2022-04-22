@@ -6,12 +6,9 @@
 
 [README-EN](README_EN.md)
 
-一款高可靠, 高性能的 IM 服务, 支持分布式集群部署, 单机(单实例)部署.
-
 ## 简介
 
-GlideIM 是一款完全开源的 IM 服务, 支持单实例, 微服务等多种方式部署. 支持 WebSocket, TCP 两种连接协议, 内置 JSON, ProtoBuff 两种消息交换协议, 并支持添加协议解析过程, 消息加密等.
-GlideIM 还实现了智能心跳保活机制, 死链接检测, 消息 ACK 机制等功能.
+本项目是我在 高性能IM, 微服务, 分布式, 项目架构等方面从零基础开始的一次实践, 希望可以给你带来一些帮助.
 
 ### 立即体验
 
@@ -95,8 +92,6 @@ wget https://raw.githubusercontent.com/Glide-IM/Glide-IM/master/cmd/script/glide
 ![i](_art/system_arch.png)
 
 ## 讨论群
-
-[![QQ Group 793204140](http://pub.idqqimg.com/wpa/images/group.png)](https://qm.qq.com/cgi-bin/qm/qr?k=PJvSdCQXtAXyBGuOyP-T2CPu9eVNmzls&jump_from=webapi)
 
 - 微信群
 
