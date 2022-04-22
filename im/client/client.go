@@ -34,7 +34,7 @@ func init() {
 }
 
 const (
-	stateInit = iota
+	_ = iota
 	stateRunning
 	stateClosing
 	stateClosed
@@ -181,7 +181,6 @@ func (c *Client) readMessage() {
 	atomic.StoreInt32(&c.readClosed, 0)
 	for {
 		select {
-		// TODO
 		case <-c.readClose:
 			goto STOP
 		case <-c.hbR.C:
@@ -190,15 +189,10 @@ func (c *Client) readMessage() {
 				logger.D("heartbeat timout, id=%d, device=%d", c.id, c.device)
 				goto STOP
 			}
+			// reset client heartbeat
+			c.hbR = tw.After(HeartbeatDuration)
 			c.EnqueueMessage(message.NewMessage(0, message.ActionHeartbeat, ""))
-		case msg, ok := <-readChan:
-			if !ok {
-				//if Manager.IsDeviceOnline(c.id, c.device) {
-				//	Manager.Logout(c.id, c.device)
-				//}
-				//goto STOP
-				continue
-			}
+		case msg := <-readChan:
 			if msg.err != nil {
 				if c.Closed() || c.handleError(msg.err) {
 					// 连接断开或致命错误中断读消息
@@ -218,7 +212,7 @@ func (c *Client) readMessage() {
 STOP:
 	c.hbR.Cancel()
 	atomic.StoreInt32(&c.readClosed, 1)
-	done <- struct{}{}
+	close(done)
 	id, device := c.getID()
 	logger.D("client read closed, id=%d, device=%d", id, device)
 }

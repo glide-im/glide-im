@@ -3,6 +3,7 @@ package client
 import (
 	"go_im/im/conn"
 	"go_im/im/message"
+	"go_im/pkg/logger"
 	"sync"
 )
 
@@ -56,25 +57,28 @@ func (d *defaultReader) ReadCh(conn conn.Connection) (<-chan *readerRes, chan<- 
 	done := make(chan struct{})
 	// TODO 2021-12-3 IO重构
 	go func() {
-		for {
-			select {
-			case <-done:
-				goto CLOSE
-			default:
-				m, err := d.Read(conn)
-				res := recyclePool.Get().(*readerRes)
-				res.err = err
-				if err != nil {
-					c <- res
-					goto DONE
-				}
-				res.m = m
-				c <- res
+		defer func() {
+			e := recover()
+			if e != nil {
+				logger.E("error on read msg from connection %v", e)
 			}
+		}()
+		for {
+			_, ok := <-done
+			if !ok {
+				goto CLOSE
+			}
+			m, err := d.Read(conn)
+			res := recyclePool.Get().(*readerRes)
+			res.err = err
+			if err != nil {
+				c <- res
+				goto CLOSE
+			}
+			res.m = m
+			c <- res
 		}
 	CLOSE:
-		close(done)
-	DONE:
 		close(c)
 	}()
 	return c, done
