@@ -13,9 +13,10 @@ import (
 var dispatchCount int32 = 0
 
 func initDepMock() {
-	enqueueMessage = func(uid int64, device int64, message *message.Message) {
-		logger.D("%d, %d, %s", uid, device, message.Data)
+	enqueueMessage = func(uid int64, device int64, message *message.Message) error {
+		logger.D("%d, %d, %s", uid, device, message.GetData())
 		atomic.AddInt32(&dispatchCount, 1)
+		return nil
 	}
 }
 
@@ -24,7 +25,7 @@ func initUserMock(gid int64, uid ...int64) {
 	for _, i := range uid {
 		um = append(um, MemberUpdate{
 			Uid:  i,
-			Flag: FlagMemberAdd,
+			Flag: FlagMemberOnline,
 		})
 
 		um = append(um, MemberUpdate{

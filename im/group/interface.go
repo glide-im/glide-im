@@ -6,22 +6,18 @@ import (
 )
 
 const (
-	_ = iota
-	FlagMemberAdd
-	FlagMemberDel
-	FlagMemberOnline
-	FlagMemberOffline
-	FlagMemberMuted
-	FlagMemberSetAdmin
-	FlagMemberCancelAdmin
+	FlagMemberOnline      int64 = 1 << 62
+	FlagMemberOffline           = 1 << 61
+	FlagMemberMuted             = 1 << 1
+	FlagMemberTypeAdmin         = 1 << 2
+	FlagMemberTypeGeneral       = 1 << 3
 )
 
 const (
-	_ = iota
-	FlagGroupCreate
-	FlagGroupDissolve
-	FlagGroupMute
-	FlagGroupCancelMute
+	FlagGroupCreate     int64 = 1
+	FlagGroupDissolve         = 2
+	FlagGroupMute             = 3
+	FlagGroupCancelMute       = 4
 )
 
 type MessageHandler func(uid int64, device int64, message *message.Message) error

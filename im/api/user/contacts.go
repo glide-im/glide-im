@@ -6,6 +6,7 @@ import (
 	"go_im/im/api/router"
 	"go_im/im/dao/msgdao"
 	"go_im/im/dao/userdao"
+	"go_im/im/group"
 	"go_im/im/message"
 	"go_im/pkg/logger"
 	"time"
@@ -83,7 +84,8 @@ func (a *UserApi) GetContactList(ctx *route.Context) error {
 	resp := []ContactResponse{}
 	for _, contact := range contacts {
 		if contact.Type == userdao.ContactsTypeGroup {
-			_ = apidep.GroupInterface.MemberOnline(contact.Id, ctx.Uid)
+			// TODO 2022-4-24 member flag
+			_ = apidep.GroupInterface.UpdateMember(contact.Id, ctx.Uid, group.FlagMemberOnline|group.FlagMemberTypeGeneral)
 		}
 		resp = append(resp, ContactResponse{
 			Id:     contact.Id,

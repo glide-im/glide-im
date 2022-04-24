@@ -34,7 +34,8 @@ func (m *DefaultManager) Init() {
 	}
 	for _, g := range groups {
 		logger.D("load group %d", g.Gid)
-		sGroup := newGroup(g.Gid)
+		// TODO load seq segment and seq
+		sGroup := newGroup(g.Gid, 0)
 		m.groups[g.Gid] = sGroup
 		mbs, err := groupdao.Dao.GetMembers(g.Gid)
 		if err != nil {
@@ -71,7 +72,7 @@ func (m *DefaultManager) UpdateGroup(gid int64, update Update) error {
 
 	if update.Flag == FlagGroupCreate {
 		m.mu.Lock()
-		m.groups[gid] = newGroup(gid)
+		m.groups[gid] = newGroup(gid, 0)
 		m.mu.Unlock()
 		return nil
 	}

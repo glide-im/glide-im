@@ -32,6 +32,9 @@ func newMemberInfo() *memberInfo {
 var tw = timingwheel.NewTimingWheel(time.Second, 3, 20)
 var queueExec *ants.Pool
 
+// group message sequence segment length
+const msgSeqSegmentLen = 200
+
 const messageQueueSleep = time.Second * 10
 
 func init() {
@@ -54,7 +57,9 @@ type Group struct {
 	gid int64
 
 	msgSequence int64
-	startup     string
+	seqRemain   int64
+
+	startup string
 
 	mute      bool
 	dissolved bool
@@ -75,7 +80,7 @@ type Group struct {
 	members   map[int64]*memberInfo
 }
 
-func newGroup(gid int64) *Group {
+func newGroup(gid int64, seq int64) *Group {
 	ret := new(Group)
 	ret.mu = &sync.Mutex{}
 	ret.members = map[int64]*memberInfo{}
@@ -84,7 +89,8 @@ func newGroup(gid int64) *Group {
 	ret.notify = make(chan *message.GroupNotify, 10)
 	ret.checkActive = tw.After(messageQueueSleep)
 	ret.queueRunning = 0
-	ret.msgSequence = 1
+	ret.msgSequence = seq
+	ret.seqRemain = msgSeqSegmentLen
 	ret.gid = gid
 	return ret
 }
@@ -143,6 +149,8 @@ func (g *Group) EnqueueMessage(msg *message.ChatMessage, recall bool) (int64, er
 		atomic.AddInt64(&g.msgSequence, -1)
 		return 0, err
 	}
+	g.checkSeqRemain()
+
 	err = msgdao.UpdateGroupMessageState(g.gid, msg.Mid, time.Now().Unix(), seq)
 	if err != nil {
 		logger.E("Group.EnqueueMessage update group message state error, %v", err)
@@ -170,6 +178,14 @@ func (g *Group) EnqueueMessage(msg *message.ChatMessage, recall bool) (int64, er
 		return 0, err
 	}
 	return seq, nil
+}
+
+func (g *Group) checkSeqRemain() {
+	g.seqRemain--
+	remain := atomic.AddInt64(&g.seqRemain, -1)
+	if remain <= 0 {
+		// TODO load a new segment
+	}
 }
 
 func (g *Group) checkMsgQueue() error {
@@ -229,7 +245,10 @@ func (g *Group) SendMessage(from int64, message *message.Message) {
 		if !mf.online || uid == from {
 			continue
 		}
-		enqueueMessage(uid, 0, message)
+		err := enqueueMessage(uid, 0, message)
+		if err != nil {
+			logger.E("%v", err)
+		}
 	}
 	g.mu.Unlock()
 }
@@ -238,24 +257,24 @@ func (g *Group) updateMember(u MemberUpdate) error {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	mf, ok := g.members[u.Uid]
-	if !ok && u.Flag != FlagMemberAdd {
+	if !ok && u.Flag&FlagMemberOnline != 1 {
 		return errors.New("member not exist")
 	}
-	switch u.Flag {
-	case FlagMemberDel:
-		mf.deletedAt = time.Now().Unix()
-	case FlagMemberAdd:
-		g.members[u.Uid] = newMemberInfo()
-	case FlagMemberMuted:
+	if u.Flag&FlagMemberOnline == 1 {
+		mf = newMemberInfo()
+		g.PutMember(u.Uid, mf)
+	}
+	if u.Flag&FlagMemberOffline == 1 {
+		g.RemoveMember(u.Uid)
+	}
+	if u.Flag&FlagMemberMuted == 1 {
 		mf.muted = true
-	case FlagMemberOnline:
-		mf.online = true
-	case FlagMemberOffline:
-		mf.online = false
-	case FlagMemberCancelAdmin:
-		mf.admin = false
-	case FlagMemberSetAdmin:
+	}
+	if u.Flag&FlagMemberTypeAdmin == 1 {
 		mf.admin = true
+	}
+	if u.Flag&FlagMemberTypeGeneral == 1 {
+		mf.admin = false
 	}
 	return nil
 }

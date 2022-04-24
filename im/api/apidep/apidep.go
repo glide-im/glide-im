@@ -64,6 +64,7 @@ type GroupManagerInterface interface {
 type groupInterface struct{}
 
 func (g *groupInterface) MemberOnline(gid int64, uid int64) error {
+	// TODO member flag, member type, muted...
 	u := []group.MemberUpdate{
 		{
 			Uid:   uid,
@@ -102,7 +103,7 @@ func (g *groupInterface) PutMember(gid int64, mb []int64) error {
 	for _, uid := range mb {
 		u = append(u, group.MemberUpdate{
 			Uid:  uid,
-			Flag: group.FlagMemberAdd,
+			Flag: group.FlagMemberOnline,
 		})
 	}
 	return group.UpdateMember(gid, u)
@@ -113,7 +114,7 @@ func (g *groupInterface) RemoveMember(gid int64, uid ...int64) error {
 	for _, id := range uid {
 		u = append(u, group.MemberUpdate{
 			Uid:  id,
-			Flag: group.FlagMemberDel,
+			Flag: group.FlagMemberOffline,
 		})
 	}
 	return group.UpdateMember(gid, u)

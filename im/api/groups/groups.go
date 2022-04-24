@@ -51,7 +51,7 @@ func (m *GroupApi) CreateGroup(ctx *route.Context, request *CreateGroupRequest) 
 	if err != nil {
 		return comm.NewUnexpectedErr("add group member failed", err)
 	}
-	err = apidep.GroupInterface.UpdateMember(dbGroup.Gid, ctx.Uid, group.FlagMemberSetAdmin)
+	err = apidep.GroupInterface.UpdateMember(dbGroup.Gid, ctx.Uid, group.FlagMemberTypeAdmin)
 	if err != nil {
 		return comm.NewUnexpectedErr("create group failed", err)
 	}
