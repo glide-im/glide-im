@@ -47,15 +47,15 @@ type MessageReader interface {
 	Read(conn conn.Connection) (*message.Message, error)
 
 	// ReadCh 返回两个管道, 第一个用于读取内容, 第二个用于发送停止读取, 停止读取时切记要发送停止信号
-	ReadCh(conn conn.Connection) (<-chan *readerRes, chan<- struct{})
+	ReadCh(conn conn.Connection) (<-chan *readerRes, chan<- interface{})
 }
 
 type defaultReader struct{}
 
-func (d *defaultReader) ReadCh(conn conn.Connection) (<-chan *readerRes, chan<- struct{}) {
+func (d *defaultReader) ReadCh(conn conn.Connection) (<-chan *readerRes, chan<- interface{}) {
 	c := make(chan *readerRes, 5)
-	done := make(chan struct{})
-	// TODO 2021-12-3 IO重构
+	done := make(chan interface{})
+
 	go func() {
 		defer func() {
 			e := recover()
@@ -64,19 +64,21 @@ func (d *defaultReader) ReadCh(conn conn.Connection) (<-chan *readerRes, chan<- 
 			}
 		}()
 		for {
-			_, ok := <-done
-			if !ok {
+			select {
+			case <-done:
 				goto CLOSE
+			default:
+				m, err := d.Read(conn)
+				res := recyclePool.Get().(*readerRes)
+				if err != nil {
+					res.err = err
+					c <- res
+					goto CLOSE
+				} else {
+					res.m = m
+					c <- res
+				}
 			}
-			m, err := d.Read(conn)
-			res := recyclePool.Get().(*readerRes)
-			res.err = err
-			if err != nil {
-				c <- res
-				goto CLOSE
-			}
-			res.m = m
-			c <- res
 		}
 	CLOSE:
 		close(c)

@@ -15,7 +15,7 @@ import (
 var tw = timingwheel.NewTimingWheel(time.Millisecond*500, 3, 20)
 
 // HeartbeatDuration 心跳间隔
-const HeartbeatDuration = time.Second * 30
+const HeartbeatDuration = time.Second * 5
 
 var pool *ants.Pool
 
@@ -84,8 +84,8 @@ type Client struct {
 	queuedMessage int64
 	// messages 带缓冲的下行消息管道, 缓冲大小40
 	messages chan *message.Message
-	// readClose 关闭或写入则停止读
-	readClose  chan struct{}
+	// rCloseCh 关闭或写入则停止读
+	rCloseCh   chan struct{}
 	readClosed int32
 
 	// hbR 心跳倒计时
@@ -105,7 +105,7 @@ func newClient(conn conn.Connection) *Client {
 	// 大小为 40 的缓冲管道, 防止短时间消息过多如果网络连接 output 不及时会造成程序阻塞, 可以适当调整
 	client.messages = make(chan *message.Message, 60)
 	client.connectAt = time.Now()
-	client.readClose = make(chan struct{})
+	client.rCloseCh = make(chan struct{})
 	client.seq = 0
 	client.hbR = tw.After(HeartbeatDuration)
 	client.hbW = tw.After(HeartbeatDuration)
@@ -129,7 +129,7 @@ func (c *Client) SetID(id int64, device int64) {
 }
 
 func (c *Client) Closed() bool {
-	return atomic.LoadInt32(&c.state) == stateClosed
+	return atomic.LoadInt32(&c.state) != stateRunning
 }
 
 // EnqueueMessage 放入下行消息队列
@@ -140,7 +140,7 @@ func (c *Client) EnqueueMessage(message *message.Message) {
 			atomic.AddInt64(&c.queuedMessage, -1)
 			e := recover()
 			if e != nil {
-				logger.E("panic: %v", e)
+				logger.E("%v", e)
 			}
 		}()
 		s := atomic.LoadInt32(&c.state)
@@ -157,7 +157,6 @@ func (c *Client) EnqueueMessage(message *message.Message) {
 		case c.messages <- message:
 		default:
 			atomic.AddInt64(&c.queuedMessage, -1)
-			// TODO 客户端弱网消息下行速度过慢导致缓冲溢出
 			// 消息 chan 缓冲溢出, 这条消息将被丢弃
 			logger.E("message chan is full, id=%d", c.id)
 		}
@@ -181,7 +180,8 @@ func (c *Client) readMessage() {
 	atomic.StoreInt32(&c.readClosed, 0)
 	for {
 		select {
-		case <-c.readClose:
+		case <-c.rCloseCh:
+			close(c.rCloseCh)
 			goto STOP
 		case <-c.hbR.C:
 			c.hbLost++
@@ -190,6 +190,7 @@ func (c *Client) readMessage() {
 				goto STOP
 			}
 			// reset client heartbeat
+			c.hbR.Cancel()
 			c.hbR = tw.After(HeartbeatDuration)
 			c.EnqueueMessage(message.NewMessage(0, message.ActionHeartbeat, ""))
 		case msg := <-readChan:
@@ -228,19 +229,15 @@ func (c *Client) writeMessage() {
 
 	for {
 		select {
-		//case <-c.hbW.C:
-		//	c.EnqueueMessage(message.NewMessage(c.getNextSeq(), message.ActionHeartbeat, struct{}{}))
-		//	c.hbW.Cancel()
-		//	c.hbW = tw.After(HeartbeatDuration)
-		case m, ok := <-c.messages:
-			// TODO remove, use block read
-			if !ok {
-				if atomic.LoadInt32(&c.readClosed) == 1 {
-					logger.D("read closed, down message queue is empty, close write now, uid=%d", c.id)
-					goto STOP
-				}
-				continue
+		case <-c.hbW.C:
+			if c.Closed() {
+				logger.D("read closed, down msg queue timeout, close write now, uid=%d", c.id)
+				goto STOP
 			}
+			c.EnqueueMessage(message.NewMessage(c.getNextSeq(), message.ActionHeartbeat, struct{}{}))
+			c.hbW.Cancel()
+			c.hbW = tw.After(HeartbeatDuration)
+		case m := <-c.messages:
 			b, err := codec.Encode(m)
 			if err != nil {
 				logger.E("serialize output message", err)
@@ -249,8 +246,8 @@ func (c *Client) writeMessage() {
 			err = c.conn.Write(b)
 			atomic.AddInt64(&c.queuedMessage, -1)
 
-			//c.hbW.Cancel()
-			//c.hbW = tw.After(HeartbeatDuration)
+			c.hbW.Cancel()
+			c.hbW = tw.After(HeartbeatDuration)
 			if err != nil {
 				if c.Closed() || c.handleError(err) {
 					// 连接断开或致命错误中断写消息
@@ -259,8 +256,6 @@ func (c *Client) writeMessage() {
 			} else {
 				statistics.SMsgOutput()
 			}
-			//case <-timeout:
-			// TODO write message time is too long, slow client
 		}
 	}
 STOP:
@@ -288,7 +283,6 @@ func (c *Client) handleError(err error) bool {
 
 // Exit 退出客户端
 func (c *Client) Exit() {
-	// TODO 先关闭下行消息队列写入, 真正退出前先将下行队列然后所有消息写完
 	s := atomic.LoadInt32(&c.state)
 	if s == stateClosed || s == stateClosing {
 		return
@@ -296,8 +290,12 @@ func (c *Client) Exit() {
 	atomic.StoreInt32(&c.state, stateClosing)
 
 	if atomic.LoadInt32(&c.readClosed) != 1 {
-		close(c.readClose)
+		c.rCloseCh <- struct{}{}
 	}
+}
+
+func (c *Client) close() {
+
 }
 
 func (c *Client) getID() (int64, int64) {
