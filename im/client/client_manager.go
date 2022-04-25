@@ -1,6 +1,7 @@
 package client
 
 import (
+	"errors"
 	"go_im/im/conn"
 	"go_im/im/dao/uid"
 	"go_im/im/message"
@@ -11,6 +12,9 @@ import (
 	"sync/atomic"
 	"time"
 )
+
+var ErrClientClosed = errors.New("client closed")
+var ErrClientNotExist = errors.New("client does not exist")
 
 type DefaultClientManager struct {
 	clients      *clients
@@ -83,7 +87,6 @@ func (c *DefaultClientManager) ClientSignIn(id, uid_ int64, device int64) error 
 	// 删除临时 id
 	c.clients.delete(id, 0)
 
-	// TODO async
 	atomic.AddInt64(&c.clientOnline, 1)
 	max := atomic.LoadInt64(&c.maxOnline)
 	current := atomic.LoadInt64(&c.clientOnline)
@@ -113,33 +116,35 @@ func (c *DefaultClientManager) ClientLogout(uid_ int64, device int64) error {
 	return nil
 }
 
+// EnqueueMessage to the client with the specified uid and device, device: pass 0 express all device.
 func (c *DefaultClientManager) EnqueueMessage(uid int64, device int64, msg *message.Message) error {
 	atomic.AddInt64(&c.messageSent, 1)
 
+	var err error = nil
 	ds := c.clients.get(uid)
 	if ds == nil || ds.size() == 0 {
-		// offline
-		return nil
+		return ErrClientNotExist
 	}
 	if device != 0 {
 		d := ds.get(device)
 		if d == nil {
-			return nil
+			return ErrClientNotExist
 		}
-		d.EnqueueMessage(msg)
-		return nil
+		return d.EnqueueMessage(msg)
 	}
 	ds.foreach(func(deviceId int64, c IClient) {
 		if device != 0 && deviceId != device {
 			return
 		}
 		if c.Closed() {
-			// TODO 2021-10-27 client is offline, store
+			// the connection state changed during the delivery of the message
+			err = ErrClientClosed
+			return
 		} else {
-			c.EnqueueMessage(msg)
+			err = c.EnqueueMessage(msg)
 		}
 	})
-	return nil
+	return err
 }
 
 func (c *DefaultClientManager) isOnline(uid int64) bool {

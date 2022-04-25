@@ -57,7 +57,7 @@ type IClient interface {
 	Closed() bool
 
 	// EnqueueMessage 将消息放入到客户端消息队列中
-	EnqueueMessage(message *message.Message)
+	EnqueueMessage(message *message.Message) error
 
 	// Exit 退出客户端, 关闭连接等
 	Exit()
@@ -133,7 +133,7 @@ func (c *Client) Closed() bool {
 }
 
 // EnqueueMessage 放入下行消息队列
-func (c *Client) EnqueueMessage(message *message.Message) {
+func (c *Client) EnqueueMessage(message *message.Message) error {
 	atomic.AddInt64(&c.queuedMessage, 1)
 	err := pool.Submit(func() {
 		defer func() {
@@ -164,6 +164,8 @@ func (c *Client) EnqueueMessage(message *message.Message) {
 	if err != nil {
 		logger.E("message not enqueue:%v", err)
 	}
+
+	return nil
 }
 
 // readMessage 开始从 Connection 中读取消息
