@@ -3,6 +3,7 @@ package http_srv
 import (
 	"go_im/im/api/app"
 	"go_im/im/api/auth"
+	"go_im/im/api/cs"
 	"go_im/im/api/groups"
 	"go_im/im/api/msg"
 	"go_im/im/api/user"
@@ -58,6 +59,9 @@ func initRoute() {
 
 	post("/api/session/recent", msgApi.GetRecentSessions)
 	post("/api/session/get", msgApi.GetOrCreateSession)
+
+	csApi := cs.CsApi{}
+	post("/api/cs/get", csApi.GetRecentChatMessage)
 }
 
 func postNoAuth(path string, fn interface{}) {
