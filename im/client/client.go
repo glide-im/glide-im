@@ -15,7 +15,7 @@ import (
 var tw = timingwheel.NewTimingWheel(time.Millisecond*500, 3, 20)
 
 // HeartbeatDuration 心跳间隔
-const HeartbeatDuration = time.Second * 5
+const HeartbeatDuration = time.Second * 20
 
 var pool *ants.Pool
 
@@ -294,6 +294,8 @@ func (c *Client) Exit() {
 	if atomic.LoadInt32(&c.readClosed) != 1 {
 		c.rCloseCh <- struct{}{}
 	}
+
+	_ = Logout(atomic.LoadInt64(&c.id), c.device)
 }
 
 func (c *Client) close() {

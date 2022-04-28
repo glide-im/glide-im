@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func useCros() gin.HandlerFunc {
+func crosMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		method := c.Request.Method
 
@@ -15,8 +15,9 @@ func useCros() gin.HandlerFunc {
 		c.Header("Access-Control-Expose-Headers", "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Cache-Control, Content-Language, Content-Type")
 		c.Header("Access-Control-Allow-Credentials", "true")
 
-		if method == "OPTIONS" {
+		if method == http.MethodOptions {
 			c.AbortWithStatus(http.StatusNoContent)
+			return
 		}
 		c.Next()
 	}

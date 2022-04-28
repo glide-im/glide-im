@@ -13,7 +13,7 @@ const CtxKeyAuthInfo = "CTX_KEY_AUTH_INFO"
 
 func useAuth() gin.IRoutes {
 	if authRouteGroup == nil {
-		authRouteGroup = g.Use(authMiddleware)
+		authRouteGroup = g.Use(authMiddleware).Use(crosMiddleware())
 	}
 	return authRouteGroup
 }

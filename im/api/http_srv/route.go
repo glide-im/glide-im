@@ -65,10 +65,10 @@ func initRoute() {
 }
 
 func postNoAuth(path string, fn interface{}) {
-	g.POST(path, getHandler(path, fn))
+	rt.POST(path, getHandler(path, fn))
 }
 func getNoAuth(path string, fn interface{}) {
-	g.GET(path, getHandler(path, fn))
+	rt.GET(path, getHandler(path, fn))
 }
 func post(path string, fn interface{}) {
 	useAuth().POST(path, getHandler(path, fn))

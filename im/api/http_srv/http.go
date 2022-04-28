@@ -37,6 +37,7 @@ type Validatable interface {
 }
 
 var g *gin.Engine
+var rt gin.IRoutes
 var typeRequestInfo = reflect.TypeOf((*route.Context)(nil))
 var typeError = reflect.TypeOf((*error)(nil)).Elem()
 
@@ -44,8 +45,7 @@ var typeError = reflect.TypeOf((*error)(nil)).Elem()
 func Run(addr string, port int) error {
 
 	g = gin.Default()
-	g.Use(useCros())
-
+	rt = g.Use(crosMiddleware())
 	initRoute()
 
 	ad := fmt.Sprintf("%s:%d", addr, port)
