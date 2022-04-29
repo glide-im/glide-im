@@ -29,7 +29,7 @@ func init() {
 	execPool, err = ants.NewPool(50_0000,
 		ants.WithNonblocking(true),
 		ants.WithPanicHandler(onHandleMessagePanic),
-		ants.WithPreAlloc(true),
+		ants.WithPreAlloc(false),
 	)
 	if err != nil {
 		panic(err)

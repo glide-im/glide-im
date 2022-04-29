@@ -2,6 +2,7 @@ package client
 
 import (
 	"errors"
+	"github.com/panjf2000/ants/v2"
 	"go_im/im/conn"
 	"go_im/im/dao/uid"
 	"go_im/im/message"
@@ -15,6 +16,22 @@ import (
 
 var ErrClientClosed = errors.New("client closed")
 var ErrClientNotExist = errors.New("client does not exist")
+
+var pool *ants.Pool
+
+func init() {
+	var err error
+	pool, err = ants.NewPool(50_0000,
+		ants.WithNonblocking(true),
+		ants.WithPanicHandler(func(i interface{}) {
+			logger.E("%v", i)
+		}),
+		ants.WithPreAlloc(false),
+	)
+	if err != nil {
+		panic(err)
+	}
+}
 
 type DefaultClientManager struct {
 	clients      *clients
@@ -54,12 +71,10 @@ func (c *DefaultClientManager) AddClient(uid int64, cs IClient) {
 
 // ClientSignIn 客户端登录, id 为连接时使用的临时标识, uid 为z用户标识, device 用于区分不同设备
 func (c *DefaultClientManager) ClientSignIn(id, uid_ int64, device int64) error {
-	logger.D("client sign in temp-id=%d, uid=%d, device=%d", id, uid_, device)
+
 	tempDs := c.clients.get(id)
 	if tempDs == nil || tempDs.size() == 0 {
-		// 该客户端不存在
-		logger.W("attempt to sign in a nonexistent client, id=%d", id)
-		return nil
+		return ErrClientNotExist
 	}
 	client := tempDs.get(0)
 	logged := c.clients.get(uid_)
@@ -67,10 +82,8 @@ func (c *DefaultClientManager) ClientSignIn(id, uid_ int64, device int64) error 
 		// 多设备登录
 		existing := logged.get(device)
 		if existing != nil {
-			logger.D("multi device login mutex, uid=%d, device=%d", uid_, device)
 			existing.SetID(uid.GenTemp(), 0)
-			// "Your account is logged in on another device"
-			existing.EnqueueMessage(message.NewMessage(0, message.ActionNotifyKickOut, "Your account is logged in on another device"))
+			_ = c.EnqueueMessage(uid_, device, message.NewMessage(0, message.ActionNotifyKickOut, ""))
 			existing.Exit()
 			logged.remove(device)
 		}
@@ -87,9 +100,8 @@ func (c *DefaultClientManager) ClientSignIn(id, uid_ int64, device int64) error 
 	// 删除临时 id
 	c.clients.delete(id, 0)
 
-	atomic.AddInt64(&c.clientOnline, 1)
 	max := atomic.LoadInt64(&c.maxOnline)
-	current := atomic.LoadInt64(&c.clientOnline)
+	current := atomic.AddInt64(&c.clientOnline, 1)
 	if max < current {
 		atomic.StoreInt64(&c.maxOnline, current)
 	}
@@ -99,15 +111,13 @@ func (c *DefaultClientManager) ClientSignIn(id, uid_ int64, device int64) error 
 func (c *DefaultClientManager) ClientLogout(uid_ int64, device int64) error {
 	cl := c.clients.get(uid_)
 	if cl == nil || cl.size() == 0 {
-		logger.E("uid is not sign in, uid=%d", uid_)
-		return nil
+		return ErrClientNotExist
 	}
 	logDevice := cl.get(device)
 	if logDevice == nil {
-		logger.E("device not exist")
-		return nil
+		return ErrClientNotExist
 	}
-	logger.I("client logout, uid=%d, device=%d", uid_, device)
+
 	logDevice.SetID(uid.GenTemp(), 0)
 	logDevice.Exit()
 	cl.remove(device)
@@ -130,21 +140,29 @@ func (c *DefaultClientManager) EnqueueMessage(uid int64, device int64, msg *mess
 		if d == nil {
 			return ErrClientNotExist
 		}
-		return d.EnqueueMessage(msg)
+		return c.enqueueMessage(d, msg)
 	}
-	ds.foreach(func(deviceId int64, c IClient) {
+	ds.foreach(func(deviceId int64, cli IClient) {
 		if device != 0 && deviceId != device {
 			return
 		}
-		if c.Closed() {
-			// the connection state changed during the delivery of the message
-			err = ErrClientClosed
-			return
-		} else {
-			err = c.EnqueueMessage(msg)
-		}
+		err = c.enqueueMessage(cli, msg)
 	})
 	return err
+}
+
+func (c *DefaultClientManager) enqueueMessage(cli IClient, msg *message.Message) error {
+	if !cli.IsRunning() {
+		return ErrClientClosed
+	}
+	err := pool.Submit(func() {
+		_ = cli.EnqueueMessage(msg)
+	})
+	if err != nil {
+		logger.E("message enqueue:%v", err)
+		return err
+	}
+	return nil
 }
 
 func (c *DefaultClientManager) isOnline(uid int64) bool {

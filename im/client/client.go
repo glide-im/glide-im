@@ -1,7 +1,6 @@
 package client
 
 import (
-	"github.com/panjf2000/ants/v2"
 	"go_im/im/conn"
 	"go_im/im/dao/uid"
 	"go_im/im/message"
@@ -16,22 +15,6 @@ var tw = timingwheel.NewTimingWheel(time.Millisecond*500, 3, 20)
 
 // HeartbeatDuration 心跳间隔
 const HeartbeatDuration = time.Second * 20
-
-var pool *ants.Pool
-
-func init() {
-	var err error
-	pool, err = ants.NewPool(50_0000,
-		ants.WithNonblocking(true),
-		ants.WithPanicHandler(func(i interface{}) {
-			logger.E("")
-		}),
-		ants.WithPreAlloc(true),
-	)
-	if err != nil {
-		panic(err)
-	}
-}
 
 const (
 	_ = iota
@@ -49,20 +32,14 @@ type Info struct {
 
 // IClient 表示一个客户端, 用于管理连接状态, 连接 id, 消息收发
 type IClient interface {
-
-	// SetID 设置该客户端标识 ID
 	SetID(id int64, device int64)
 
-	// Closed 返回该客户端连接是否已关闭
-	Closed() bool
+	IsRunning() bool
 
-	// EnqueueMessage 将消息放入到客户端消息队列中
 	EnqueueMessage(message *message.Message) error
 
-	// Exit 退出客户端, 关闭连接等
 	Exit()
 
-	// Run 开始收发消息客户端连接的消息
 	Run()
 
 	GetInfo() Info
@@ -123,48 +100,41 @@ func (c *Client) GetInfo() Info {
 
 // SetID 设置 id 标识及设备标识
 func (c *Client) SetID(id int64, device int64) {
-	//logger.D("set client id, origin: id=%d, device=%d, new: id=%d, device=%d", c.id, c.device, id, device)
 	atomic.StoreInt64(&c.id, id)
 	atomic.StoreInt64(&c.device, device)
 }
 
-func (c *Client) Closed() bool {
-	return atomic.LoadInt32(&c.state) != stateRunning
+func (c *Client) IsRunning() bool {
+	return atomic.LoadInt32(&c.state) == stateRunning
 }
 
 // EnqueueMessage 放入下行消息队列
 func (c *Client) EnqueueMessage(message *message.Message) error {
 	atomic.AddInt64(&c.queuedMessage, 1)
-	err := pool.Submit(func() {
-		defer func() {
+	defer func() {
+		e := recover()
+		if e != nil {
 			atomic.AddInt64(&c.queuedMessage, -1)
-			e := recover()
-			if e != nil {
-				logger.E("%v", e)
-			}
-		}()
-		s := atomic.LoadInt32(&c.state)
-		if s == stateClosed {
-			logger.D("client has closed, enqueue message failed")
-			return
+			logger.E("%v", e)
 		}
-		logger.I("EnqueueMessage(id=%d, %s): %v", c.id, message.GetAction(), message)
-		if message.GetSeq() < 0 {
-			// 服务端主动发送的消息使用服务端的序列号
-			message.SetSeq(c.getNextSeq())
-		}
-		select {
-		case c.messages <- message:
-		default:
-			atomic.AddInt64(&c.queuedMessage, -1)
-			// 消息 chan 缓冲溢出, 这条消息将被丢弃
-			logger.E("message chan is full, id=%d", c.id)
-		}
-	})
-	if err != nil {
-		logger.E("message not enqueue:%v", err)
+	}()
+	s := atomic.LoadInt32(&c.state)
+	if s == stateClosed {
+		logger.D("client has closed, enqueue message failed")
+		return ErrClientClosed
 	}
-
+	logger.I("EnqueueMessage(id=%d, %s): %v", c.id, message.GetAction(), message)
+	if message.GetSeq() < 0 {
+		// 服务端主动发送的消息使用服务端的序列号
+		message.SetSeq(c.getNextSeq())
+	}
+	select {
+	case c.messages <- message:
+	default:
+		atomic.AddInt64(&c.queuedMessage, -1)
+		// 消息 chan 缓冲溢出, 这条消息将被丢弃
+		logger.E("message chan is full, id=%d", c.id)
+	}
 	return nil
 }
 
@@ -188,16 +158,15 @@ func (c *Client) readMessage() {
 		case <-c.hbR.C:
 			c.hbLost++
 			if c.hbLost > 3 {
-				logger.D("heartbeat timout, id=%d, device=%d", c.id, c.device)
 				goto STOP
 			}
 			// reset client heartbeat
 			c.hbR.Cancel()
 			c.hbR = tw.After(HeartbeatDuration)
-			c.EnqueueMessage(message.NewMessage(0, message.ActionHeartbeat, ""))
+			_ = c.EnqueueMessage(message.NewMessage(0, message.ActionHeartbeat, ""))
 		case msg := <-readChan:
 			if msg.err != nil {
-				if c.Closed() || c.handleError(msg.err) {
+				if !c.IsRunning() || c.handleError(msg.err) {
 					// 连接断开或致命错误中断读消息
 					goto STOP
 				}
@@ -232,11 +201,11 @@ func (c *Client) writeMessage() {
 	for {
 		select {
 		case <-c.hbW.C:
-			if c.Closed() {
+			if !c.IsRunning() {
 				logger.D("read closed, down msg queue timeout, close write now, uid=%d", c.id)
 				goto STOP
 			}
-			c.EnqueueMessage(message.NewMessage(c.getNextSeq(), message.ActionHeartbeat, struct{}{}))
+			_ = c.EnqueueMessage(message.NewMessage(c.getNextSeq(), message.ActionHeartbeat, ""))
 			c.hbW.Cancel()
 			c.hbW = tw.After(HeartbeatDuration)
 		case m := <-c.messages:
@@ -251,7 +220,7 @@ func (c *Client) writeMessage() {
 			c.hbW.Cancel()
 			c.hbW = tw.After(HeartbeatDuration)
 			if err != nil {
-				if c.Closed() || c.handleError(err) {
+				if !c.IsRunning() || c.handleError(err) {
 					// 连接断开或致命错误中断写消息
 					goto STOP
 				}
