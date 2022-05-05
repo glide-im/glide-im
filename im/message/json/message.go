@@ -76,3 +76,10 @@ type Recall struct {
 	RecallBy int64
 	Mid      int64
 }
+
+type ClientCustomMessage struct {
+	From    int64
+	To      int64
+	Type    int32
+	Content string
+}

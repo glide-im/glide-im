@@ -22,6 +22,7 @@ var messageHandlerFunMap = map[message.Action]func(from int64, device int64, msg
 	message.ActionCSMessage:          handleCustomerServiceMsg,
 	message.ActionAckRequest:         handleAckRequest,
 	message.ActionAckGroupMsg:        handleAckGroupMsgRequest,
+	message.ActionClientCustom:       handleClientCustom,
 }
 
 func init() {
@@ -99,6 +100,15 @@ func handleCustomerServiceMsg(from int64, device int64, msg *message.Message) {
 	}
 	// 发送消息给客服
 	enqueueMessage(csMsg.CsId, msg)
+}
+
+func handleClientCustom(from int64, device int64, msg *message.Message) {
+	m := new(message.ClientCustom)
+	if !unwrap(from, msg, m) {
+		return
+	}
+	m2 := message.NewMessage(0, message.ActionClientCustom, m)
+	enqueueMessage(m.To, m2)
 }
 
 func onHandleMessagePanic(i interface{}) {

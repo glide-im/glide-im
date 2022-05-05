@@ -12,6 +12,7 @@ const (
 	ActionGroupMessageRecall        = "message.group.recall"
 	ActionCSMessage                 = "message.cs"
 	ActionMessageFailed             = "message.failed.send"
+	ActionClientCustom              = "message.cli"
 
 	ActionNotifyNeedAuth      = "notify.auth"
 	ActionNotifyKickOut       = "notify.kickout"

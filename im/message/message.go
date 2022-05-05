@@ -1,6 +1,7 @@
 package message
 
 import (
+	"go_im/im/message/json"
 	"go_im/protobuf/gen/pb_im"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -68,4 +69,8 @@ func NewGroupNotify(mid, gid int64, seq int64, typ int64, timestamp int64, data 
 	}
 	_ = notify.Data.MarshalFrom(message)
 	return notify
+}
+
+type ClientCustom struct {
+	*json.ClientCustomMessage
 }
