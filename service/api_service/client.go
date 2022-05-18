@@ -4,8 +4,8 @@ import (
 	"context"
 	"go_im/im/message"
 	rpc2 "go_im/pkg/rpc"
+	"go_im/protobuf/gen/pb_im"
 	"go_im/protobuf/gen/pb_rpc"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type Client struct {
@@ -43,13 +43,14 @@ func (c *Client) Echo(uid int64, message *message.Message) *pb_rpc.Response {
 	return resp
 }
 
-func (c *Client) Handle(uid int64, device int64, message *message.Message) error {
+func (c *Client) Handle(uid int64, device int64, m *message.Message) (*message.Message, error) {
 
 	request := pb_rpc.ApiHandleRequest{
 		Uid:     uid,
 		Device:  device,
-		Message: message.GetProtobuf(),
+		Message: m.GetProtobuf(),
 	}
-	err := c.Call(context.Background(), "Handle", &request, &emptypb.Empty{})
-	return err
+	msg := pb_im.CommMessage{}
+	err := c.Call(context.Background(), "Handle", &request, &msg)
+	return message.FromProtobuf(&msg), err
 }

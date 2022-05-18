@@ -9,7 +9,7 @@ import (
 var handler Interface = NewDefaultRouter()
 
 type Interface interface {
-	Handle(uid int64, device int64, message *message.Message) error
+	Handle(uid int64, device int64, message *message.Message) (*message.Message, error)
 }
 
 func SetInterfaceImpl(i Interface) {
@@ -30,7 +30,7 @@ func MockDep() {
 }
 
 // Handle 处理一个 api 消息
-func Handle(uid int64, device int64, message *message.Message) error {
+func Handle(uid int64, device int64, message *message.Message) (*message.Message, error) {
 	return handler.Handle(uid, device, message)
 }
 

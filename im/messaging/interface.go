@@ -33,3 +33,10 @@ func enqueueMessage(uid int64, message *message.Message) {
 		logger.E("%v", err)
 	}
 }
+
+func enqueueMessage2Device(uid int64, device int64, message *message.Message) {
+	err := client.EnqueueMessageToDevice(uid, device, message)
+	if err != nil {
+		logger.E("%v", err)
+	}
+}

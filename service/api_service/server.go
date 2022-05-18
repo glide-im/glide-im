@@ -6,15 +6,15 @@ import (
 	"go_im/im/api"
 	"go_im/im/message"
 	"go_im/pkg/rpc"
+	"go_im/protobuf/gen/pb_im"
 	"go_im/protobuf/gen/pb_rpc"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type Server struct {
 	*rpc.BaseServer
 }
 
-func (s *Server) Handle(ctx context.Context, r *pb_rpc.ApiHandleRequest, resp *emptypb.Empty) error {
+func (s *Server) Handle(ctx context.Context, r *pb_rpc.ApiHandleRequest, resp *pb_im.CommMessage) error {
 	msg := message.FromProtobuf(r.Message)
 
 	if msg.GetAction() == "api.user.auth" {
@@ -24,7 +24,9 @@ func (s *Server) Handle(ctx context.Context, r *pb_rpc.ApiHandleRequest, resp *e
 			return errors.New("message extra is nil")
 		}
 	}
-	return api.Handle(r.GetUid(), r.GetDevice(), msg)
+	m, err := api.Handle(r.GetUid(), r.GetDevice(), msg)
+	resp = m.GetProtobuf()
+	return err
 }
 
 func (s *Server) Echo(ctx context.Context, r *pb_rpc.ApiHandleRequest, resp *pb_rpc.Response) error {

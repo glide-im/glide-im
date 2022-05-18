@@ -52,9 +52,12 @@ func handleMessage(from int64, device int64, msg *message.Message) error {
 			handleHeartbeat(from, device, msg)
 		default:
 			if strings.HasPrefix(msg.GetAction(), message.ActionApi) {
-				err := api.Handle(from, device, msg)
+				resp, err := api.Handle(from, device, msg)
 				if err != nil {
 					logger.E("handle api message error %v", err)
+				}
+				if resp != nil {
+					enqueueMessage2Device(from, device, resp)
 				}
 			} else {
 				enqueueMessage(from, message.NewMessage(-1, message.ActionNotifyError, "unknown action"))

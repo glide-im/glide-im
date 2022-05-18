@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"go_im/im/api/apidep"
 	"go_im/im/api/comm"
 	"go_im/im/message"
 	"reflect"
 	"strings"
+	"time"
 )
 
 const PathSeparator = "."
@@ -51,6 +51,8 @@ type Context struct {
 	Seq    int64
 	Action string
 	R      func(message *message.Message)
+
+	done bool
 }
 
 func (i *Context) Response(message *message.Message) {
@@ -248,18 +250,38 @@ func (r *Router) Add(rts ...IRoute) {
 	}
 }
 
-func (r *Router) Handle(uid int64, device int64, msg *message.Message) error {
+func (r *Router) Handle(uid int64, device int64, msg *message.Message) (*message.Message, error) {
 	ctx := &Context{
 		Uid:    uid,
 		Seq:    msg.GetSeq(),
 		Device: device,
 		Action: msg.GetAction(),
 	}
-	ctx.R = func(message *message.Message) {
-		apidep.SendMessageIfOnline(ctx.Uid, ctx.Device, message)
-	}
 	p := newPath(msg.GetAction())
-	return r.root.handle(p, ctx, msg)
+
+	respCh := make(chan *message.Message)
+	errCh := make(chan error)
+	timeout := time.After(time.Second * 3)
+
+	go func() {
+		ctx.R = func(message *message.Message) {
+			ctx.done = true
+			respCh <- message
+		}
+		err := r.root.handle(p, ctx, msg)
+		if err != nil && !ctx.done {
+			errCh <- err
+		}
+	}()
+
+	select {
+	case err := <-errCh:
+		return nil, err
+	case <-timeout:
+		return nil, fmt.Errorf("timeout")
+	case m := <-respCh:
+		return m, nil
+	}
 }
 
 func (r *Router) String() string {

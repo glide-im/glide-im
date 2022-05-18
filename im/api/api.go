@@ -75,20 +75,17 @@ func (a *Routers) init() {
 	a.router = rt
 }
 
-func (a *Routers) Handle(uid int64, device int64, message *message.Message) error {
+func (a *Routers) Handle(uid int64, device int64, message *message.Message) (*message.Message, error) {
 
 	logger.D("%v", message)
-	err := a.handle(uid, device, message)
-	if err != nil {
-		a.onError(uid, device, message, err)
-	}
-	return nil
+	m, err := a.handle(uid, device, message)
+	return m, err
 }
 
-func (a *Routers) handle(uid int64, device int64, message *message.Message) error {
+func (a *Routers) handle(uid int64, device int64, message *message.Message) (*message.Message, error) {
 
 	if err := a.intercept(uid, device, message); err != nil {
-		return err
+		return nil, err
 	}
 
 	return a.router.Handle(uid, device, message)
