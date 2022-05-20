@@ -1,6 +1,8 @@
 package msgdao
 
-import "go_im/pkg/db"
+import (
+	"go_im/pkg/db"
+)
 
 var Comm CommonDao = commonDao{}
 
