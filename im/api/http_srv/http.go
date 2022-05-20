@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go_im/im/api/comm"
 	"go_im/im/api/router"
+	"go_im/im/auth"
 	"go_im/im/message"
 	"go_im/pkg/logger"
 	"net/http"
@@ -123,7 +124,7 @@ func getContext(ctx *gin.Context) *route.Context {
 	}
 	a, exists := ctx.Get(CtxKeyAuthInfo)
 	if exists {
-		authInfo, ok := a.(*comm.AuthInfo)
+		authInfo, ok := a.(*auth.AuthInfo)
 		if ok {
 			info.Uid = authInfo.Uid
 			info.Device = authInfo.Device

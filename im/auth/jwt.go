@@ -1,14 +1,14 @@
-package comm
+package auth
 
 import (
 	"github.com/golang-jwt/jwt"
+	"go_im/im/api/comm"
 	"time"
 )
 
 var jwtSecret []byte
 
 func init() {
-	// TODO 2021-12-17 11:11:34 update
 	jwtSecret = []byte("glide-im-jwt-secret")
 }
 
@@ -19,13 +19,13 @@ type AuthInfo struct {
 	Ver    int64 `json:"ver"`
 }
 
-func GenJwt(payload AuthInfo) (string, error) {
+func genJwt(payload AuthInfo) (string, error) {
 
 	expireAt := time.Now().Add(time.Hour * 24)
-	return GenJwtExp(payload, expireAt)
+	return genJwtExp(payload, expireAt)
 }
 
-func GenJwtExp(payload AuthInfo, expiredAt time.Time) (string, error) {
+func genJwtExp(payload AuthInfo, expiredAt time.Time) (string, error) {
 	payload.ExpiresAt = expiredAt.Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
 
@@ -36,7 +36,7 @@ func GenJwtExp(payload AuthInfo, expiredAt time.Time) (string, error) {
 	return t, nil
 }
 
-func ParseJwt(token string) (*AuthInfo, error) {
+func parseJwt(token string) (*AuthInfo, error) {
 	j := AuthInfo{}
 	t, err := jwt.ParseWithClaims(token, &j, func(token *jwt.Token) (interface{}, error) {
 		return jwtSecret, nil
@@ -46,11 +46,11 @@ func ParseJwt(token string) (*AuthInfo, error) {
 	}
 	jwtToken, ok := t.Claims.(*AuthInfo)
 	if !ok {
-		return nil, NewApiBizError(1, "invalid token")
+		return nil, comm.NewApiBizError(1, "invalid token")
 	}
 	return jwtToken, nil
 }
 
-func GenJwtVersion() int64 {
+func genJwtVersion() int64 {
 	return time.Now().Unix()
 }

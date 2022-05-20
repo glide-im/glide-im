@@ -27,7 +27,8 @@ const (
 	ActionAckMessage  = "ack.message"
 	ActionAckNotify   = "ack.notify"
 
-	ActionApi       = "api"
-	ActionHeartbeat = "heartbeat"
-	ActionApiFailed = "api.failed"
+	ActionApiAuth    = "api.auth"
+	ActionHeartbeat  = "heartbeat"
+	ActionApiFailed  = "api.failed"
+	ActionApiSuccess = "api.success"
 )

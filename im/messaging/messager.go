@@ -2,11 +2,9 @@ package messaging
 
 import (
 	"github.com/panjf2000/ants/v2"
-	"go_im/im/api"
 	"go_im/im/message"
 	"go_im/im/statistics"
 	"go_im/pkg/logger"
-	"strings"
 )
 
 // execPool 100 capacity goroutine pool, 假设每个消息处理需要10ms, 一个协程则每秒能处理100条消息
@@ -23,11 +21,12 @@ var messageHandlerFunMap = map[message.Action]func(from int64, device int64, msg
 	message.ActionAckRequest:         handleAckRequest,
 	message.ActionAckGroupMsg:        handleAckGroupMsgRequest,
 	message.ActionClientCustom:       handleClientCustom,
+	message.ActionApiAuth:            handleAuth,
 }
 
 func init() {
 	var err error
-	execPool, err = ants.NewPool(50_0000,
+	execPool, err = ants.NewPool(1_0000,
 		ants.WithNonblocking(true),
 		ants.WithPanicHandler(onHandleMessagePanic),
 		ants.WithPreAlloc(false),
@@ -51,18 +50,8 @@ func handleMessage(from int64, device int64, msg *message.Message) error {
 		case message.ActionHeartbeat:
 			handleHeartbeat(from, device, msg)
 		default:
-			if strings.HasPrefix(msg.GetAction(), message.ActionApi) {
-				resp, err := api.Handle(from, device, msg)
-				if err != nil {
-					logger.E("handle api message error %v", err)
-				}
-				if resp != nil {
-					enqueueMessage2Device(from, device, resp)
-				}
-			} else {
-				enqueueMessage(from, message.NewMessage(-1, message.ActionNotifyError, "unknown action"))
-				logger.W("receive a unknown action message: " + string(msg.GetAction()))
-			}
+			enqueueMessage(from, message.NewMessage(-1, message.ActionNotifyError, "unknown action"))
+			logger.W("receive a unknown action message: " + string(msg.GetAction()))
 		}
 	})
 	if err != nil {

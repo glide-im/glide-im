@@ -6,10 +6,10 @@ import (
 	"go_im/im/api/apidep"
 	"go_im/im/api/comm"
 	"go_im/im/api/router"
+	"go_im/im/auth"
 	"go_im/im/dao/common"
 	"go_im/im/dao/userdao"
 	"go_im/im/message"
-	"go_im/pkg/logger"
 	"math/rand"
 	"time"
 )
@@ -60,28 +60,14 @@ type AuthApi struct {
 }
 
 func (*AuthApi) AuthToken(ctx *route.Context, req *AuthTokenRequest) error {
-	token, err := comm.ParseJwt(req.Token)
+
+	result, err := auth.Auth(ctx.Uid, ctx.Device, &auth.Token{Token: req.Token})
 	if err != nil {
 		return ErrInvalidToken
 	}
-	version, err := userdao.Dao.GetTokenVersion(token.Uid, token.Device)
-	if err != nil || version == 0 || version > token.Ver {
-		return ErrInvalidToken
-	}
-	if ctx.Uid == token.Uid && ctx.Device == token.Device {
-		// logged in
-		logger.D("auth token for a connection is logged in")
-	} else {
-		// if the request from http, at the first time auth, the uid is 0.
-		if ctx.Uid != 0 {
-			apidep.ClientInterface.SignIn(ctx.Uid, token.Uid, token.Device)
-			ctx.Uid = token.Uid
-			ctx.Device = token.Device
-		}
-	}
 	resp := AuthResponse{
-		Token:   req.Token,
-		Uid:     token.Uid,
+		Token:   result.Token,
+		Uid:     result.Uid,
 		Servers: host,
 	}
 	ctx.Response(message.NewMessage(ctx.Seq, comm.ActionSuccess, resp))
@@ -99,17 +85,8 @@ func (*AuthApi) SignIn(ctx *route.Context, request *SignInRequest) error {
 		}
 		return comm.NewDbErr(err)
 	}
-	jt := comm.AuthInfo{
-		Uid:    uid,
-		Device: request.Device,
-		Ver:    comm.GenJwtVersion(),
-	}
-	token, err := comm.GenJwt(jt)
-	if err != nil {
-		return comm.NewUnexpectedErr("login failed", err)
-	}
 
-	err = userdao.Dao.SetTokenVersion(jt.Uid, jt.Device, jt.Ver, time.Duration(jt.ExpiresAt))
+	token, err := auth.GenerateToken(uid, request.Device)
 	if err != nil {
 		return comm.NewDbErr(err)
 	}
@@ -160,20 +137,8 @@ func (*AuthApi) GuestRegister(ctx *route.Context, req *GuestRegisterRequest) err
 		}
 		return comm.NewDbErr(err)
 	}
-	jt := comm.AuthInfo{
-		Uid:    uid,
-		Device: 3,
-		Ver:    comm.GenJwtVersion(),
-	}
-	token, err := comm.GenJwtExp(jt, time.Now().Add(time.Hour*24*3))
-	if err != nil {
-		return comm.NewUnexpectedErr("register failed", err)
-	}
 
-	err = userdao.Dao.SetTokenVersion(jt.Uid, jt.Device, jt.Ver, time.Duration(jt.ExpiresAt))
-	if err != nil {
-		return comm.NewDbErr(err)
-	}
+	token, err := auth.GenerateTokenExpire(uid, 3, 24*7)
 
 	tk := AuthResponse{
 		Uid:     uid,

@@ -2,7 +2,7 @@ package http_srv
 
 import (
 	"github.com/gin-gonic/gin"
-	"go_im/im/api/comm"
+	"go_im/im/auth"
 	"net/http"
 	"strings"
 )
@@ -26,7 +26,7 @@ func authMiddleware(context *gin.Context) {
 		return
 	}
 	authHeader = strings.TrimPrefix(authHeader, "Bearer ")
-	authInfo, err := comm.ParseJwt(authHeader)
+	authInfo, err := auth.ParseToken(authHeader)
 	if err != nil {
 		context.Status(http.StatusUnauthorized)
 		context.Abort()
