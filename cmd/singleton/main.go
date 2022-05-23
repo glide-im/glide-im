@@ -44,7 +44,9 @@ func Run() {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
-		err := api.RunHttpServer(config.ApiHttpService.Addr, config.ApiHttpService.Port)
+		addr := config.ApiHttp.Addr
+		port := config.ApiHttp.Port
+		err := api.RunHttpServer(addr, port)
 		if err != nil {
 			panic(err)
 		}
@@ -53,7 +55,9 @@ func Run() {
 
 	wg.Add(1)
 	go func() {
-		err := server.Run(config.IMService.Addr, config.IMService.Port)
+		addr := config.WsServer.Addr
+		port := config.WsServer.Port
+		err := server.Run(addr, port)
 		if err != nil {
 			panic(err)
 		}

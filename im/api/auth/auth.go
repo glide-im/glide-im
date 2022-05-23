@@ -2,7 +2,6 @@ package auth
 
 import (
 	"fmt"
-	"go_im/config"
 	"go_im/im/api/apidep"
 	"go_im/im/api/comm"
 	"go_im/im/api/router"
@@ -52,7 +51,7 @@ var (
 
 var (
 	host = []string{
-		fmt.Sprintf("ws://%s/ws", config.IMService.Service),
+		fmt.Sprintf("ws://%s/ws", "127.0.0.1:8080"),
 	}
 )
 

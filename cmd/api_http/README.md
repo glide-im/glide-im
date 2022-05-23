@@ -10,8 +10,6 @@ API HTTP 依赖 IM 服务, 例如添加好友, 邀请群成员, 需要通过 IM 
 [ApiHttp.IMService]
 Addr = "0.0.0.0"
 Port = 8080
-# Etcd = []
-# Name = "" 
 ```
 
 如果两种方式都配置了, 则优先使用 ETCD 服务发现

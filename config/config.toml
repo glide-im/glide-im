@@ -2,10 +2,15 @@
 Addr = "0.0.0.0"
 Port = 8081
 
-[IMService]
-Service = "192.168.1.123:8080"
+[WsServer]
 Addr = "0.0.0.0"
 Port = 8080
+
+[IMRpcServer]
+Addr = "127.0.0.1"
+Port = 8090
+Etcd = []
+Name = "im_rpc_service"
 
 [MySql]
 Host = "127.0.0.1"

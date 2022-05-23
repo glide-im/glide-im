@@ -11,6 +11,11 @@ import (
 
 func main() {
 
+	err := config.Load()
+	if err != nil {
+		panic(err)
+	}
+
 	db.Init()
 	dao.Init()
 
@@ -19,7 +24,9 @@ func main() {
 	//api.MockDep()
 	initIM()
 
-	err := api.RunHttpServer("0.0.0.0", 8081)
+	addr := config.ApiHttp.Addr
+	port := config.ApiHttp.Port
+	err = api.RunHttpServer(addr, port)
 
 	if err != nil {
 		panic(err)
@@ -28,12 +35,11 @@ func main() {
 
 func initIM() {
 
-	im := config.ApiHttpService.IMService
+	addr := config.IMRpcServer.Addr
+	port := config.IMRpcServer.Port
 	clientConfig := service.ClientConfig{
-		Addr:        im.Addr,
-		Port:        im.Port,
-		EtcdServers: im.Etcd,
-		Name:        im.Name,
+		Addr: addr,
+		Port: port,
 	}
 	err := gateway.SetupClient(&clientConfig)
 	if err != nil {
