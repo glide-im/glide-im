@@ -1,4 +1,4 @@
-package http_srv
+package api
 
 import (
 	"bytes"
@@ -14,7 +14,7 @@ import (
 func TestRunHTTPServer(t *testing.T) {
 	db.Init()
 	dao.Init()
-	Run("0.0.0.0", 8081)
+	run("0.0.0.0", 8081)
 }
 
 func TestName(t *testing.T) {

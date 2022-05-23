@@ -46,10 +46,11 @@ func (c *Client) ClientLogout(uid int64, device int64) error {
 	return nil
 }
 
-func (c *Client) EnqueueMessage(uid int64, device int64, message *message.Message) error {
+func (c *Client) EnqueueMessage(uid int64, device int64, msg *message.Message) error {
 
 	req := &pb_rpc.EnqueueMessageRequest{
-		Uid: uid,
+		Uid:     uid,
+		Message: msg.GetProtobuf(),
 	}
 	resp := &pb_rpc.Response{}
 	err := c.Call(getTagContext(uid, -1), "EnqueueMessage", req, resp)
@@ -70,7 +71,6 @@ func (c *Client) allClient() []int64 {
 
 func getTagContext(uid int64, device int64) context.Context {
 	ret := rpc2.NewCtxFrom(context.Background())
-
 	return ret
 }
 

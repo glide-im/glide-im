@@ -39,8 +39,14 @@ type IMServiceConf struct {
 }
 
 type ApiHttpServiceConf struct {
-	Addr string
-	Port int
+	Addr      string
+	Port      int
+	IMService struct {
+		Addr string
+		Port int
+		Etcd []string
+		Name string
+	}
 }
 
 type config struct {

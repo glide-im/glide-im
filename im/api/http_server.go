@@ -1,4 +1,4 @@
-package http_srv
+package api
 
 import (
 	"encoding/json"
@@ -42,8 +42,8 @@ var rt gin.IRoutes
 var typeRequestInfo = reflect.TypeOf((*route.Context)(nil))
 var typeError = reflect.TypeOf((*error)(nil)).Elem()
 
-//Run http server
-func Run(addr string, port int) error {
+//run http server
+func run(addr string, port int) error {
 
 	g = gin.Default()
 	rt = g.Use(crosMiddleware())

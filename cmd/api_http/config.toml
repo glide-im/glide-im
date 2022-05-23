@@ -1,0 +1,25 @@
+[ApiHttp]
+Addr = "0.0.0.0"
+Port = 8081
+
+[ApiHttp.IMService]
+# if set, connect im service directly
+Addr = "0.0.0.0" # im service address
+Port = 8080 # im service port
+# if set, using etcd service discovery to connect to IM service
+# Etcd = [] # etcd service discovery service address
+# Name = "" # im service name in etcd
+
+[MySql]
+Host = "127.0.0.1"
+Port = 3306
+Username = "root"
+Password = "root"
+Db = "go_im"
+Charset = "utf8mb4"
+
+[Redis]
+Host = "127.0.0.1"
+Port = 6379
+Password = ""
+Db = 8

@@ -1,4 +1,4 @@
-package http_srv
+package api
 
 import (
 	"github.com/gin-gonic/gin"

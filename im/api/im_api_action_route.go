@@ -1,3 +1,6 @@
+// Package api
+//
+// Deprecated
 package api
 
 import (
@@ -16,6 +19,8 @@ import (
 )
 
 // Routers 默认 api 路由, 将不同 action 交给相应的方法处理
+//
+// Deprecated
 type Routers struct {
 	*user.UserApi
 	*groups.GroupApi
@@ -26,6 +31,9 @@ type Routers struct {
 	router *route.Router
 }
 
+// NewDefaultRouter
+//
+// Deprecated
 func NewDefaultRouter() *Routers {
 	ret := new(Routers)
 	ret.init()

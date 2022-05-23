@@ -1,4 +1,4 @@
-package http_srv
+package api
 
 import (
 	"go_im/im/api/app"
@@ -10,8 +10,6 @@ import (
 )
 
 func initRoute() {
-
-	// TODO 2021-11-15 完成其他 api 的 http 服务
 
 	appApi := app.AppApi{}
 	getNoAuth("api/app/release", appApi.GetReleaseInfo)

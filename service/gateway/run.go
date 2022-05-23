@@ -14,9 +14,9 @@ import (
 var gatewayRoute = "gateway"
 
 // SetupClient init nsq client if you want to use client interface to send message
-func SetupClient(configs service.Configs) error {
+func SetupClient(configs *service.ClientConfig) error {
 
-	options := configs.Gateway.Client.ToClientOptions()
+	options := configs.ToClientOptions()
 	cli, err := NewClient(options)
 	if err != nil {
 		return err
