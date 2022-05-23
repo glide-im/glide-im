@@ -4,7 +4,6 @@ import (
 	"go_im/im/dao"
 	"go_im/pkg/db"
 	"go_im/service"
-	"go_im/service/api_service"
 	"go_im/service/broker"
 	"go_im/service/dispatch"
 	"go_im/service/messaging_service"
@@ -15,11 +14,6 @@ func main() {
 	dao.Init()
 
 	config, err := service.GetConfig()
-	if err != nil {
-		panic(err)
-	}
-
-	err = api_service.SetupClient(config)
 	if err != nil {
 		panic(err)
 	}

@@ -3,10 +3,11 @@ package main
 import (
 	"go_im/config"
 	"go_im/im/api"
+	"go_im/im/client"
 	"go_im/im/dao"
 	"go_im/pkg/db"
-	"go_im/service"
-	"go_im/service/gateway"
+	"go_im/pkg/rpc"
+	"go_im/service/im_service"
 )
 
 func main() {
@@ -35,14 +36,14 @@ func main() {
 
 func initIM() {
 
-	addr := config.IMRpcServer.Addr
-	port := config.IMRpcServer.Port
-	clientConfig := service.ClientConfig{
-		Addr: addr,
-		Port: port,
+	options := rpc.ClientOptions{
+		Addr: config.IMRpcServer.Addr,
+		Port: config.IMRpcServer.Port,
+		Name: config.IMRpcServer.Name,
 	}
-	err := gateway.SetupClient(&clientConfig)
+	cli, err := im_service.NewClient(&options)
 	if err != nil {
 		panic(err)
 	}
+	client.SetInterfaceImpl(cli)
 }

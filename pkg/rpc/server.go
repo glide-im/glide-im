@@ -36,6 +36,11 @@ func NewBaseServer(options *ServerOptions) *BaseServer {
 		Srv: server.NewServer(),
 		id:  fmt.Sprintf("%s@%s:%d", options.Name, options.Addr, options.Port),
 	}
+
+	if options.Network == "" {
+		options.Network = "tcp"
+	}
+
 	ret.Options = options
 	if len(options.EtcdServers) != 0 {
 		ret.etcdRegister = &serverplugin.EtcdV3RegisterPlugin{

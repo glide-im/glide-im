@@ -9,27 +9,41 @@ import (
 )
 
 type Server struct {
-	*rpc.BaseServer
+	srv *rpc.BaseServer
 }
 
-func NewServer(options *rpc.ServerOptions) *Server {
+func RunServer(options *rpc.ServerOptions) error {
 	s := &Server{
-		BaseServer: rpc.NewBaseServer(options),
+		srv: rpc.NewBaseServer(options),
 	}
-	s.Register(options.Name, s)
-	return s
+	s.srv.Register(options.Name, s)
+	return s.srv.Run()
 }
 
 func (s *Server) ClientSignIn(ctx context.Context, request *pb_rpc.GatewaySignInRequest, reply *pb_rpc.Response) error {
-	return client.SignIn(request.GetOld(), request.GetUid(), request.GetDevice())
+	err := client.SignIn(request.GetOld(), request.GetUid(), request.GetDevice())
+	if err != nil {
+		reply.Message = err.Error()
+		reply.Ok = false
+	}
+	return nil
 }
 
 func (s *Server) ClientLogout(ctx context.Context, request *pb_rpc.GatewayLogoutRequest, reply *pb_rpc.Response) error {
-	return client.Logout(request.GetUid(), request.GetDevice())
+	err := client.Logout(request.GetUid(), request.GetDevice())
+	if err != nil {
+		reply.Message = err.Error()
+		reply.Ok = false
+	}
+	return nil
 }
 
 func (s *Server) EnqueueMessage(ctx context.Context, request *pb_rpc.EnqueueMessageRequest, reply *pb_rpc.Response) error {
 	m := message.FromProtobuf(request.GetMessage())
 	err := client.EnqueueMessageToDevice(request.GetUid(), 0, m)
-	return err
+	if err != nil {
+		reply.Message = err.Error()
+		reply.Ok = false
+	}
+	return nil
 }

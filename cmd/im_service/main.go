@@ -40,41 +40,38 @@ func main() {
 
 	client.SetInterfaceImpl(cm)
 
-	manager := group.NewDefaultManager()
-	group.SetInterfaceImpl(manager)
-	manager.Init()
+	if config.IMRpcServer.EnableGroup {
+		manager := group.NewDefaultManager()
+		group.SetInterfaceImpl(manager)
+		manager.Init()
+	}
 
 	errCh := make(chan error)
 
 	go func() {
-		errCh <- server.Run(config.IMRpcServer.Addr, config.IMRpcServer.Port)
+		errCh <- server.Run(config.WsServer.Addr, config.WsServer.Port)
 	}()
 
 	go func() {
 		options := rpc.ServerOptions{}
 
-		srvName := config.IMRpcServer.Name
-		etcd := config.IMRpcServer.Etcd
+		options.Addr = config.IMRpcServer.Addr
+		options.Port = config.IMRpcServer.Port
+		options.Name = config.IMRpcServer.Name
+		options.Network = config.IMRpcServer.Network
+		options.EtcdServers = config.IMRpcServer.Etcd
 
-		if srvName != "" && len(etcd) > 0 {
-			options.Name = srvName
-			options.EtcdServers = etcd
+		if options.Name != "" && len(options.EtcdServers) > 0 {
 			logger.D("start im rpc server by etcd")
 		} else {
-
-			addr := config.IMRpcServer.Addr
-			port := config.IMRpcServer.Port
-			if addr == "" || port == 0 {
+			if options.Addr == "" || options.Port == 0 {
 				errCh <- errors.New("rpc server addr or port is empty")
 				return
 			}
-			options.Addr = addr
-			options.Port = port
 			logger.D("start im rpc server by addr")
 		}
-
-		rpcServer := im_service.NewServer(&options)
-		errCh <- rpcServer.Run()
+		err2 := im_service.RunServer(&options)
+		errCh <- err2
 	}()
 
 	panic(<-errCh)

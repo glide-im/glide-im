@@ -6,6 +6,7 @@ import (
 	"go_im/im/api/cs"
 	"go_im/im/api/groups"
 	"go_im/im/api/msg"
+	"go_im/im/api/test"
 	"go_im/im/api/user"
 )
 
@@ -14,6 +15,8 @@ func initRoute() {
 	appApi := app.AppApi{}
 	getNoAuth("api/app/release", appApi.GetReleaseInfo)
 	getNoAuth("/api/app/info", appApi.GetServerInfo)
+	api := test.TestApi{}
+	getNoAuth("/api/t", api.TestSendMessage)
 
 	authApi := auth.AuthApi{}
 	postNoAuth("/api/auth/register", authApi.Register)

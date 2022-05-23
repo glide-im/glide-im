@@ -21,10 +21,12 @@ type ApiHttpConf struct {
 }
 
 type IMRpcServerConf struct {
-	Addr string
-	Port int
-	Etcd []string
-	Name string
+	Addr        string
+	Port        int
+	Network     string
+	Etcd        []string
+	Name        string
+	EnableGroup bool
 }
 
 type MySqlConf struct {

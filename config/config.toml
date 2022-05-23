@@ -7,21 +7,23 @@ Addr = "0.0.0.0"
 Port = 8080
 
 [IMRpcServer]
-Addr = "127.0.0.1"
-Port = 8090
+EnableGroup = false
+Addr = "0.0.0.0"
+Port = 8092
+Network = "tcp"
 Etcd = []
-Name = "im_rpc_service"
+Name = "im_rpc_server"
 
 [MySql]
-Host = "127.0.0.1"
+Host = "dengzii.com"
 Port = 3306
-Username = "root"
-Password = "root"
-Db = "go_im"
+Username = "go_im_test"
+Password = "8dmaRNCYBFHP4F67"
+Db = "go_im_test"
 Charset = "utf8mb4"
 
 [Redis]
-Host = "127.0.0.1"
-Port = 6379
-Password = ""
-Db = 8
+Host = "dengzii.com"
+Port = 6378
+Password = "tcmm1713."
+Db = 9
