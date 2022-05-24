@@ -2,12 +2,12 @@ package gateway
 
 import (
 	"fmt"
-	"github.com/glide-im/glideim/im/client"
-	"github.com/glide-im/glideim/im/conn"
-	"github.com/glide-im/glideim/im/messaging"
-	"github.com/glide-im/glideim/pkg/logger"
-	"github.com/glide-im/glideim/service"
-	"github.com/glide-im/glideim/service/dispatch"
+	"go_im/im/client"
+	"go_im/im/conn"
+	"go_im/im/messaging"
+	"go_im/pkg/logger"
+	"go_im/service"
+	"go_im/service/dispatch"
 	"time"
 )
 

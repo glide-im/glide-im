@@ -1,8 +1,8 @@
 package uid
 
 import (
-	"github.com/glide-im/glideim/pkg/db"
-	"github.com/glide-im/glideim/pkg/logger"
+	"go_im/pkg/db"
+	"go_im/pkg/logger"
 	"strconv"
 	"sync"
 )

@@ -1,8 +1,9 @@
-module github.com/glide-im/glideim
+module go_im
 
 go 1.15
 
 require (
+	github.com/BurntSushi/toml v0.3.1
 	github.com/apache/thrift v0.14.2 // indirect
 	github.com/blend/go-sdk v1.20211025.3 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect

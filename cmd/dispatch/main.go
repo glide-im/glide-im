@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/glide-im/glideim/service"
-	"github.com/glide-im/glideim/service/dispatch"
+	"go_im/service"
+	"go_im/service/dispatch"
 )
 
 func main() {

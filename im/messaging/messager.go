@@ -1,10 +1,10 @@
 package messaging
 
 import (
-	"github.com/glide-im/glideim/im/message"
-	"github.com/glide-im/glideim/im/statistics"
-	"github.com/glide-im/glideim/pkg/logger"
 	"github.com/panjf2000/ants/v2"
+	"go_im/im/message"
+	"go_im/im/statistics"
+	"go_im/pkg/logger"
 )
 
 // execPool 100 capacity goroutine pool, 假设每个消息处理需要10ms, 一个协程则每秒能处理100条消息

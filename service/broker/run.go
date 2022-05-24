@@ -1,9 +1,9 @@
 package broker
 
 import (
-	"github.com/glide-im/glideim/im/group"
-	"github.com/glide-im/glideim/pkg/logger"
-	"github.com/glide-im/glideim/service"
+	"go_im/im/group"
+	"go_im/pkg/logger"
+	"go_im/service"
 )
 
 func SetupClient(config *service.Configs) error {

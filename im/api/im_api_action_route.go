@@ -5,16 +5,16 @@ package api
 
 import (
 	"errors"
-	"github.com/glide-im/glideim/im/api/apidep"
-	"github.com/glide-im/glideim/im/api/app"
-	"github.com/glide-im/glideim/im/api/auth"
-	"github.com/glide-im/glideim/im/api/groups"
-	"github.com/glide-im/glideim/im/api/msg"
-	"github.com/glide-im/glideim/im/api/router"
-	"github.com/glide-im/glideim/im/api/test"
-	"github.com/glide-im/glideim/im/api/user"
-	"github.com/glide-im/glideim/im/message"
-	"github.com/glide-im/glideim/pkg/logger"
+	"go_im/im/api/apidep"
+	"go_im/im/api/app"
+	"go_im/im/api/auth"
+	"go_im/im/api/groups"
+	"go_im/im/api/msg"
+	"go_im/im/api/router"
+	"go_im/im/api/test"
+	"go_im/im/api/user"
+	"go_im/im/message"
+	"go_im/pkg/logger"
 	"strings"
 )
 

@@ -1,7 +1,7 @@
 package groups
 
 import (
-	"github.com/glide-im/glideim/im/dao/groupdao"
+	"go_im/im/dao/groupdao"
 )
 
 type GroupInfoRequest struct {

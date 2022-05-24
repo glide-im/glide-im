@@ -2,11 +2,11 @@ package message
 
 import (
 	"errors"
-	"github.com/glide-im/glideim/im/message/json"
-	"github.com/glide-im/glideim/im/message/pb"
-	"github.com/glide-im/glideim/pkg/logger"
-	"github.com/glide-im/glideim/protobuf/gen/pb_im"
-	"github.com/glide-im/glideim/protobuf/gen/pb_rpc"
+	"go_im/im/message/json"
+	"go_im/im/message/pb"
+	"go_im/pkg/logger"
+	"go_im/protobuf/gen/pb_im"
+	"go_im/protobuf/gen/pb_rpc"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )

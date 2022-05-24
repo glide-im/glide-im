@@ -1,7 +1,7 @@
 package comm
 
 import (
-	"github.com/glide-im/glideim/im/dao/common"
+	"go_im/im/dao/common"
 	"runtime"
 	"strconv"
 )

@@ -1,8 +1,8 @@
 package pb
 
 import (
-	"github.com/glide-im/glideim/pkg/logger"
-	"github.com/glide-im/glideim/protobuf/gen/pb_im"
+	"go_im/pkg/logger"
+	"go_im/protobuf/gen/pb_im"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	"reflect"

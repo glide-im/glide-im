@@ -3,7 +3,7 @@ package rpc
 import (
 	"context"
 	"fmt"
-	"github.com/glide-im/glideim/pkg/logger"
+	"go_im/pkg/logger"
 	"google.golang.org/grpc"
 	"math"
 	"net"

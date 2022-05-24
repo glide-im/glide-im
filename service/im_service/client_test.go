@@ -1,8 +1,8 @@
 package im_service
 
 import (
-	"github.com/glide-im/glideim/im/message"
-	"github.com/glide-im/glideim/pkg/rpc"
+	"go_im/im/message"
+	"go_im/pkg/rpc"
 	"testing"
 )
 

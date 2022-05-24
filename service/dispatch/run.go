@@ -2,9 +2,9 @@ package dispatch
 
 import (
 	"errors"
-	"github.com/glide-im/glideim/im/client"
-	"github.com/glide-im/glideim/pkg/rpc"
-	"github.com/glide-im/glideim/service"
+	"go_im/im/client"
+	"go_im/pkg/rpc"
+	"go_im/service"
 )
 
 func SetupClient(configs *service.Configs) error {

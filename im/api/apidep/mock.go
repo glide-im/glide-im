@@ -1,9 +1,9 @@
 package apidep
 
 import (
-	"github.com/glide-im/glideim/im/client"
-	"github.com/glide-im/glideim/im/message"
-	"github.com/glide-im/glideim/pkg/logger"
+	"go_im/im/client"
+	"go_im/im/message"
+	"go_im/pkg/logger"
 )
 
 type MockClientManager struct {

@@ -1,9 +1,9 @@
 package dispatch
 
 import (
-	"github.com/glide-im/glideim/im/message"
-	rpc2 "github.com/glide-im/glideim/pkg/rpc"
-	"github.com/glide-im/glideim/protobuf/gen/pb_rpc"
+	"go_im/im/message"
+	rpc2 "go_im/pkg/rpc"
+	"go_im/protobuf/gen/pb_rpc"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 

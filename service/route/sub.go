@@ -2,9 +2,9 @@ package route
 
 import (
 	"encoding/json"
-	"github.com/glide-im/glideim/pkg/mq_nsq"
-	"github.com/glide-im/glideim/service"
 	"github.com/nsqio/go-nsq"
+	"go_im/pkg/mq_nsq"
+	"go_im/service"
 )
 
 var producer *mq_nsq.NSQProducer

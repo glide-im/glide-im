@@ -3,9 +3,9 @@ package api
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/glide-im/glideim/im/api/auth"
-	"github.com/glide-im/glideim/im/dao"
-	"github.com/glide-im/glideim/pkg/db"
+	"go_im/im/api/auth"
+	"go_im/im/dao"
+	"go_im/pkg/db"
 	"io/ioutil"
 	"net/http"
 	"testing"

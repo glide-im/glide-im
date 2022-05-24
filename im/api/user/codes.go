@@ -1,6 +1,6 @@
 package user
 
-import "github.com/glide-im/glideim/im/api/comm"
+import "go_im/im/api/comm"
 
 var (
 	errAddSelf         = comm.NewApiBizError(2001, "unable to add yourself as a contact")

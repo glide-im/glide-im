@@ -1,9 +1,9 @@
 package messaging_service
 
 import (
-	"github.com/glide-im/glideim/im/client"
-	"github.com/glide-im/glideim/im/messaging"
-	"github.com/glide-im/glideim/service"
+	"go_im/im/client"
+	"go_im/im/messaging"
+	"go_im/service"
 )
 
 func SetupClient(configs *service.Configs) error {

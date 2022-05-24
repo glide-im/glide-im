@@ -1,7 +1,7 @@
 package message
 
 import (
-	"github.com/glide-im/glideim/protobuf/gen/pb_im"
+	"go_im/protobuf/gen/pb_im"
 )
 
 const (

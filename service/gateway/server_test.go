@@ -1,8 +1,8 @@
 package gateway
 
 import (
-	"github.com/glide-im/glideim/pkg/rpc"
-	"github.com/glide-im/glideim/service"
+	"go_im/pkg/rpc"
+	"go_im/service"
 	"testing"
 )
 

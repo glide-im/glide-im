@@ -2,8 +2,8 @@ package broker
 
 import (
 	"context"
-	"github.com/glide-im/glideim/pkg/logger"
-	"github.com/glide-im/glideim/pkg/rpc"
+	"go_im/pkg/logger"
+	"go_im/pkg/rpc"
 )
 
 const ctxKeyRoute = "_key_group_route"

@@ -1,10 +1,10 @@
 package client
 
 import (
-	"github.com/glide-im/glideim/im/conn"
-	"github.com/glide-im/glideim/im/dao"
-	"github.com/glide-im/glideim/im/message"
-	"github.com/glide-im/glideim/pkg/db"
+	"go_im/im/conn"
+	"go_im/im/dao"
+	"go_im/im/message"
+	"go_im/pkg/db"
 	"math/rand"
 	"testing"
 	"time"

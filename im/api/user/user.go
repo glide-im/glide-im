@@ -2,10 +2,10 @@ package user
 
 import (
 	"errors"
-	"github.com/glide-im/glideim/im/api/comm"
-	"github.com/glide-im/glideim/im/api/router"
-	"github.com/glide-im/glideim/im/dao/userdao"
-	"github.com/glide-im/glideim/im/message"
+	"go_im/im/api/comm"
+	"go_im/im/api/router"
+	"go_im/im/dao/userdao"
+	"go_im/im/message"
 )
 
 type UserApi struct{}

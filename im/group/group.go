@@ -2,11 +2,11 @@ package group
 
 import (
 	"errors"
-	"github.com/glide-im/glideim/im/dao/msgdao"
-	"github.com/glide-im/glideim/im/message"
-	"github.com/glide-im/glideim/pkg/logger"
-	"github.com/glide-im/glideim/pkg/timingwheel"
 	"github.com/panjf2000/ants/v2"
+	"go_im/im/dao/msgdao"
+	"go_im/im/message"
+	"go_im/pkg/logger"
+	"go_im/pkg/timingwheel"
 	"strconv"
 	"sync"
 	"sync/atomic"

@@ -1,10 +1,10 @@
 package msg
 
 import (
-	"github.com/glide-im/glideim/im/api/comm"
-	route "github.com/glide-im/glideim/im/api/router"
-	"github.com/glide-im/glideim/im/dao/msgdao"
-	"github.com/glide-im/glideim/im/message"
+	"go_im/im/api/comm"
+	route "go_im/im/api/router"
+	"go_im/im/dao/msgdao"
+	"go_im/im/message"
 )
 
 type MsgApi struct {

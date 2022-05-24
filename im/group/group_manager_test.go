@@ -1,10 +1,10 @@
 package group
 
 import (
-	"github.com/glide-im/glideim/im/dao"
-	"github.com/glide-im/glideim/im/message"
-	"github.com/glide-im/glideim/pkg/db"
-	"github.com/glide-im/glideim/pkg/logger"
+	"go_im/im/dao"
+	"go_im/im/message"
+	"go_im/pkg/db"
+	"go_im/pkg/logger"
 	"sync/atomic"
 	"testing"
 	"time"

@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/glide-im/glideim/im"
-	"github.com/glide-im/glideim/service"
-	"github.com/glide-im/glideim/service/gateway"
-	"github.com/glide-im/glideim/service/messaging_service"
+	"go_im/im"
+	"go_im/service"
+	"go_im/service/gateway"
+	"go_im/service/messaging_service"
 )
 
 func main() {

@@ -1,7 +1,7 @@
 package dao
 
 import (
-	"github.com/glide-im/glideim/im/dao/uid"
+	"go_im/im/dao/uid"
 )
 
 func Init() {

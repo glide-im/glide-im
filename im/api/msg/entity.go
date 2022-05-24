@@ -1,6 +1,6 @@
 package msg
 
-import "github.com/glide-im/glideim/im/dao/msgdao"
+import "go_im/im/dao/msgdao"
 
 type MessageResponse struct {
 	Mid      int64

@@ -1,10 +1,10 @@
 package messaging
 
 import (
-	"github.com/glide-im/glideim/im/dao/msgdao"
-	"github.com/glide-im/glideim/im/dao/uid"
-	"github.com/glide-im/glideim/im/message"
-	"github.com/glide-im/glideim/pkg/logger"
+	"go_im/im/dao/msgdao"
+	"go_im/im/dao/uid"
+	"go_im/im/message"
+	"go_im/pkg/logger"
 )
 
 // handleGroupMsg 分发群消息

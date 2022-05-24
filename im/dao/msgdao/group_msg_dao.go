@@ -1,8 +1,8 @@
 package msgdao
 
 import (
-	"github.com/glide-im/glideim/im/dao/common"
-	"github.com/glide-im/glideim/pkg/db"
+	"go_im/im/dao/common"
+	"go_im/pkg/db"
 	"strconv"
 	"time"
 )

@@ -2,9 +2,9 @@ package auth
 
 import (
 	"fmt"
-	"github.com/glide-im/glideim/im/api/comm"
-	"github.com/glide-im/glideim/im/dao/userdao"
-	"github.com/glide-im/glideim/pkg/logger"
+	"go_im/im/api/comm"
+	"go_im/im/dao/userdao"
+	"go_im/pkg/logger"
 	"time"
 )
 

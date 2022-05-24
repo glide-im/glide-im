@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/glide-im/glideim/im/dao"
-	"github.com/glide-im/glideim/pkg/db"
-	"github.com/glide-im/glideim/service"
-	"github.com/glide-im/glideim/service/broker"
-	"github.com/glide-im/glideim/service/dispatch"
-	"github.com/glide-im/glideim/service/messaging_service"
+	"go_im/im/dao"
+	"go_im/pkg/db"
+	"go_im/service"
+	"go_im/service/broker"
+	"go_im/service/dispatch"
+	"go_im/service/messaging_service"
 )
 
 func main() {

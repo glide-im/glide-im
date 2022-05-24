@@ -2,13 +2,13 @@ package auth
 
 import (
 	"fmt"
-	"github.com/glide-im/glideim/im/api/apidep"
-	"github.com/glide-im/glideim/im/api/comm"
-	"github.com/glide-im/glideim/im/api/router"
-	"github.com/glide-im/glideim/im/auth"
-	"github.com/glide-im/glideim/im/dao/common"
-	"github.com/glide-im/glideim/im/dao/userdao"
-	"github.com/glide-im/glideim/im/message"
+	"go_im/im/api/apidep"
+	"go_im/im/api/comm"
+	"go_im/im/api/router"
+	"go_im/im/auth"
+	"go_im/im/dao/common"
+	"go_im/im/dao/userdao"
+	"go_im/im/message"
 	"math/rand"
 	"time"
 )

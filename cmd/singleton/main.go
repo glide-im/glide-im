@@ -1,14 +1,14 @@
 package main
 
 import (
-	"github.com/glide-im/glideim/config"
-	"github.com/glide-im/glideim/im/api"
-	"github.com/glide-im/glideim/im/client"
-	"github.com/glide-im/glideim/im/conn"
-	"github.com/glide-im/glideim/im/dao"
-	"github.com/glide-im/glideim/im/group"
-	"github.com/glide-im/glideim/im/messaging"
-	"github.com/glide-im/glideim/pkg/db"
+	"go_im/config"
+	"go_im/im/api"
+	"go_im/im/client"
+	"go_im/im/conn"
+	"go_im/im/dao"
+	"go_im/im/group"
+	"go_im/im/messaging"
+	"go_im/pkg/db"
 	"sync"
 	"time"
 )

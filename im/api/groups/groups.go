@@ -1,16 +1,16 @@
 package groups
 
 import (
-	"github.com/glide-im/glideim/im/api/apidep"
-	"github.com/glide-im/glideim/im/api/comm"
-	"github.com/glide-im/glideim/im/api/router"
-	"github.com/glide-im/glideim/im/dao/common"
-	"github.com/glide-im/glideim/im/dao/groupdao"
-	"github.com/glide-im/glideim/im/dao/msgdao"
-	"github.com/glide-im/glideim/im/dao/userdao"
-	"github.com/glide-im/glideim/im/group"
-	"github.com/glide-im/glideim/im/message"
-	"github.com/glide-im/glideim/pkg/logger"
+	"go_im/im/api/apidep"
+	"go_im/im/api/comm"
+	"go_im/im/api/router"
+	"go_im/im/dao/common"
+	"go_im/im/dao/groupdao"
+	"go_im/im/dao/msgdao"
+	"go_im/im/dao/userdao"
+	"go_im/im/group"
+	"go_im/im/message"
+	"go_im/pkg/logger"
 	"time"
 )
 

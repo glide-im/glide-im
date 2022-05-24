@@ -1,10 +1,10 @@
 package gateway
 
 import (
-	"github.com/glide-im/glideim/pkg/mq_nsq"
-	"github.com/glide-im/glideim/protobuf/gen/pb_rpc"
 	"github.com/gogo/protobuf/proto"
 	"github.com/nsqio/go-nsq"
+	"go_im/pkg/mq_nsq"
+	"go_im/protobuf/gen/pb_rpc"
 )
 
 type msgHandler struct {

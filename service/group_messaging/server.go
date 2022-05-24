@@ -2,11 +2,11 @@ package group_messaging
 
 import (
 	"context"
-	"github.com/glide-im/glideim/im/group"
-	"github.com/glide-im/glideim/im/message"
-	"github.com/glide-im/glideim/pkg/logger"
-	"github.com/glide-im/glideim/pkg/rpc"
-	"github.com/glide-im/glideim/protobuf/gen/pb_rpc"
+	"go_im/im/group"
+	"go_im/im/message"
+	"go_im/pkg/logger"
+	"go_im/pkg/rpc"
+	"go_im/protobuf/gen/pb_rpc"
 )
 
 type Server struct {

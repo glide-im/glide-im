@@ -1,7 +1,7 @@
 package dispatch
 
 import (
-	"github.com/glide-im/glideim/pkg/mq_nsq"
+	"go_im/pkg/mq_nsq"
 	"google.golang.org/protobuf/proto"
 )
 

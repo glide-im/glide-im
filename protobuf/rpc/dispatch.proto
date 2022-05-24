@@ -1,7 +1,7 @@
 syntax = "proto3";
 package pro.glide;
 
-option go_package = "github.com/glide-im/glideim/protobuf/gen/pb_rpc";
+option go_package = "go_im/protobuf/gen/pb_rpc";
 import public 'google/protobuf/any.proto';
 
 message DispatchRequest {

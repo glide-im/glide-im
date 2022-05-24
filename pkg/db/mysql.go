@@ -2,9 +2,9 @@ package db
 
 import (
 	"fmt"
-	"github.com/glide-im/glideim/config"
-	l "github.com/glide-im/glideim/pkg/logger"
 	"github.com/go-redis/redis"
+	"go_im/config"
+	l "go_im/pkg/logger"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"

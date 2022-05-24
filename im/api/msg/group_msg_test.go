@@ -1,7 +1,7 @@
 package msg
 
 import (
-	"github.com/glide-im/glideim/pkg/db"
+	"go_im/pkg/db"
 	"testing"
 )
 

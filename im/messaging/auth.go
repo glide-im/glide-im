@@ -1,9 +1,9 @@
 package messaging
 
 import (
-	"github.com/glide-im/glideim/im/auth"
-	"github.com/glide-im/glideim/im/client"
-	"github.com/glide-im/glideim/im/message"
+	"go_im/im/auth"
+	"go_im/im/client"
+	"go_im/im/message"
 )
 
 func handleAuth(from int64, device int64, msg *message.Message) {

@@ -1,8 +1,8 @@
 package group
 
 import (
-	"github.com/glide-im/glideim/im/client"
-	"github.com/glide-im/glideim/im/message"
+	"go_im/im/client"
+	"go_im/im/message"
 )
 
 const (

@@ -2,7 +2,7 @@ package json
 
 import (
 	"encoding/json"
-	"github.com/glide-im/glideim/pkg/logger"
+	"go_im/pkg/logger"
 )
 
 type Data struct {

@@ -1,11 +1,11 @@
 package auth
 
 import (
-	"github.com/glide-im/glideim/im/api/apidep"
-	route "github.com/glide-im/glideim/im/api/router"
-	"github.com/glide-im/glideim/im/message"
-	"github.com/glide-im/glideim/pkg/db"
-	"github.com/glide-im/glideim/pkg/logger"
+	"go_im/im/api/apidep"
+	route "go_im/im/api/router"
+	"go_im/im/message"
+	"go_im/pkg/db"
+	"go_im/pkg/logger"
 	"testing"
 )
 
