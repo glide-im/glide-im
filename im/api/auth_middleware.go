@@ -2,7 +2,7 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"go_im/im/auth"
+	"github.com/glide-im/glideim/im/auth"
 	"net/http"
 	"strings"
 )

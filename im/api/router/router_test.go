@@ -2,7 +2,7 @@ package route
 
 import (
 	"encoding/json"
-	"go_im/im/message"
+	"github.com/glide-im/glideim/im/message"
 	"testing"
 )
 

@@ -1,7 +1,7 @@
 package im_service
 
 import (
-	"go_im/pkg/rpc"
+	"github.com/glide-im/glideim/pkg/rpc"
 	"testing"
 )
 

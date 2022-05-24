@@ -1,9 +1,9 @@
 package main
 
 import (
-	"go_im/pkg/db"
-	"go_im/service"
-	"go_im/service/broker"
+	"github.com/glide-im/glideim/pkg/db"
+	"github.com/glide-im/glideim/service"
+	"github.com/glide-im/glideim/service/broker"
 )
 
 func main() {

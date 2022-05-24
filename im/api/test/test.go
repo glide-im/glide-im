@@ -1,9 +1,9 @@
 package test
 
 import (
-	route "go_im/im/api/router"
-	"go_im/im/client"
-	"go_im/im/message"
+	route "github.com/glide-im/glideim/im/api/router"
+	"github.com/glide-im/glideim/im/client"
+	"github.com/glide-im/glideim/im/message"
 )
 
 type TestApi struct{}

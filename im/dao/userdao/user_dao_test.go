@@ -1,7 +1,7 @@
 package userdao
 
 import (
-	"go_im/pkg/db"
+	"github.com/glide-im/glideim/pkg/db"
 	"testing"
 )
 

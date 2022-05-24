@@ -1,8 +1,8 @@
 package api
 
 import (
-	"go_im/im/api/apidep"
-	"go_im/im/message"
+	"github.com/glide-im/glideim/im/api/apidep"
+	"github.com/glide-im/glideim/im/message"
 )
 
 var handler Interface = NewDefaultRouter()

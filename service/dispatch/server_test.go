@@ -1,7 +1,7 @@
 package dispatch
 
 import (
-	"go_im/pkg/rpc"
+	"github.com/glide-im/glideim/pkg/rpc"
 	"testing"
 )
 

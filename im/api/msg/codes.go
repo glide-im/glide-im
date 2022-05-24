@@ -1,6 +1,6 @@
 package msg
 
-import "go_im/im/api/comm"
+import "github.com/glide-im/glideim/im/api/comm"
 
 var (
 	errRecentMsgLoadFailed = comm.NewApiBizError(3001, "message load failed")

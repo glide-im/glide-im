@@ -1,8 +1,8 @@
 package client
 
 import (
-	"go_im/im/message"
-	"go_im/pkg/logger"
+	"github.com/glide-im/glideim/im/message"
+	"github.com/glide-im/glideim/pkg/logger"
 )
 
 type CustomerServiceClient struct {

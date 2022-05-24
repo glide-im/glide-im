@@ -1,7 +1,7 @@
 package mid
 
 import (
-	"go_im/pkg/db"
+	"github.com/glide-im/glideim/pkg/db"
 )
 
 func GetMid() (int64, error) {

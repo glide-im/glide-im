@@ -2,16 +2,16 @@ package main
 
 import (
 	"errors"
-	"go_im/config"
-	"go_im/im/client"
-	"go_im/im/conn"
-	"go_im/im/dao"
-	"go_im/im/group"
-	"go_im/im/messaging"
-	"go_im/pkg/db"
-	"go_im/pkg/logger"
-	"go_im/pkg/rpc"
-	"go_im/service/im_service"
+	"github.com/glide-im/glideim/config"
+	"github.com/glide-im/glideim/im/client"
+	"github.com/glide-im/glideim/im/conn"
+	"github.com/glide-im/glideim/im/dao"
+	"github.com/glide-im/glideim/im/group"
+	"github.com/glide-im/glideim/im/messaging"
+	"github.com/glide-im/glideim/pkg/db"
+	"github.com/glide-im/glideim/pkg/logger"
+	"github.com/glide-im/glideim/pkg/rpc"
+	"github.com/glide-im/glideim/service/im_service"
 	"time"
 )
 

@@ -2,7 +2,7 @@ package conn
 
 import (
 	"fmt"
-	"go_im/pkg/logger"
+	"github.com/glide-im/glideim/pkg/logger"
 	"net/http"
 	"time"
 

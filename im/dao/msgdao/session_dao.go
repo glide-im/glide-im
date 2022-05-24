@@ -1,9 +1,9 @@
 package msgdao
 
 import (
+	"github.com/glide-im/glideim/pkg/db"
+	"github.com/glide-im/glideim/pkg/logger"
 	"github.com/go-redis/redis"
-	"go_im/pkg/db"
-	"go_im/pkg/logger"
 	"strconv"
 	"strings"
 	"time"

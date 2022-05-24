@@ -3,8 +3,8 @@ package dispatch
 import (
 	"context"
 	"errors"
-	"go_im/pkg/rpc"
-	"go_im/protobuf/gen/pb_rpc"
+	"github.com/glide-im/glideim/pkg/rpc"
+	"github.com/glide-im/glideim/protobuf/gen/pb_rpc"
 )
 
 var cache *routeCache

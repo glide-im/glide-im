@@ -7,7 +7,7 @@
 package pb_rpc
 
 import (
-	pb_im "go_im/protobuf/gen/pb_im"
+	pb_im "github.com/glide-im/glideim/protobuf/gen/pb_im"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	anypb "google.golang.org/protobuf/types/known/anypb"

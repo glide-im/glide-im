@@ -2,12 +2,12 @@ package client
 
 import (
 	"errors"
+	"github.com/glide-im/glideim/im/conn"
+	"github.com/glide-im/glideim/im/dao/uid"
+	"github.com/glide-im/glideim/im/message"
+	"github.com/glide-im/glideim/im/statistics"
+	"github.com/glide-im/glideim/pkg/logger"
 	"github.com/panjf2000/ants/v2"
-	"go_im/im/conn"
-	"go_im/im/dao/uid"
-	"go_im/im/message"
-	"go_im/im/statistics"
-	"go_im/pkg/logger"
 	"strconv"
 	"sync"
 	"sync/atomic"

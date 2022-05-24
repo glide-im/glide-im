@@ -1,11 +1,11 @@
 package gateway
 
 import (
-	"go_im/im/client"
-	"go_im/im/message"
-	"go_im/pkg/logger"
-	"go_im/pkg/mq_nsq"
-	"go_im/protobuf/gen/pb_rpc"
+	"github.com/glide-im/glideim/im/client"
+	"github.com/glide-im/glideim/im/message"
+	"github.com/glide-im/glideim/pkg/logger"
+	"github.com/glide-im/glideim/pkg/mq_nsq"
+	"github.com/glide-im/glideim/protobuf/gen/pb_rpc"
 	"google.golang.org/protobuf/proto"
 	"sync"
 	"testing"

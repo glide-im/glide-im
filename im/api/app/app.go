@@ -2,12 +2,12 @@ package app
 
 import (
 	"fmt"
-	"go_im/im/api/apidep"
-	"go_im/im/api/comm"
-	"go_im/im/api/router"
-	"go_im/im/client"
-	"go_im/im/dao/appdao"
-	"go_im/im/message"
+	"github.com/glide-im/glideim/im/api/apidep"
+	"github.com/glide-im/glideim/im/api/comm"
+	"github.com/glide-im/glideim/im/api/router"
+	"github.com/glide-im/glideim/im/client"
+	"github.com/glide-im/glideim/im/dao/appdao"
+	"github.com/glide-im/glideim/im/message"
 	"time"
 )
 

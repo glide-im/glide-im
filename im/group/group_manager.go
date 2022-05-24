@@ -2,10 +2,10 @@ package group
 
 import (
 	"errors"
-	"go_im/im/client"
-	"go_im/im/dao/groupdao"
-	"go_im/im/message"
-	"go_im/pkg/logger"
+	"github.com/glide-im/glideim/im/client"
+	"github.com/glide-im/glideim/im/dao/groupdao"
+	"github.com/glide-im/glideim/im/message"
+	"github.com/glide-im/glideim/pkg/logger"
 	"strconv"
 	"sync"
 	"time"

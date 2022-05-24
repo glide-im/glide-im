@@ -1,8 +1,8 @@
 package message
 
 import (
-	"go_im/im/message/json"
-	"go_im/protobuf/gen/pb_im"
+	"github.com/glide-im/glideim/im/message/json"
+	"github.com/glide-im/glideim/protobuf/gen/pb_im"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )

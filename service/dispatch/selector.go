@@ -2,10 +2,10 @@ package dispatch
 
 import (
 	"context"
+	hash2 "github.com/glide-im/glideim/pkg/hash"
+	"github.com/glide-im/glideim/pkg/logger"
+	"github.com/glide-im/glideim/pkg/rpc"
 	"github.com/smallnest/rpcx/client"
-	hash2 "go_im/pkg/hash"
-	"go_im/pkg/logger"
-	"go_im/pkg/rpc"
 	"reflect"
 	"strconv"
 )

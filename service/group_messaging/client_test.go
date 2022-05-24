@@ -1,9 +1,9 @@
 package group_messaging
 
 import (
-	"go_im/im/message"
-	"go_im/pkg/rpc"
-	"go_im/service"
+	"github.com/glide-im/glideim/im/message"
+	"github.com/glide-im/glideim/pkg/rpc"
+	"github.com/glide-im/glideim/service"
 	"testing"
 )
 

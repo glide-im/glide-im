@@ -1,6 +1,6 @@
 package groups
 
-import "go_im/im/api/comm"
+import "github.com/glide-im/glideim/im/api/comm"
 
 var (
 	ErrGroupNotExit       = comm.NewApiBizError(3001, "ErrGroupNotExit")

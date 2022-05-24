@@ -1,8 +1,8 @@
 package auth
 
 import (
+	"github.com/glide-im/glideim/im/api/comm"
 	"github.com/golang-jwt/jwt"
-	"go_im/im/api/comm"
 	"time"
 )
 

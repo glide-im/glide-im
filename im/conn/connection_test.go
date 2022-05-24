@@ -1,7 +1,7 @@
 package conn
 
 import (
-	"go_im/im/message"
+	"github.com/glide-im/glideim/im/message"
 	"testing"
 	"time"
 )

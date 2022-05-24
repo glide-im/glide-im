@@ -1,8 +1,8 @@
 package message
 
 import (
-	"go_im/im/message/json"
-	"go_im/protobuf/gen/pb_im"
+	"github.com/glide-im/glideim/im/message/json"
+	"github.com/glide-im/glideim/protobuf/gen/pb_im"
 )
 
 // CustomerServiceMessage 表示客服消息

@@ -1,8 +1,9 @@
 package service
 
 import (
-	"github.com/BurntSushi/toml"
-	"go_im/pkg/rpc"
+	"github.com/spf13/viper"
+	github.com/glide-im/glideimpkg/logger"
+	github.com/glide-im/glideimpkg/rpc"
 	"sync"
 )
 
@@ -10,10 +11,20 @@ var c *Configs
 var loadErr error
 var once = sync.Once{}
 
-func GetConfig() (*Configs, error) {
+func GetServiceConfig() (*Configs, error) {
 	once.Do(func() {
+		viper.SetConfigName("example_config")
+		viper.AddConfigPath(".")
+		viper.SetConfigType("toml")
+		loadErr = viper.ReadInConfig()
+		if loadErr != nil {
+			return
+		}
 		c = &Configs{}
-		_, loadErr = toml.DecodeFile("example_config.toml", c)
+		loadErr = viper.Unmarshal(&c)
+		if loadErr != nil {
+			logger.E("load config error: %s", loadErr.Error())
+		}
 	})
 	return c, loadErr
 }
@@ -53,7 +64,7 @@ type ClientConfig struct {
 func (c *ClientConfig) ToClientOptions() *rpc.ClientOptions {
 	return &rpc.ClientOptions{
 		Addr:        c.Addr,
-		Port:        int(c.Port),
+		Port:        c.Port,
 		Name:        c.Name,
 		EtcdServers: c.EtcdServers,
 	}

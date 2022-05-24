@@ -1,9 +1,9 @@
 package messaging_service
 
 import (
-	"go_im/im/message"
-	"go_im/im/messaging"
-	"go_im/service"
+	"github.com/glide-im/glideim/im/message"
+	"github.com/glide-im/glideim/im/messaging"
+	"github.com/glide-im/glideim/service"
 	"testing"
 )
 
