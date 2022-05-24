@@ -1,15 +1,13 @@
 package service
 
 import (
-	"github.com/BurntSushi/toml"
 	"testing"
 )
 
 func TestGetConfig(t *testing.T) {
-	c := Configs{}
-	_, err := toml.DecodeFile("example_config.toml", &c)
+	cf, err := GetConfig()
 	if err != nil {
 		t.Error(err)
 	}
-	t.Log(c.Api.Client)
+	t.Log(cf)
 }

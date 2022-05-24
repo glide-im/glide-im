@@ -3,10 +3,10 @@ package im_service
 import (
 	"context"
 	"errors"
-	"go_im/im/client"
-	"go_im/im/message"
-	rpc2 "go_im/pkg/rpc"
-	"go_im/protobuf/gen/pb_rpc"
+	"github.com/glide-im/glideim/im/client"
+	"github.com/glide-im/glideim/im/message"
+	rpc2 "github.com/glide-im/glideim/pkg/rpc"
+	"github.com/glide-im/glideim/protobuf/gen/pb_rpc"
 )
 
 type Client struct {

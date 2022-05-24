@@ -1,8 +1,8 @@
 package groupdao
 
 import (
-	"go_im/im/dao/common"
-	"go_im/pkg/db"
+	"github.com/glide-im/glideim/im/dao/common"
+	"github.com/glide-im/glideim/pkg/db"
 	"time"
 )
 

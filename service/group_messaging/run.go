@@ -1,9 +1,9 @@
 package group_messaging
 
 import (
-	"go_im/im/client"
-	"go_im/im/group"
-	"go_im/service"
+	"github.com/glide-im/glideim/im/client"
+	"github.com/glide-im/glideim/im/group"
+	"github.com/glide-im/glideim/service"
 )
 
 func SetupClient(configs *service.Configs) error {

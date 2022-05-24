@@ -1,12 +1,12 @@
 package main
 
 import (
-	"go_im/im/client"
-	"go_im/im/conn"
-	"go_im/im/dao"
-	"go_im/im/dao/msgdao"
-	"go_im/im/group"
-	"go_im/pkg/db"
+	"github.com/glide-im/glideim/im/client"
+	"github.com/glide-im/glideim/im/conn"
+	"github.com/glide-im/glideim/im/dao"
+	"github.com/glide-im/glideim/im/dao/msgdao"
+	"github.com/glide-im/glideim/im/group"
+	"github.com/glide-im/glideim/pkg/db"
 	"time"
 )
 

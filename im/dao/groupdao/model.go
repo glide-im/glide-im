@@ -1,6 +1,6 @@
 package groupdao
 
-import "go_im/im/dao/common"
+import "github.com/glide-im/glideim/im/dao/common"
 
 type GroupModel struct {
 	Gid      int64 `gorm:"primaryKey"`

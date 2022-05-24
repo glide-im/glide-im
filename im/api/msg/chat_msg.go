@@ -1,11 +1,11 @@
 package msg
 
 import (
-	"go_im/im/api/comm"
-	"go_im/im/api/router"
-	"go_im/im/dao/msgdao"
-	"go_im/im/message"
-	"go_im/pkg/logger"
+	"github.com/glide-im/glideim/im/api/comm"
+	"github.com/glide-im/glideim/im/api/router"
+	"github.com/glide-im/glideim/im/dao/msgdao"
+	"github.com/glide-im/glideim/im/message"
+	"github.com/glide-im/glideim/pkg/logger"
 	"math"
 	"time"
 )

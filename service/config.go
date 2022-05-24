@@ -1,8 +1,9 @@
 package service
 
 import (
-	"github.com/BurntSushi/toml"
-	"go_im/pkg/rpc"
+	"github.com/glide-im/glideim/pkg/logger"
+	"github.com/glide-im/glideim/pkg/rpc"
+	"github.com/spf13/viper"
 	"sync"
 )
 
@@ -12,8 +13,18 @@ var once = sync.Once{}
 
 func GetConfig() (*Configs, error) {
 	once.Do(func() {
+		viper.SetConfigName("example_config")
+		viper.AddConfigPath(".")
+		viper.SetConfigType("toml")
+		loadErr = viper.ReadInConfig()
+		if loadErr != nil {
+			return
+		}
 		c = &Configs{}
-		_, loadErr = toml.DecodeFile("example_config.toml", c)
+		loadErr = viper.Unmarshal(&c)
+		if loadErr != nil {
+			logger.E("load config error: %s", loadErr.Error())
+		}
 	})
 	return c, loadErr
 }

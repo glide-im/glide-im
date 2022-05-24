@@ -2,9 +2,9 @@ package rpc
 
 import (
 	"context"
+	"github.com/glide-im/glideim/pkg/logger"
 	"github.com/smallnest/rpcx/client"
 	"github.com/smallnest/rpcx/share"
-	"go_im/pkg/logger"
 )
 
 type selector struct {

@@ -1,9 +1,9 @@
 package broker
 
 import (
-	"go_im/pkg/logger"
-	"go_im/pkg/rpc"
-	"go_im/service"
+	"github.com/glide-im/glideim/pkg/logger"
+	"github.com/glide-im/glideim/pkg/rpc"
+	"github.com/glide-im/glideim/service"
 	"testing"
 )
 

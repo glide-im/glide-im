@@ -1,12 +1,12 @@
 package msg
 
 import (
-	"go_im/im/api/comm"
-	route "go_im/im/api/router"
-	"go_im/im/dao/common"
-	"go_im/im/dao/msgdao"
-	"go_im/im/dao/userdao"
-	"go_im/im/message"
+	"github.com/glide-im/glideim/im/api/comm"
+	route "github.com/glide-im/glideim/im/api/router"
+	"github.com/glide-im/glideim/im/dao/common"
+	"github.com/glide-im/glideim/im/dao/msgdao"
+	"github.com/glide-im/glideim/im/dao/userdao"
+	"github.com/glide-im/glideim/im/message"
 	"math"
 )
 

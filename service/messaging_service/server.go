@@ -2,10 +2,10 @@ package messaging_service
 
 import (
 	"context"
-	"go_im/im/message"
-	"go_im/im/messaging"
-	"go_im/pkg/rpc"
-	"go_im/protobuf/gen/pb_rpc"
+	"github.com/glide-im/glideim/im/message"
+	"github.com/glide-im/glideim/im/messaging"
+	"github.com/glide-im/glideim/pkg/rpc"
+	"github.com/glide-im/glideim/protobuf/gen/pb_rpc"
 )
 
 type Server struct {

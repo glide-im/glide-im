@@ -1,10 +1,10 @@
 package messaging
 
 import (
-	"go_im/im/client"
-	"go_im/im/group"
-	"go_im/im/message"
-	"go_im/pkg/logger"
+	"github.com/glide-im/glideim/im/client"
+	"github.com/glide-im/glideim/im/group"
+	"github.com/glide-im/glideim/im/message"
+	"github.com/glide-im/glideim/pkg/logger"
 )
 
 type Interface func(from int64, device int64, msg *message.Message) error

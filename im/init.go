@@ -1,10 +1,10 @@
 package im
 
 import (
-	"go_im/im/client"
-	"go_im/im/dao"
-	"go_im/im/messaging"
-	"go_im/pkg/db"
+	"github.com/glide-im/glideim/im/client"
+	"github.com/glide-im/glideim/im/dao"
+	"github.com/glide-im/glideim/im/messaging"
+	"github.com/glide-im/glideim/pkg/db"
 )
 
 func Init() {

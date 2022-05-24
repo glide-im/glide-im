@@ -1,13 +1,13 @@
 package api
 
 import (
-	"go_im/im/api/app"
-	"go_im/im/api/auth"
-	"go_im/im/api/cs"
-	"go_im/im/api/groups"
-	"go_im/im/api/msg"
-	"go_im/im/api/test"
-	"go_im/im/api/user"
+	"github.com/glide-im/glideim/im/api/app"
+	"github.com/glide-im/glideim/im/api/auth"
+	"github.com/glide-im/glideim/im/api/cs"
+	"github.com/glide-im/glideim/im/api/groups"
+	"github.com/glide-im/glideim/im/api/msg"
+	"github.com/glide-im/glideim/im/api/test"
+	"github.com/glide-im/glideim/im/api/user"
 )
 
 func initRoute() {

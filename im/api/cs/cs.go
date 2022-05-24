@@ -1,6 +1,6 @@
 package cs
 
-import route "go_im/im/api/router"
+import route "github.com/glide-im/glideim/im/api/router"
 
 type CsApi struct {
 }

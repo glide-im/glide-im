@@ -1,9 +1,9 @@
 package gateway
 
 import (
-	"go_im/im/message"
-	"go_im/pkg/mq_nsq"
-	"go_im/service/route"
+	"github.com/glide-im/glideim/im/message"
+	"github.com/glide-im/glideim/pkg/mq_nsq"
+	"github.com/glide-im/glideim/service/route"
 )
 
 var producer *mq_nsq.NSQProducer
