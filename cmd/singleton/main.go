@@ -14,10 +14,12 @@ import (
 )
 
 func main() {
-	Run()
-}
 
-func Run() {
+	err := config.Load()
+	if err != nil {
+		panic(err)
+	}
+
 	db.Init()
 	dao.Init()
 

@@ -6,13 +6,11 @@ Port = 8081
 Addr = "0.0.0.0"
 Port = 8080
 
-[IMRpcServer]
-EnableGroup = false
+[IMService]
+# IM 服务的地址
+Service = "127.0.0.1:8080"
 Addr = "0.0.0.0"
-Port = 8092
-Network = "tcp"
-Etcd = []
-Name = "im_rpc_server"
+Port = 8081
 
 [MySql]
 Host = "dengzii.com"

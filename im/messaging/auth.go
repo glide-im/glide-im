@@ -17,8 +17,8 @@ func handleAuth(from int64, device int64, msg *message.Message) {
 	}
 	result, err := auth.Auth(from, device, &t)
 
-	if err != nil {
-		resp := message.NewMessage(0, message.ActionApiSuccess, result)
+	if err == nil {
+		resp := message.NewMessage(msg.GetSeq(), message.ActionApiSuccess, result)
 		_ = client.SignIn(from, result.Uid, device)
 		_ = client.EnqueueMessageToDevice(result.Uid, device, resp)
 	} else {
