@@ -1,5 +1,7 @@
 # Glide-IM
 
+**这个项目已重构, 本仓库代码不在更新**, 新项目地址 [glide-im/glide](https://github.com/glide-im/glide)
+
 ![i](_art/logo.png)
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/dengzii/go_im)](https://goreportcard.com/report/github.com/dengzii/go_im)
@@ -9,8 +11,6 @@
 ## 简介
 
 [微信交流群](https://github.com/Glide-IM/GlideIM/issues/3)
-
-本项目是我在 高性能IM, 微服务, 分布式, 项目架构等方面从零基础开始的一次实践, 希望可以给你带来一些帮助.
 
 ### 立即体验
 
