@@ -2,10 +2,11 @@ package gate
 
 import (
 	"crypto/sha512"
-	"github.com/glide-im/glide/pkg/hash"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/glide-im/glide/pkg/hash"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewID(t *testing.T) {
@@ -52,8 +53,8 @@ func TestID_Gateway(t *testing.T) {
 
 func TestAesCBC_Decrypt(t *testing.T) {
 
-	key := sha512.New().Sum([]byte("secret_key"))
-	cbcCrypto := NewAesCBCCrypto(key)
+	key := sha512.Sum512([]byte("secret_key"))
+	cbcCrypto := NewAesCBCCrypto(key[:])
 
 	credentials := ClientAuthCredentials{
 		Type:       1,

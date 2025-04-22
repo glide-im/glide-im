@@ -9,11 +9,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"strings"
+	"time"
+
 	"github.com/glide-im/glide/pkg/hash"
 	"github.com/glide-im/glide/pkg/logger"
 	"github.com/glide-im/glide/pkg/messages"
-	"strings"
-	"time"
 )
 
 type CredentialCrypto interface {
@@ -170,9 +171,9 @@ type Authenticator struct {
 }
 
 func NewAuthenticator(gateway DefaultGateway, key string) *Authenticator {
-	k := sha512.New().Sum([]byte(key))
+	k := sha512.Sum512([]byte(key))
 	return &Authenticator{
-		credentialCrypto: NewAesCBCCrypto(k),
+		credentialCrypto: NewAesCBCCrypto(k[:]),
 		gateway:          gateway,
 	}
 }
