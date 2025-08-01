@@ -1,4 +1,6 @@
-## glide
+## Glide
+
+Glide 是一个轻量快速, 稳定, 可拓展的消息服务. 支持完善的客户端链接管理, 客户端鉴权, 消息路由鉴权, 频道订阅鉴权.
 
 **[立即体验](http://im.dengzii.com/)**
 
@@ -16,6 +18,8 @@
 
 **相关项目**
 
-[TypeScript WebApp](https://github.com/glide-im/glide_ts_sdk)
+[Dart SDK](https://github.com/glide-im/glide_dart_sdk)
+
+[Glide Flutter](https://github.com/glide-im/glide-chat)
 
 [业务 HTTP API接口](https://github.com/glide-im/api)
