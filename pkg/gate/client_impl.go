@@ -85,17 +85,20 @@ type UserClient struct {
 	closeWriteOnce sync.Once
 	// closeReadOnce is the once for close runRead goroutine
 	closeReadOnce sync.Once
+	// closeOnce is the once for close messages channel and connection
+	closeOnce sync.Once
 
 	// hbC is the timer for client heartbeat
 	hbC *timingwheel.Task
 	// hbS is the timer for server heartbeat
 	hbS *timingwheel.Task
 	// hbLost is the count of heartbeat lost
-	hbLost int
+	hbLost int32
 
 	// info is the client info
 	info *Info
 
+	mu          sync.Mutex
 	credentials *ClientAuthCredentials
 
 	// mgr the client manager which manage this client
@@ -140,6 +143,8 @@ func NewClient(conn conn.Connection, mgr Gateway, handler MessageHandler) Defaul
 }
 
 func (c *UserClient) SetCredentials(credentials *ClientAuthCredentials) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.credentials = credentials
 	c.info.ConnectionId = credentials.ConnectionID
 	if credentials.ConnectionConfig != nil {
@@ -150,6 +155,8 @@ func (c *UserClient) SetCredentials(credentials *ClientAuthCredentials) {
 }
 
 func (c *UserClient) GetCredentials() *ClientAuthCredentials {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	return c.credentials
 }
 
@@ -178,10 +185,15 @@ func (c *UserClient) IsRunning() bool {
 }
 
 // EnqueueMessage enqueue message to client message queue.
-func (c *UserClient) EnqueueMessage(msg *messages.GlideMessage) error {
+func (c *UserClient) EnqueueMessage(msg *messages.GlideMessage) (err error) {
 	if atomic.LoadInt32(&c.state) == stateClosed {
 		return errors.New("client has closed")
 	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = errors.New("client has closed")
+		}
+	}()
 	logger.I("EnqueueMessage ID=%s msg=%v", c.info.ID, msg)
 	select {
 	case c.messages <- msg:
@@ -215,8 +227,8 @@ func (c *UserClient) runRead() {
 			if !c.IsRunning() {
 				goto STOP
 			}
-			c.hbLost++
-			if c.hbLost > c.config.HeartbeatLostLimit {
+			atomic.AddInt32(&c.hbLost, 1)
+			if int(atomic.LoadInt32(&c.hbLost)) > c.config.HeartbeatLostLimit {
 				closeReason = "heartbeat lost"
 				c.Exit()
 			}
@@ -243,7 +255,7 @@ func (c *UserClient) runRead() {
 				c.Exit()
 				break
 			}
-			c.hbLost = 0
+			atomic.StoreInt32(&c.hbLost, 0)
 			c.hbC.Cancel()
 			c.hbC = tw.After(c.config.ClientHeartbeatDuration)
 
@@ -306,10 +318,9 @@ STOP:
 // Exit client, note: exit client will not close conn right now, but will close when message chan is empty.
 // It's close read right now, and close write2Conn when all message in queue is sent.
 func (c *UserClient) Exit() {
-	if atomic.LoadInt32(&c.state) == stateClosed {
+	if !atomic.CompareAndSwapInt32(&c.state, stateRunning, stateClosed) {
 		return
 	}
-	atomic.StoreInt32(&c.state, stateClosed)
 
 	id := c.info.ID
 	// exit by client self, remove client from manager
@@ -342,9 +353,16 @@ func (c *UserClient) Exit() {
 
 func (c *UserClient) Run() {
 	logger.I("new client running addr:%s id:%s", c.conn.GetConnInfo().Addr, c.info.ID)
-	atomic.StoreInt32(&c.state, stateRunning)
+
+	c.messages = make(chan *messages.GlideMessage, 100)
+	c.closeReadCh = make(chan struct{})
+	c.closeWriteCh = make(chan struct{})
 	c.closeWriteOnce = sync.Once{}
 	c.closeReadOnce = sync.Once{}
+	c.closeOnce = sync.Once{}
+	atomic.StoreInt32(&c.hbLost, 0)
+
+	atomic.StoreInt32(&c.state, stateRunning)
 
 	go c.runRead()
 	go c.runWrite()
@@ -355,8 +373,10 @@ func (c *UserClient) isClosed() bool {
 }
 
 func (c *UserClient) close() {
-	close(c.messages)
-	_ = c.conn.Close()
+	c.closeOnce.Do(func() {
+		close(c.messages)
+		_ = c.conn.Close()
+	})
 }
 
 func (c *UserClient) write2Conn(m *messages.GlideMessage) {
